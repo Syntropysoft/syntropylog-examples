@@ -1,36 +1,116 @@
-# Example 00: Hello World
+# Example 01: Hello World - Basic Logging
 
-This is the most basic example to get started with SyntropyLog.
+This example demonstrates basic logging with SyntropyLog. It includes minimal initialization and graceful shutdown, focusing on logging concepts.
+
+## Prerequisites
+
+This example is self-contained, but for a deeper understanding of initialization patterns, see [Example 00: Setup & Initialization](./00-setup-initialization/README.md).
 
 ## Purpose
 
-The purpose of this example is to demonstrate how to:
+The goal of this example is to show:
 
-1.  Instantiate the `SyntropyLog` logger.
-2.  Log messages at different levels (`info`, `warn`, `error`).
-3.  Add structured data (metadata) to a log.
+1. **Getting a Logger**: How to obtain a logger instance
+2. **Log Levels**: Using different log levels (info, warn, error)
+3. **Structured Logging**: Adding metadata to your logs
+4. **Error Logging**: Proper error logging with context
+
+## Key Concepts
+
+### Logger Instances
+Each part of your application can have its own logger instance with a unique name, making it easier to identify where logs come from.
+
+### Log Levels
+Different log levels help categorize the importance and type of information being logged:
+- **info**: General information about application flow
+- **warn**: Warning conditions that don't stop execution
+- **error**: Error conditions that need attention
+
+### Structured Logging
+Instead of string concatenation, use objects to add context to your logs. This makes logs more searchable and analyzable.
+
+### Critical: Initialization & Shutdown
+⚠️ **CRITICAL**: Initialization and shutdown are **essential** for log integrity:
+
+- **Initialization**: Ensures SyntropyLog is ready to process logs
+- **Shutdown**: **Guarantees all pending logs are sent before the process terminates**
+- **Graceful Shutdown**: Prevents log loss when the pod dies or restarts
+
+> **💡 Pro Tip**: In production, always implement signal handlers (SIGTERM, SIGINT) to ensure graceful shutdown. See [Example 00: Setup & Initialization](./00-setup-initialization/README.md) for advanced patterns.
 
 ## How to Run
 
-1.  **Install Dependencies**:
-    From the `examples/00-hello-world` directory, run:
-    ```bash
-    npm install
-    ```
-    This command will install `typescript`, `ts-node`, and create a symbolic link to the local `syntropylog` library.
+1. **Install Dependencies**:
+   From the `01-hello-world` directory, run:
+   ```bash
+   npm install
+   ```
 
-2.  **Run the Script**:
-    ```bash
-    npm start
-    ```
+2. **Run the Script**:
+   ```bash
+   npm run dev
+   ```
 
 ## Expected Output
 
-You should see an output in your console similar to this, with colors and formatting:
+You should see output similar to this:
 
 ```
-INFO (my-app): Hello World from SyntropyLog!
-WARN (my-app): This is a warning message.
-ERROR (my-app): This is an error message.
-INFO (my-app): User logged in successfully {"userId":"user-123","tenantId":"tenant-abc"}
-``` 
+{"level":"info","timestamp":"2025-07-16T23:18:47.461Z","service":"syntropylog-main","message":"SyntropyLog framework initialized successfully."}
+✅ Hello World example completed!
+{"level":"info","timestamp":"2025-07-16T23:18:47.461Z","service":"hello-world","message":"Hello World from SyntropyLog!"}
+{"level":"warn","timestamp":"2025-07-16T23:18:47.461Z","service":"hello-world","message":"This is a warning message."}
+{"level":"error","timestamp":"2025-07-16T23:18:47.461Z","service":"hello-world","message":"This is an error message."}
+{"level":"info","timestamp":"2025-07-16T23:18:47.461Z","service":"hello-world","message":"User logged in successfully {\n  userId: 'user-123',\n  tenantId: 'tenant-abc',\n  timestamp: '2025-07-16T23:18:47.461Z'\n}"}
+{"level":"info","timestamp":"2025-07-16T23:18:47.462Z","service":"hello-world","message":"Processing user data {\n  user: { id: 123, name: 'John Doe', email: 'john@example.com' },\n  actions: [ 'login', 'profile_update' ],\n  metadata: { source: 'web', version: '1.0.0' }\n}"}
+{"level":"error","timestamp":"2025-07-16T23:18:47.463Z","service":"hello-world","message":"An error occurred during processing {\n  error: 'Something went wrong',\n  stack: 'Error: Something went wrong\\n' +\n    '    at demonstrateLogging...',\n  context: 'user-authentication'\n}"}
+{"level":"info","timestamp":"2025-07-16T23:18:47.463Z","service":"syntropylog-main","message":"🔄 LifecycleManager.shutdown() called. Current state: READY"}
+{"level":"info","timestamp":"2025-07-16T23:18:47.463Z","service":"syntropylog-main","message":"🔄 State changed to SHUTTING_DOWN"}
+{"level":"info","timestamp":"2025-07-16T23:18:47.463Z","service":"syntropylog-main","message":"Shutting down SyntropyLog framework..."}
+{"level":"info","timestamp":"2025-07-16T23:18:47.463Z","service":"syntropylog-main","message":"📋 Executing 1 shutdown promises..."}
+{"level":"info","timestamp":"2025-07-16T23:18:47.463Z","service":"syntropylog-main","message":"✅ Shutdown promises completed"}
+{"level":"info","timestamp":"2025-07-16T23:18:47.463Z","service":"syntropylog-main","message":"🔍 Starting external process termination..."}
+{"level":"info","timestamp":"2025-07-16T23:18:47.463Z","service":"syntropylog-main","message":"Found 3 regex-test processes to terminate"}
+{"level":"info","timestamp":"2025-07-16T23:18:47.463Z","service":"syntropylog-main","message":"Terminating 3 external processes..."}
+{"level":"info","timestamp":"2025-07-16T23:18:47.665Z","service":"syntropylog-main","message":"✅ All regex-test processes terminated successfully"}
+{"level":"info","timestamp":"2025-07-16T23:18:47.665Z","service":"syntropylog-main","message":"All managers have been shut down."}
+{"level":"info","timestamp":"2025-07-16T23:18:47.665Z","service":"syntropylog-main","message":"✅ State changed to SHUTDOWN"}
+```
+
+### Performance Notes
+
+⚡ **Notice the Speed**: The entire example runs in just **2 milliseconds** (from 47.461Z to 47.463Z)! This demonstrates SyntropyLog's high-performance design:
+
+- **Non-blocking operations**: Logging doesn't block your application
+- **Efficient serialization**: Fast JSON serialization of log data
+- **Optimized shutdown**: Quick cleanup of resources
+- **Minimal overhead**: Framework adds negligible latency to your operations
+
+## Code Structure
+
+### Boilerplate (Reusable)
+- **`initializeSyntropyLog()`**: Standard initialization - **ALWAYS REQUIRED**
+- **`shutdownSyntropyLog()`**: Graceful shutdown - **CRITICAL for production**
+
+### Example Logic
+- **`demonstrateLogging()`**: Example-specific logic (logging)
+- **`main()`**: Orchestration of steps
+
+### Why This Structure?
+- **Separation of concerns**: Boilerplate vs specific logic
+- **Reusability**: Initialization functions can be copied to other examples
+- **Clarity**: It's obvious what's critical vs what's example-specific
+
+## Best Practices
+
+1. **Use Descriptive Logger Names**: Choose names that identify the component or module
+2. **Add Context**: Always include relevant metadata with your logs
+3. **Structured Data**: Use objects instead of string concatenation
+4. **Error Context**: Include error details and context when logging errors
+5. **🚨 ALWAYS Initialize and Shutdown**: Never skip initialization or shutdown - this guarantees log integrity
+6. **Handle Process Signals**: In production, implement SIGTERM/SIGINT handlers for graceful shutdown
+7. **Copy Boilerplate**: Use the initialization/shutdown functions as templates for your applications
+
+## Next Steps
+
+After understanding basic logging, proceed to [Example 10: Basic Context](./10-basic-context/README.md) to learn about automatic context propagation. 

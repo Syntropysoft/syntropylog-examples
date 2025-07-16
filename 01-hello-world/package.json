@@ -3,19 +3,21 @@
   "version": "1.0.0",
   "description": "A basic 'Hello World' example for SyntropyLog.",
   "main": "src/index.ts",
+  "type": "module",
   "scripts": {
-    "start": "ts-node src/index.ts",
-    "start:simple": "ts-node src/index-simple.ts",
-    "start:debug": "ts-node src/index-debug.ts",
-    "dev": "ts-node --watch src/index-simple.ts"
+    "start": "tsx src/index.ts",
+    "dev": "tsx src/index.ts"
   },
   "author": "",
   "license": "ISC",
   "engines": {
     "node": ">=18.0.0"
   },
+  "dependencies": {
+    "syntropylog": "^0.5.6"
+  },
   "devDependencies": {
-    "ts-node": "^10.9.2",
+    "tsx": "^4.0.0",
     "typescript": "^5.3.3"
   }
 }

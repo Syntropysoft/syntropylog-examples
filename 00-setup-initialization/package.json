@@ -1,0 +1,19 @@
+{
+  "name": "00-setup-initialization",
+  "version": "1.0.0",
+  "description": "SyntropyLog Setup & Initialization Example",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsx src/index.ts"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "tsx": "^4.0.0"
+  },
+  "dependencies": {
+    "syntropylog": "^0.5.6"
+  }
+}
