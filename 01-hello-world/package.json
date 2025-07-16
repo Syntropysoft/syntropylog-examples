@@ -1,0 +1,21 @@
+{
+  "name": "01-hello-world",
+  "version": "1.0.0",
+  "description": "A basic 'Hello World' example for SyntropyLog.",
+  "main": "src/index.ts",
+  "scripts": {
+    "start": "ts-node src/index.ts",
+    "start:simple": "ts-node src/index-simple.ts",
+    "start:debug": "ts-node src/index-debug.ts",
+    "dev": "ts-node --watch src/index-simple.ts"
+  },
+  "author": "",
+  "license": "ISC",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  }
+}
