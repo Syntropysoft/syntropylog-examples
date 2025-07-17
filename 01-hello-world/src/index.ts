@@ -18,6 +18,7 @@ async function initializeSyntropyLog(serviceName: string = 'my-app') {
     logger: {
       serviceName,
       level: 'info',
+      serializerTimeoutMs: 50,
     },
   });
 }

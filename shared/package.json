@@ -1,0 +1,26 @@
+{
+  "name": "@syntropylog-examples/shared",
+  "version": "1.0.0",
+  "description": "Shared utilities and boilerplate for SyntropyLog examples",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "dependencies": {
+    "syntropylog": "^0.5.8"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  },
+  "keywords": [
+    "syntropylog",
+    "boilerplate",
+    "shared",
+    "utilities"
+  ],
+  "author": "Gabriel Alejandro Gomez",
+  "license": "MIT"
+} 

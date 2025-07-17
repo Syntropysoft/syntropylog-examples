@@ -1,0 +1,44 @@
+{
+  "name": "syntropylog-examples",
+  "version": "1.0.0",
+  "description": "SyntropyLog Examples Collection",
+  "type": "module",
+  "private": true,
+  "workspaces": [
+    "00-setup-initialization",
+    "01-hello-world",
+    "02-basic-context",
+    "03-data-masking",
+    "04-http-correlation",
+    "05-kafka-correlation",
+    "06-rabbitmq-advanced",
+    "07-full-stack-correlation",
+    "08-nats-full-stack",
+    "09-compliance-retention",
+    "10-custom-serializers",
+    "11-diagnostics-doctor",
+    "12-private-package-registry",
+    "13-github-packages-consumer"
+  ],
+  "scripts": {
+    "test": "echo \"No tests specified\" && exit 0",
+    "build": "npm run build --workspaces",
+    "clean": "npm run clean --workspaces"
+  },
+  "dependencies": {
+    "syntropylog": "^0.5.8"
+  },
+  "devDependencies": {
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3"
+  },
+  "keywords": [
+    "syntropylog",
+    "examples",
+    "logging",
+    "observability",
+    "monorepo"
+  ],
+  "author": "Gabriel Alejandro Gomez",
+  "license": "MIT"
+} 

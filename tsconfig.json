@@ -1,0 +1,20 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": ".",
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true
+  },
+  "include": [
+    "boilerplate.ts",
+    "**/src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/node_modules",
+    "**/dist"
+  ]
+} 
