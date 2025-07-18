@@ -26,7 +26,7 @@
     "clean": "npm run clean --workspaces"
   },
   "dependencies": {
-    "syntropylog": "^0.5.8"
+    "syntropylog": "0.5.13-alpha.2"
   },
   "devDependencies": {
     "tsx": "^4.7.0",
