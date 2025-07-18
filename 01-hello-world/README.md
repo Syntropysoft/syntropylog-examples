@@ -43,8 +43,10 @@ Instead of string concatenation, use objects to add context to your logs. This m
 1. **Install Dependencies**:
    From the `01-hello-world` directory, run:
    ```bash
-   npm install
+   npm install --no-workspaces
    ```
+   
+   > **⚠️ Important**: Use `--no-workspaces` flag to avoid npm workspace conflicts when installing dependencies in individual examples.
 
 2. **Run the Script**:
    ```bash

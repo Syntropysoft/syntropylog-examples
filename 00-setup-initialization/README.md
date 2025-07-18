@@ -28,8 +28,10 @@ Robust error handling during initialization and shutdown prevents your applicati
 1. **Install Dependencies**:
    From the `00-setup-initialization` directory, run:
    ```bash
-   npm install
+   npm install --no-workspaces
    ```
+   
+   > **⚠️ Important**: Use `--no-workspaces` flag to avoid npm workspace conflicts when installing dependencies in individual examples.
 
 2. **Run the Script**:
    ```bash

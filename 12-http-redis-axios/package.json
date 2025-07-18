@@ -1,7 +1,7 @@
 {
-  "name": "75-full-stack-correlation-http-redis",
+  "name": "12-http-redis-axios",
   "version": "1.0.0",
-  "description": "",
+  "description": "Example of HTTP and Redis correlation with Axios",
   "main": "index.js",
   "scripts": {
     "build": "tsc",
@@ -13,9 +13,10 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@syntropylog/types": "file:../../../@syntropylog/types",
     "axios": "^1.10.0",
     "redis": "^4.6.15",
-    "syntropylog": "file:../.."
+    "syntropylog": "file:../../.."
   },
   "devDependencies": {
     "tsx": "^4.7.0",

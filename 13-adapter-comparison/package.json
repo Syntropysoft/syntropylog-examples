@@ -1,7 +1,7 @@
 {
-  "name": "01-hello-world",
+  "name": "13-adapter-comparison",
   "version": "1.0.0",
-  "description": "A basic 'Hello World' example for SyntropyLog.",
+  "description": "Example comparing official vs custom adapters in SyntropyLog 🔄",
   "main": "src/index.ts",
   "type": "module",
   "scripts": {
@@ -14,11 +14,13 @@
     "node": ">=18.0.0"
   },
   "dependencies": {
-    "@syntropylog/types": "^0.1.2",
-    "syntropylog": "0.5.14-alpha.1"
+    "syntropylog": "file:../../..",
+    "@syntropylog/adapters": "file:../../../@syntropylog/adapters",
+    "axios": "^1.10.0"
   },
   "devDependencies": {
     "tsx": "^4.0.0",
-    "typescript": "^5.3.3"
+    "typescript": "^5.0.0",
+    "nock": "^13.5.6"
   }
-}
+} 
