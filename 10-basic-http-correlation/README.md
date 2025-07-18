@@ -1,4 +1,4 @@
-# Example 40: Basic HTTP Correlation
+# Example 10: Basic HTTP Correlation
 
 This example showcases a critical feature for microservices and distributed systems: **automatic context propagation over HTTP**.
 
@@ -13,6 +13,24 @@ When you use an instrumented HTTP client, SyntropyLog automatically:
 
 This means you get fully correlated, detailed logs across service boundaries with zero manual effort.
 
+## Code Structure
+
+### Boilerplate (Reusable)
+This example uses a reusable boilerplate for initialization and shutdown:
+- **`boilerplate.ts`**: Contains `initializeSyntropyLog()` and `gracefulShutdown()` functions
+- **Based on Example 00**: Uses the same initialization pattern as the setup example
+
+### Example Logic
+- **HTTP Client Configuration**: Setting up the Axios adapter
+- **Context Management**: Creating correlation context
+- **Mock Server**: Using Nock to simulate external API
+- **Request Execution**: Making instrumented HTTP calls
+
+### Why This Structure?
+- **Separation of concerns**: Boilerplate vs HTTP-specific logic
+- **Reusability**: Boilerplate can be copied to other examples
+- **Consistency**: Same initialization pattern across all examples
+
 ## Purpose
 
 The goal of this example is to demonstrate:
@@ -23,35 +41,42 @@ The goal of this example is to demonstrate:
 ## How to Run
 
 1.  **Install Dependencies**:
-    From the `examples/40-basic-http-correlation` directory, run:
+    From the `10-basic-http-correlation` directory, run:
     ```bash
-    npm install
+    npm install --no-workspaces
     ```
+    
+    > **⚠️ Important**: Use `--no-workspaces` flag to avoid npm workspace conflicts when installing dependencies in individual examples.
 
-2.  **Build the Example**:
-    This example must be compiled from TypeScript to JavaScript first.
+2.  **Run the Script**:
     ```bash
-    npm run build
-    ```
-
-3.  **Run the Script**:
-    ```bash
-    npm start
+    npm run dev
     ```
 
 ## Expected Output
 
-The log output shows the full lifecycle of the HTTP request. The most important line is from our `nock` server, confirming it received the header. You can also see the `correlationId` automatically included in the context of every log.
+The log output shows the full lifecycle of the HTTP request with automatic correlation. The most important line is from our `nock` server, confirming it received the correlation header. You can see the `correlationId` automatically included in the context of every log.
 
 ```
-11:19:37 [INFO] (main): Context created. Making HTTP call...
-  └─ context={"X-Correlation-ID":"f0115224-0892-4d83-ba46-92416e12f6c5"}
-11:19:37 [INFO] (my-axios-client): Starting HTTP request
-  └─ method=GET url=/users/1 context={"X-Correlation-ID":"f0115224-0892-4d83-ba46-92416e12f6c5"}
-11:19:37 [INFO] (main): Nock mock confirmed: Correlation ID received! { correlationId: 'f011...' }
-  └─ context={"X-Correlation-ID":"f0115224-0892-4d83-ba46-92416e12f6c5"}
-11:19:37 [INFO] (my-axios-client): HTTP response received
-  └─ statusCode=200 url=/users/1 method=GET durationMs=39 context={"X-Correlation-ID":"f011..."}
-11:19:37 [INFO] (main): Request finished.
-  └─ context={"X-Correlation-ID":"f0115224-0892-4d83-ba46-92416e12f6c5"}
+🚀 Initializing SyntropyLog...
+✅ SyntropyLog initialized successfully!
+12:38:35 [INFO] (main): Initialized.
+12:38:35 [INFO] (main): Context created. Making HTTP call...
+  └─ correlationId=2669c5dc-a12e-43b1-94f2-65c7369fd946 X-Correlation-ID=1f909011-9c2f-4198-8c7c-319ee4ba2a10
+12:38:35 [INFO] (syntropylog-main): Starting HTTP request
+  └─ correlationId=2669c5dc-a12e-43b1-94f2-65c7369fd946 X-Correlation-ID=1f909011-9c2f-4198-8c7c-319ee4ba2a10 source=http-manager module=HttpManager method=GET url=/users/1
+12:38:35 [INFO] (main): Nock mock confirmed: Correlation ID received! { correlationId: '2669c5dc-a12e-43b1-94f2-65c7369fd946' }
+  └─ correlationId=2669c5dc-a12e-43b1-94f2-65c7369fd946 X-Correlation-ID=1f909011-9c2f-4198-8c7c-319ee4ba2a10
+12:38:35 [INFO] (syntropylog-main): HTTP response received
+  └─ correlationId=2669c5dc-a12e-43b1-94f2-65c7369fd946 X-Correlation-ID=1f909011-9c2f-4198-8c7c-319ee4ba2a10 source=http-manager module=HttpManager statusCode=undefined url=/users/1 method=GET durationMs=9
+12:38:35 [INFO] (main): Request finished.
+  └─ correlationId=2669c5dc-a12e-43b1-94f2-65c7369fd946 X-Correlation-ID=1f909011-9c2f-4198-8c7c-319ee4ba2a10
+🔄 Shutting down SyntropyLog gracefully...
+✅ SyntropyLog shutdown completed
 ```
+
+### Key Observations:
+- **Correlation ID Propagation**: `correlationId=2669c5dc-a12e-43b1-94f2-65c7369fd946` appears in all logs
+- **Header Injection**: `X-Correlation-ID=1f909011-9c2f-4198-8c7c-319ee4ba2a10` is automatically added to HTTP headers
+- **Performance**: Request completed in just 9ms
+- **Mock Confirmation**: Nock server confirms the correlation header was received
