@@ -1,0 +1,26 @@
+{
+  "name": "13-http-redis-fastify",
+  "version": "1.0.0",
+  "description": "Example of HTTP and Redis correlation with Fastify",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "tsx src/index.ts",
+    "dev": "tsx watch src/index.ts"
+  },
+  "keywords": [],
+  "author": "gabriel70",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@syntropylog/types": "0.1.4 ",
+    "fastify": "^4.24.3",
+    "redis": "^4.6.15",
+    "syntropylog": "file:../../.."
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.2.2"
+  }
+} 
