@@ -1,6 +1,15 @@
 <p align="center">
-  <img src="./assets/syntropyLog-logo.png" alt="SyntropyLog Logo" width="170"/>
+  <img src="https://raw.githubusercontent.com/Syntropysoft/syntropylog-examples-/main/assets/syntropyLog-logo.png" alt="SyntropyLog Logo" width="170"/>
 </p>
+
+<h1 align="center">SyntropyLog</h1>
+
+<p align="center">
+  <strong>The Observability Framework for High-Performance Teams.</strong>
+  <br />
+  Ship resilient, secure, and cost-effective Node.js applications with confidence.
+</p>
+## 📖 Table of Contents
 
 # SyntropyLog Examples
 
@@ -90,6 +99,6 @@ npm run dev
 
 This examples collection is compatible with **SyntropyLog v0.6.1-alpha.0+**. The examples have been tested and verified to work with the latest alpha release.
 
-For the best experience, ensure you're using the same version as specified in each example's `package.json` file.
+For the best experience, ensure you're using the same version as specified in each example's `package.json` file. 
 
 > **⚠️ Alpha Version Notice**: This is an alpha release. Features may change before the stable release. For production use, wait for the stable version. 

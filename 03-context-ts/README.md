@@ -1,3 +1,16 @@
+<p align="center">
+  <img src="https://raw.githubusercontent.com/Syntropysoft/syntropylog-examples-/main/assets/syntropyLog-logo.png" alt="SyntropyLog Logo" width="170"/>
+</p>
+
+<h1 align="center">SyntropyLog</h1>
+
+<p align="center">
+  <strong>The Observability Framework for High-Performance Teams.</strong>
+  <br />
+  Ship resilient, secure, and cost-effective Node.js applications with confidence.
+</p>
+## 📖 Table of Contents
+
 # Example 03: TypeScript Context with Interfaces
 
 This example demonstrates how to use SyntropyLog with TypeScript, leveraging static typing for context management and logging. It shows a complete application with proper initialization, context propagation, and graceful shutdown.
@@ -35,14 +48,14 @@ The goal of this example is to show:
 
 1. **Install Dependencies**:
    From the `03-context-ts` directory, run:
-   ```bash
+    ```bash
    npm install --no-workspaces
-   ```
-   
+    ```
+
    > **⚠️ Important**: Use `--no-workspaces` flag to avoid npm workspace conflicts when installing dependencies in individual examples.
 
 2. **Run the Example**:
-   ```bash
+    ```bash
    npm run dev
    ```
 

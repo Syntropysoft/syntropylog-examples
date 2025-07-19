@@ -44,7 +44,7 @@ async function initializeSyntropyLog(): Promise<void> {
 
     syntropyLog.init(config);
   });
-}
+  }
 
 async function gracefulShutdown(): Promise<void> {
   console.log('🔄 Shutting down SyntropyLog gracefully...');
@@ -72,40 +72,40 @@ function processUser(userId: string): void {
 // Another function that also logs with context
 function validateUser(userId: string): boolean {
   const logger = syntropyLog.getLogger('validation-service');
-  
+    
   logger.info({ userId }, 'Validating user');
-  
+    
   // Simulate validation
   const isValid = userId.startsWith('user-');
   
   if (isValid) {
     logger.info({ userId }, 'User validation passed');
-  } else {
+    } else {
     logger.warn({ userId }, 'User validation failed');
-  }
-  
+    }
+    
   return isValid;
-}
+  }
 
 // Main function that demonstrates context propagation
 async function main(): Promise<void> {
   try {
     // Initialize SyntropyLog
     await initializeSyntropyLog();
-    
+
     const logger = syntropyLog.getLogger('main');
     const contextManager = syntropyLog.getContextManager();
-    
+
     logger.info('Starting context propagation example...');
-    
+
     // Simulate processing multiple users with different correlation IDs
     const users = ['user-001', 'user-002', 'user-003'];
-    
+
     for (const userId of users) {
       const correlationId = `corr-${userId}-${Date.now()}`;
       
       logger.info({ correlationId, userId }, 'Starting user processing session');
-      
+
       // Create a new context for each user
       await contextManager.run(async () => {
         // Set correlation ID in context
@@ -114,26 +114,26 @@ async function main(): Promise<void> {
         // Add additional context data
         contextManager.set('sessionId', `session-${Date.now()}`);
         contextManager.set('timestamp', new Date().toISOString());
-        
+
         // Process user - context is automatically propagated
         processUser(userId);
         
         // Validate user - context is automatically propagated
         const isValid = validateUser(userId);
-        
+          
         if (isValid) {
           logger.info({ userId }, 'User processing completed successfully');
         } else {
           logger.warn({ userId }, 'User processing completed with warnings');
         }
       });
-      
+
       // Small delay between users
       await new Promise(resolve => setTimeout(resolve, 100));
     }
-    
+
     logger.info('All users processed. Example completed.');
-    
+
   } catch (error) {
     console.error('Example error:', error);
   } finally {

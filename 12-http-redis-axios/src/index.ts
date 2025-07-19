@@ -1,80 +1,64 @@
 // =================================================================
-//  ARCHIVO 3 (Corregido): src/index.ts
-//  RESPONSABILIDAD: Orquestar la aplicación. Ya no sabe cómo se
-//  crea el adaptador, simplemente lo importa y lo usa.
+//  index.ts - Product Service with Redis Cache Example
+//  RESPONSIBILITY: Orchestrate ProductDataService and ProductServer
 // =================================================================
 
-import { randomUUID } from 'node:crypto';
-import { syntropyLog, ClassicConsoleTransport } from 'syntropylog';
-
-// --- ¡LA MAGIA! ---
-// Importamos la instancia singleton del adaptador desde nuestro archivo centralizado.
-import { myRedisBusAdapter } from './adapters/redis-client';
-
-const CHANNEL_NAME = 'syntropylog-test-channel';
+import { syntropyLog } from 'syntropylog';
+import { initializeSyntropyLog, gracefulShutdown } from './boilerplate';
+import { ProductDataService } from './ProductDataService';
+import { ProductServer } from './ProductServer';
 
 async function main() {
-  console.log('--- Running Redis Broker Instrumentation Example ---');
+  console.log('--- Running Product Service with Redis Cache Example ---');
 
-  // La configuración ahora es mucho más limpia y clara.
-  syntropyLog.init({
-    logger: {
-      level: 'info',
-      serviceName: 'redis-broker-example',
-      transports: [new ClassicConsoleTransport()],
-      serializerTimeoutMs: 100,
-    },
-    context: {
-      correlationIdHeader: 'X-Correlation-ID',
-    },
-    brokers: {
-      instances: [
-        {
-          instanceName: 'my-redis-bus',
-          adapter: myRedisBusAdapter, // Usamos la instancia importada
-        },
-      ],
-    },
-  });
+  // Initialize SyntropyLog with boilerplate
+  await initializeSyntropyLog();
 
-  const broker = syntropyLog.getBroker('my-redis-bus');
-  const contextManager = syntropyLog.getContextManager();
+  const logger = syntropyLog.getLogger('main');
 
   try {
-    await broker.connect();
+    logger.info('🚀 Starting Product Service with Redis cache...');
+    
+    // Get Redis instance
+    const redis = await syntropyLog.getRedis('product-cache');
+    
+    // Test Redis connection
+    await redis.ping('test');
+    logger.info('✅ Redis connection verified');
 
-    await broker.subscribe(CHANNEL_NAME, async (message, controls) => {
-      const logger = syntropyLog.getLogger('consumer');
-      logger.info(
-        { payload: message.payload.toString() },
-        'Message processed by consumer.'
-      );
-      await controls.ack(); // In Redis PUB/SUB, this does nothing but is kept for interface compliance
+    // Create data service
+    const dataService = new ProductDataService(redis, logger);
+    logger.info('✅ ProductDataService created');
+
+    // Create and start HTTP server
+    const server = new ProductServer(dataService, logger);
+    server.start(3000);
+
+    logger.info('✅ Product Service started successfully!');
+    logger.info('📋 Available endpoints:');
+    logger.info('   GET  http://localhost:3000/product/:id  - Get product (with cache)');
+    logger.info('   POST http://localhost:3000/product/     - Create product');
+    logger.info('   GET  http://localhost:3000/health       - Health check');
+
+    // Keep the server running
+    process.on('SIGINT', async () => {
+      logger.info('🛑 Shutting down Product Service...');
+      server.stop();
+      await gracefulShutdown();
+      process.exit(0);
     });
 
-    await contextManager.run(async () => {
-      const correlationId = randomUUID();
-      contextManager.set(
-        contextManager.getCorrelationIdHeaderName(),
-        correlationId
-      );
-
-      const logger = syntropyLog.getLogger('producer');
-      logger.info('Producer context created. Publishing message...');
-
-      await broker.publish(CHANNEL_NAME, {
-        payload: Buffer.from('Hello, distributed world!'),
-      });
-
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-    });
   } catch (error) {
-    console.error('An error occurred:', error);
-  } finally {
-    await broker.disconnect();
-    await syntropyLog.shutdown();
-    console.log('\n✅ Redis broker example finished.');
+    logger.error('❌ Error starting Product Service', { 
+      error: error instanceof Error ? error.message : String(error),
+      ...(error instanceof Error && error.stack ? { stack: error.stack } : {})
+    });
+    await gracefulShutdown();
+    process.exit(1);
   }
 }
 
-main(); 
+main().catch((error) => {
+  console.error('❌ Fatal error:', error);
+  process.exit(1);
+}); 

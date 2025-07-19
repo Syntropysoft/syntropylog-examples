@@ -3,8 +3,8 @@ import {
   IBrokerAdapter,
   BrokerMessage,
   MessageHandler,
-  MessageControls,
-} from 'syntropylog/brokers';
+  MessageLifecycleControls,
+} from '@syntropylog/types';
 
 export class RedisAdapter implements IBrokerAdapter {
   private publisher: RedisClientType;
@@ -58,7 +58,7 @@ export class RedisAdapter implements IBrokerAdapter {
           headers: parsedMessage.headers,
         };
 
-        const controls: MessageControls = {
+        const controls: MessageLifecycleControls = {
           ack: async () => { /* PUB/SUB doesn't require ACK */ },
           nack: async () => { /* PUB/SUB doesn't require NACK */ },
         };

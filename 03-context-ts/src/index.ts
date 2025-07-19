@@ -46,12 +46,12 @@ async function initializeSyntropyLog(): Promise<void> {
 
     // Initialize with configuration
     const config: SyntropyLogConfig = {
-      logger: {
-        level: 'info',
+  logger: {
+    level: 'info',
         serviceName: 'example-03-typescript',
         transports: [new ClassicConsoleTransport()],
-        serializerTimeoutMs: 100,
-      },
+    serializerTimeoutMs: 100,
+  },
       context: {
         correlationIdHeader: 'X-Correlation-ID',
       },
@@ -131,7 +131,7 @@ async function main(): Promise<void> {
     // Initialize SyntropyLog
     await initializeSyntropyLog();
     
-    const logger = syntropyLog.getLogger('main');
+const logger = syntropyLog.getLogger('main');
     const contextManager = syntropyLog.getContextManager();
     
     logger.info('Starting TypeScript context propagation example...');
@@ -151,7 +151,7 @@ async function main(): Promise<void> {
         orderId: order.orderId,
         correlationId
       });
-      
+
       // Create a new context for each order
       await contextManager.run(async () => {
         // Set correlation ID in context
