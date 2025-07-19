@@ -88,6 +88,8 @@ npm run dev
 
 ## Version Information
 
-This examples collection is compatible with **SyntropyLog v0.5.8+**. The examples have been tested and verified to work with the latest stable release.
+This examples collection is compatible with **SyntropyLog v0.6.1-alpha.0+**. The examples have been tested and verified to work with the latest alpha release.
 
-For the best experience, ensure you're using the same version as specified in each example's `package.json` file. 
+For the best experience, ensure you're using the same version as specified in each example's `package.json` file.
+
+> **⚠️ Alpha Version Notice**: This is an alpha release. Features may change before the stable release. For production use, wait for the stable version. 

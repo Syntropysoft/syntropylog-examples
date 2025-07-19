@@ -10,7 +10,7 @@
     "dev": "tsc --watch"
   },
   "dependencies": {
-    "syntropylog": "^0.5.8"
+    "syntropylog": "0.6.1-alpha.0"
   },
   "devDependencies": {
     "typescript": "^5.3.3"

@@ -4,13 +4,19 @@
   "description": "An example of using SyntropyLog with TypeScript.",
   "main": "src/index.ts",
   "scripts": {
-    "start": "ts-node-esm src/index.ts"
+    "start": "tsx src/index.ts",
+    "dev": "tsx src/index.ts"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "syntropylog",
+    "typescript",
+    "context",
+    "logging"
+  ],
+  "author": "Gabriel Alejandro Gomez",
+  "license": "MIT",
   "dependencies": {
-    "syntropylog": "file:../.."
+    "syntropylog": "0.6.1-alpha.0"
   },
   "devDependencies": {
     "ts-node": "^10.9.2",

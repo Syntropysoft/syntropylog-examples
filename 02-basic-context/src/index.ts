@@ -1,221 +1,159 @@
-import { randomUUID } from 'crypto';
-import { syntropyLog, initializeSyntropyLog, shutdownSyntropyLog, setupGracefulShutdown } from '../../shared/src/index.js';
+import { syntropyLog, SyntropyLogConfig, ClassicConsoleTransport } from 'syntropyLog';
 
-// Setup graceful shutdown
-setupGracefulShutdown();
+/**
+ * Example 02: Basic Context and Correlation
+ * 
+ * This example demonstrates the fundamental concept of automatic context propagation
+ * for tracing operations across function calls.
+ * 
+ * Key Concepts:
+ * - Context propagation across function calls
+ * - Correlation IDs for request tracing
+ * - Automatic context inheritance
+ * - Structured logging with context
+ */
 
-// Types for our domain
-interface Order {
-  productId: string;
-  quantity: number;
-  customerId: string;
-}
-
-interface InventoryItem {
-  id: string;
-  stock: number;
-  price: number;
-}
-
-// This simulates a service responsible for inventory management.
-const inventoryService = {
-  checkStock: (itemId: string): InventoryItem => {
-    // No need to pass the logger around. We can get it from the singleton.
-    const stockLogger = syntropyLog.getLogger('inventory-service');
+// Complete boilerplate for SyntropyLog initialization and shutdown
+async function initializeSyntropyLog(): Promise<void> {
+  console.log('🚀 Initializing SyntropyLog...');
+  
+  return new Promise<void>((resolve, reject) => {
+    // Set up event listeners before initialization
+    syntropyLog.on('ready', () => {
+      console.log('✅ SyntropyLog initialized successfully!');
+      resolve();
+    });
     
-    stockLogger.info({ itemId }, 'Checking inventory...');
-    
-    // Simulate some business logic
-    const inventoryItem: InventoryItem = {
-      id: itemId,
-      stock: Math.floor(Math.random() * 100) + 1,
-      price: Math.floor(Math.random() * 1000) + 100
+    syntropyLog.on('error', (err) => {
+      console.error('❌ SyntropyLog initialization failed:', err);
+      reject(err);
+    });
+
+    // Initialize with configuration
+    const config: SyntropyLogConfig = {
+      logger: {
+        level: 'info',
+        serviceName: 'example-02-context',
+        transports: [new ClassicConsoleTransport()],
+        serializerTimeoutMs: 100,
+      },
+      context: {
+        correlationIdHeader: 'X-Correlation-ID',
+      },
     };
-    
-    stockLogger.info({ 
-      itemId, 
-      stock: inventoryItem.stock, 
-      price: inventoryItem.price 
-    }, 'Inventory check completed');
-    
-    return inventoryItem;
-  },
 
-  reserveStock: (itemId: string, quantity: number): boolean => {
-    const stockLogger = syntropyLog.getLogger('inventory-service');
-    
-    stockLogger.info({ itemId, quantity }, 'Reserving stock...');
-    
-    // Simulate stock reservation logic
-    const success = Math.random() > 0.1; // 90% success rate
-    
-    if (success) {
-      stockLogger.info({ itemId, quantity }, 'Stock reserved successfully');
-    } else {
-      stockLogger.warn({ itemId, quantity }, 'Failed to reserve stock - insufficient inventory');
-    }
-    
-    return success;
-  }
-};
+    syntropyLog.init(config);
+  });
+}
 
-// This simulates a service responsible for handling orders.
-const orderService = {
-  process: async (order: Order): Promise<boolean> => {
-    const orderLogger = syntropyLog.getLogger('order-service');
-    
-    orderLogger.info({ 
-      orderId: order.productId, 
-      quantity: order.quantity,
-      customerId: order.customerId 
-    }, 'Processing order...');
-    
-    try {
-      // Check inventory
-      const inventoryItem = inventoryService.checkStock(order.productId);
-      
-      if (inventoryItem.stock < order.quantity) {
-        orderLogger.warn({ 
-          orderId: order.productId, 
-          requested: order.quantity, 
-          available: inventoryItem.stock 
-        }, 'Insufficient stock for order');
-        return false;
-      }
-      
-      // Reserve stock
-      const reserved = inventoryService.reserveStock(order.productId, order.quantity);
-      
-      if (!reserved) {
-        orderLogger.error({ 
-          orderId: order.productId, 
-          quantity: order.quantity 
-        }, 'Failed to reserve stock');
-        return false;
-      }
-      
-      // Simulate order processing
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      orderLogger.info({ 
-        orderId: order.productId, 
-        quantity: order.quantity,
-        totalPrice: inventoryItem.price * order.quantity 
-      }, 'Order processed successfully');
-      
-      return true;
-      
-    } catch (error) {
-      orderLogger.error({ 
-        orderId: order.productId, 
-        error: error instanceof Error ? error.message : 'Unknown error' 
-      }, 'Error processing order');
-      return false;
-    }
-  }
-};
-
-// This simulates a payment service
-const paymentService = {
-  processPayment: async (amount: number, customerId: string): Promise<boolean> => {
-    const paymentLogger = syntropyLog.getLogger('payment-service');
-    
-    paymentLogger.info({ amount, customerId }, 'Processing payment...');
-    
-    // Simulate payment processing
-    await new Promise(resolve => setTimeout(resolve, 200));
-    
-    const success = Math.random() > 0.05; // 95% success rate
-    
-    if (success) {
-      paymentLogger.info({ amount, customerId }, 'Payment processed successfully');
-    } else {
-      paymentLogger.error({ amount, customerId }, 'Payment failed');
-    }
-    
-    return success;
-  }
-};
-
-// Main application logic
-async function main() {
+async function gracefulShutdown(): Promise<void> {
+  console.log('🔄 Shutting down SyntropyLog gracefully...');
+  
   try {
-    // 1. Initialize SyntropyLog
+    await syntropyLog.shutdown();
+    console.log('✅ SyntropyLog shutdown completed');
+  } catch (err) {
+    console.error('❌ Error during shutdown:', err);
+  }
+}
+
+// Simple function that logs with context
+function processUser(userId: string): void {
+  const logger = syntropyLog.getLogger('user-service');
+  
+  logger.info({ userId }, 'Processing user data');
+  
+  // Simulate some work
+  const userData = { id: userId, name: 'John Doe', email: 'john@example.com' };
+  
+  logger.info({ userId, userData }, 'User data processed successfully');
+}
+
+// Another function that also logs with context
+function validateUser(userId: string): boolean {
+  const logger = syntropyLog.getLogger('validation-service');
+  
+  logger.info({ userId }, 'Validating user');
+  
+  // Simulate validation
+  const isValid = userId.startsWith('user-');
+  
+  if (isValid) {
+    logger.info({ userId }, 'User validation passed');
+  } else {
+    logger.warn({ userId }, 'User validation failed');
+  }
+  
+  return isValid;
+}
+
+// Main function that demonstrates context propagation
+async function main(): Promise<void> {
+  try {
+    // Initialize SyntropyLog
     await initializeSyntropyLog();
-
-    const mainLogger = syntropyLog.getLogger('main');
+    
+    const logger = syntropyLog.getLogger('main');
     const contextManager = syntropyLog.getContextManager();
-
-    mainLogger.info('Starting e-commerce application...');
-
-    // 2. Simulate multiple incoming requests with different correlation IDs
-    const orders: Order[] = [
-      { productId: 'PROD-001', quantity: 2, customerId: 'CUST-001' },
-      { productId: 'PROD-002', quantity: 1, customerId: 'CUST-002' },
-      { productId: 'PROD-003', quantity: 3, customerId: 'CUST-003' }
-    ];
-
-    // Process each order in its own context
-    for (const order of orders) {
-      const correlationId = randomUUID();
+    
+    logger.info('Starting context propagation example...');
+    
+    // Simulate processing multiple users with different correlation IDs
+    const users = ['user-001', 'user-002', 'user-003'];
+    
+    for (const userId of users) {
+      const correlationId = `corr-${userId}-${Date.now()}`;
       
-      mainLogger.info({ 
-        correlationId, 
-        customerId: order.customerId 
-      }, 'Starting new order processing session');
-
-      // 3. This is the magic! Create an async context for each order
+      logger.info({ correlationId, userId }, 'Starting user processing session');
+      
+      // Create a new context for each user
       await contextManager.run(async () => {
-        // Set correlation ID in the context
-        contextManager.set(contextManager.getCorrelationIdHeaderName(), correlationId);
+        // Set correlation ID in context
+        contextManager.set('X-Correlation-ID', correlationId);
         
         // Add additional context data
-        contextManager.set('customerId', order.customerId);
-        contextManager.set('sessionId', randomUUID());
-
-        // Process the order
-        const orderSuccess = await orderService.process(order);
+        contextManager.set('sessionId', `session-${Date.now()}`);
+        contextManager.set('timestamp', new Date().toISOString());
         
-        if (orderSuccess) {
-          // Simulate payment processing
-          const inventoryItem = inventoryService.checkStock(order.productId);
-          const paymentSuccess = await paymentService.processPayment(
-            inventoryItem.price * order.quantity, 
-            order.customerId
-          );
-          
-          if (paymentSuccess) {
-            mainLogger.info({ 
-              orderId: order.productId, 
-              customerId: order.customerId 
-            }, 'Order and payment completed successfully');
-          } else {
-            mainLogger.error({ 
-              orderId: order.productId, 
-              customerId: order.customerId 
-            }, 'Order completed but payment failed');
-          }
+        // Process user - context is automatically propagated
+        processUser(userId);
+        
+        // Validate user - context is automatically propagated
+        const isValid = validateUser(userId);
+        
+        if (isValid) {
+          logger.info({ userId }, 'User processing completed successfully');
         } else {
-          mainLogger.warn({ 
-            orderId: order.productId, 
-            customerId: order.customerId 
-          }, 'Order processing failed');
+          logger.warn({ userId }, 'User processing completed with warnings');
         }
       });
-
-      // Small delay between orders
-      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Small delay between users
+      await new Promise(resolve => setTimeout(resolve, 100));
     }
-
-    mainLogger.info('All orders processed. Application finished.');
-
+    
+    logger.info('All users processed. Example completed.');
+    
   } catch (error) {
-    console.error('Application error:', error);
+    console.error('Example error:', error);
   } finally {
-    // 4. Always shutdown SyntropyLog to ensure all logs are flushed
-    await shutdownSyntropyLog();
+    // Always shutdown SyntropyLog
+    await gracefulShutdown();
   }
 }
 
-// Run the application
+// Handle process termination signals
+process.on('SIGINT', async () => {
+  console.log('\n🛑 Received SIGINT, shutting down...');
+  await gracefulShutdown();
+  process.exit(0);
+});
+
+process.on('SIGTERM', async () => {
+  console.log('\n🛑 Received SIGTERM, shutting down...');
+  await gracefulShutdown();
+  process.exit(0);
+});
+
+// Run the example
 main().catch(console.error); 

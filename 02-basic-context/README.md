@@ -34,13 +34,16 @@ The goal of this example is to show how to:
 ## 🚀 How to Run
 
 1. **Install Dependencies**:
+   From the `02-basic-context` directory, run:
    ```bash
-   npm install
+   npm install --no-workspaces
    ```
+   
+   > **⚠️ Important**: Use `--no-workspaces` flag to avoid npm workspace conflicts when installing dependencies in individual examples.
 
 2. **Run the Example**:
    ```bash
-   npm start
+   npm run dev
    ```
 
 ## 📊 Expected Output
@@ -128,13 +131,15 @@ await syntropyLog.init({
   logger: {
     level: 'info',
     serviceName: 'ecommerce-app',
-    transports: [new CompactConsoleTransport()],
+    transports: [new ClassicConsoleTransport()],
   },
   context: {
     correlationIdHeader: 'X-Correlation-ID'
   }
 });
 ```
+
+> **💡 Note**: This example uses `ClassicConsoleTransport` for familiar console output format, making it easier for developers coming from other logging frameworks.
 
 ## 🎯 Next Steps
 
