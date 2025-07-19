@@ -23,14 +23,14 @@ Here is a list of the examples organized by category. The numbering follows a lo
 
 ### Foundation (00-09)
 - **`00-setup-initialization`**: ✅ **Complete** - Learn how to properly initialize SyntropyLog with event handling and graceful shutdown.
-- **`01-hello-world`**: ✅ **Complete** - The perfect starting point for logging. Learn basic logging concepts in under 5 minutes. **Updated for v0.5.8**.
+- **`01-hello-world`**: ✅ **Complete** - The perfect starting point for logging. Learn basic logging concepts in under 5 minutes.
 - **`02-basic-context`**: ✅ **Complete** - Learn the fundamental concept of automatic context propagation for tracing operations across function calls.
+- **`03-context-ts`**: ✅ **Complete** - TypeScript integration with interfaces for context management and correlation.
 
 ### HTTP Clients & Redis (10-19)
-- **`10-basic-http-correlation`**: 🚧 **In Progress** - Discover how to use a built-in adapter (`axios`) to automatically propagate correlation IDs over HTTP calls.
-- **`11-custom-http-adapter`**: 🚧 **In Progress** - A more advanced example showing how to build your own adapter for a client that isn't supported out-of-the-box (`got`).
-- **`12-redis-correlation`**: 🚧 **In Progress** - Learn how to integrate Redis clients with automatic correlation and context propagation.
-- **`13-http-redis-full-stack`**: 🚧 **In Progress** - Advanced example showing HTTP + Redis correlation patterns in a full-stack application.
+- **`10-basic-http-correlation`**: ✅ **Complete** - Discover how to use a built-in adapter (`axios`) to automatically propagate correlation IDs over HTTP calls.
+- **`11-custom-adapter`**: ✅ **Complete** - A more advanced example showing how to build your own adapter for a client that isn't supported out-of-the-box (`fetch`).
+- **`12-http-redis-axios`**: ✅ **Complete** - Complete system architecture with Redis caching, HTTP clients, and Express server. Production-ready patterns.
 
 ### Message Brokers (20-29)
 - **`20-basic-kafka-correlation`**: 🚧 **In Progress** - Explore how to integrate SyntropyLog with messaging systems like Kafka.
@@ -68,12 +68,12 @@ npm run dev
 - **00-setup-initialization**: Application setup and initialization
 - **01-hello-world**: Basic logging concepts
 - **02-basic-context**: Context management and correlation
+- **03-context-ts**: TypeScript integration with interfaces
 
 ### HTTP Clients & Redis (10-19)
 - **10-basic-http-correlation**: HTTP request correlation with built-in adapters
-- **11-custom-http-adapter**: Custom HTTP client adapters
-- **12-redis-correlation**: Redis client integration and correlation
-- **13-http-redis-full-stack**: Combined HTTP + Redis patterns
+- **11-custom-adapter**: Custom HTTP client adapters (fetch)
+- **12-http-redis-axios**: Complete system architecture with Redis + HTTP + Express
 
 ### Message Brokers (20-29)
 - **20-basic-kafka-correlation**: Kafka message broker integration
@@ -94,6 +94,17 @@ npm run dev
 - **43-diagnostics-doctor**: Configuration validation
 - **44-private-package-registry**: Package management
 - **45-github-packages-consumer**: GitHub packages integration
+
+## Current Status
+
+### ✅ Completed Examples (7/45)
+- **Foundation**: 00, 01, 02, 03
+- **HTTP & Redis**: 10, 11, 12
+
+### 🚧 In Progress Examples (38/45)
+- **Message Brokers**: 20, 21, 22, 23
+- **Backend Frameworks**: 30, 31, 32, 33
+- **Advanced Patterns**: 40, 41, 42, 43, 44, 45
 
 ## Version Information
 
