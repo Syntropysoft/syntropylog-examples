@@ -83,34 +83,34 @@ Here is a list of the examples organized by category. The numbering follows a lo
 ## 📋 **PLANNED EXAMPLES (54-73)**
 
 ### **🔒 Security & Compliance Examples (54-57)**
-- **`54-security-credentials-validation`**: Reglas para validar credenciales vacías en producción
-- **`55-compliance-soc2-gdpr`**: Reglas de cumplimiento SOC2 y GDPR
-- **`56-corporate-security-rules`**: Reglas corporativas de seguridad personalizadas
-- **`57-secrets-management`**: Integración con sistemas de gestión de secretos
+- **`54-security-credentials-validation`**: Rules to validate empty credentials in production
+- **`55-compliance-soc2-gdpr`**: SOC2 and GDPR compliance rules
+- **`56-corporate-security-rules`**: Custom corporate security rules
+- **`57-secrets-management`**: Integration with secrets management systems
 
 ### **🏢 Enterprise & Corporate Examples (58-61)**
-- **`58-enterprise-audit-plan`**: Plan de auditoría empresarial completo
-- **`59-team-consistency-rules`**: Reglas para consistencia entre equipos
-- **`60-custom-validation-rules`**: Creación de reglas de validación personalizadas
-- **`61-multi-environment-audit`**: Auditoría de múltiples entornos
+- **`58-enterprise-audit-plan`**: Complete enterprise audit plan
+- **`59-team-consistency-rules`**: Rules for consistency across teams
+- **`60-custom-validation-rules`**: Creating custom validation rules
+- **`61-multi-environment-audit`**: Multi-environment auditing
 
 ### **🛡️ DevSecOps Integration Examples (62-65)**
-- **`62-pipeline-security-gates`**: Gates de seguridad en pipelines CI/CD
-- **`63-security-team-integration`**: Integración con equipos de seguridad
-- **`64-compliance-reporting`**: Generación de reportes de cumplimiento
-- **`65-audit-trail-system`**: Sistema de trazabilidad de auditorías
+- **`62-pipeline-security-gates`**: Security gates in CI/CD pipelines
+- **`63-security-team-integration`**: Integration with security teams
+- **`64-compliance-reporting`**: Compliance report generation
+- **`65-audit-trail-system`**: Audit trail system
 
 ### **📊 Advanced Analysis Examples (66-69)**
-- **`66-performance-validation`**: Reglas de validación de performance
-- **`67-architecture-compliance`**: Cumplimiento de arquitectura
-- **`68-best-practices-enforcement`**: Aplicación de mejores prácticas
-- **`69-risk-assessment`**: Evaluación de riesgos automatizada
+- **`66-performance-validation`**: Performance validation rules
+- **`67-architecture-compliance`**: Architecture compliance
+- **`68-best-practices-enforcement`**: Best practices enforcement
+- **`69-risk-assessment`**: Automated risk assessment
 
 ### **🔧 Tooling & Automation Examples (70-73)**
-- **`70-automated-fixes`**: Aplicación automática de correcciones
-- **`71-custom-reporting`**: Reportes personalizados
-- **`72-integration-examples`**: Integración con herramientas externas
-- **`73-monitoring-integration`**: Integración con sistemas de monitoreo
+- **`70-automated-fixes`**: Automated fixes application
+- **`71-custom-reporting`**: Custom reporting
+- **`72-integration-examples`**: Integration with external tools
+- **`73-monitoring-integration`**: Integration with monitoring systems
 
 ## 🧪 **Testing Status**
 
