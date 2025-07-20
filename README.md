@@ -80,6 +80,38 @@ Here is a list of the examples organized by category. The numbering follows a lo
 - **`52-diagnostics-performance`**: 🚧 **In Progress** - Comprehensive performance analysis and optimization with bottleneck detection, load testing, and automatic tuning recommendations.
 - **`53-diagnostics-security`**: 🚧 **In Progress** - Security analysis and compliance validation with vulnerability detection, SOC2/GDPR/HIPAA compliance, and security hardening recommendations.
 
+## 📋 **PLANNED EXAMPLES (54-73)**
+
+### **🔒 Security & Compliance Examples (54-57)**
+- **`54-security-credentials-validation`**: Reglas para validar credenciales vacías en producción
+- **`55-compliance-soc2-gdpr`**: Reglas de cumplimiento SOC2 y GDPR
+- **`56-corporate-security-rules`**: Reglas corporativas de seguridad personalizadas
+- **`57-secrets-management`**: Integración con sistemas de gestión de secretos
+
+### **🏢 Enterprise & Corporate Examples (58-61)**
+- **`58-enterprise-audit-plan`**: Plan de auditoría empresarial completo
+- **`59-team-consistency-rules`**: Reglas para consistencia entre equipos
+- **`60-custom-validation-rules`**: Creación de reglas de validación personalizadas
+- **`61-multi-environment-audit`**: Auditoría de múltiples entornos
+
+### **🛡️ DevSecOps Integration Examples (62-65)**
+- **`62-pipeline-security-gates`**: Gates de seguridad en pipelines CI/CD
+- **`63-security-team-integration`**: Integración con equipos de seguridad
+- **`64-compliance-reporting`**: Generación de reportes de cumplimiento
+- **`65-audit-trail-system`**: Sistema de trazabilidad de auditorías
+
+### **📊 Advanced Analysis Examples (66-69)**
+- **`66-performance-validation`**: Reglas de validación de performance
+- **`67-architecture-compliance`**: Cumplimiento de arquitectura
+- **`68-best-practices-enforcement`**: Aplicación de mejores prácticas
+- **`69-risk-assessment`**: Evaluación de riesgos automatizada
+
+### **🔧 Tooling & Automation Examples (70-73)**
+- **`70-automated-fixes`**: Aplicación automática de correcciones
+- **`71-custom-reporting`**: Reportes personalizados
+- **`72-integration-examples`**: Integración con herramientas externas
+- **`73-monitoring-integration`**: Integración con sistemas de monitoreo
+
 ## 🧪 **Testing Status**
 
 ### ✅ **Fully Tested (No External Dependencies)**
