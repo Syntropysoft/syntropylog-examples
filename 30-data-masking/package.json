@@ -14,10 +14,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "syntropylog": "file:../.."
+    "syntropylog": "^0.6.4-alpha.0"
   },
   "devDependencies": {
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
   }
-} 
+}

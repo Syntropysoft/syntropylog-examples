@@ -122,4 +122,39 @@ export class CustomFetchAdapter implements IHttpClientAdapter {
       body: data,
     });
   }
+
+  /**
+   * Helper method to create a PUT request
+   */
+  async put<T>(url: string, data?: unknown, headers?: Record<string, string | number | string[]>): Promise<AdapterHttpResponse<T>> {
+    return this.request<T>({
+      method: 'PUT',
+      url,
+      headers: headers || {},
+      body: data,
+    });
+  }
+
+  /**
+   * Helper method to create a DELETE request
+   */
+  async delete<T>(url: string, headers?: Record<string, string | number | string[]>): Promise<AdapterHttpResponse<T>> {
+    return this.request<T>({
+      method: 'DELETE',
+      url,
+      headers: headers || {},
+    });
+  }
+
+  /**
+   * Helper method to create a PATCH request
+   */
+  async patch<T>(url: string, data?: unknown, headers?: Record<string, string | number | string[]>): Promise<AdapterHttpResponse<T>> {
+    return this.request<T>({
+      method: 'PATCH',
+      url,
+      headers: headers || {},
+      body: data,
+    });
+  }
 } 

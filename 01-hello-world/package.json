@@ -14,8 +14,8 @@
     "node": ">=18.0.0"
   },
   "dependencies": {
-    "@syntropylog/types": "^0.1.4",
-    "syntropylog": "0.6.1-alpha.0"
+    "@syntropylog/types": "^0.1.5",
+    "syntropylog": "^0.6.4-alpha.0"
   },
   "devDependencies": {
     "tsx": "^4.0.0",

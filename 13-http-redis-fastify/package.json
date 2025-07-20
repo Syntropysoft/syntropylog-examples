@@ -13,14 +13,14 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "@syntropylog/types": "0.1.4 ",
+    "@syntropylog/types": "^0.1.5",
     "fastify": "^4.24.3",
     "redis": "^4.6.15",
-    "syntropylog": "file:../../.."
+    "syntropylog": "^0.6.4-alpha.0"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",
     "tsx": "^4.7.0",
     "typescript": "^5.2.2"
   }
-} 
+}

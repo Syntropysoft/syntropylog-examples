@@ -1,0 +1,3 @@
+syntropylog=0.6.4-alpha.0
+@syntropylog/adapters=0.1.22
+@syntropylog/types=0.1.5 
