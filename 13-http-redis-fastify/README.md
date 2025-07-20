@@ -146,7 +146,7 @@ export const syntropyConfig: SyntropyLogConfig = {
   context: {
     correlationIdHeader: 'X-Correlation-ID',
   },
-  redis: {
+redis: {
     instances: [
       {
         instanceName: 'product-cache',

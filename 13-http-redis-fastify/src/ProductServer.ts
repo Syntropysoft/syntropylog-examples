@@ -132,7 +132,7 @@ export class ProductServer {
   async stop(): Promise<void> {
     try {
       await this.app.close();
-      this.logger.info('Product Server stopped');
+        this.logger.info('Product Server stopped');
     } catch (error) {
       this.logger.error('Error stopping server', { error });
     }
