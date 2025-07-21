@@ -1,4 +1,16 @@
-# 70 - Full-Stack Correlation with a Broker
+<p align="center">
+  <img src="https://raw.githubusercontent.com/Syntropysoft/syntropylog-examples-/main/assets/syntropyLog-logo.png" alt="SyntropyLog Logo" width="170"/>
+</p>
+
+<h1 align="center">SyntropyLog</h1>
+
+<p align="center">
+  <strong>The Observability Framework for High-Performance Teams.</strong>
+  <br />
+  Ship resilient, secure, and cost-effective Node.js applications with confidence.
+</p>
+
+# Example 23: Full-Stack Correlation with Kafka
 
 This example demonstrates one of the most powerful features of `syntropylog`: **end-to-end context correlation** across different services communicating via a message broker (in this case, Kafka).
 
@@ -6,47 +18,84 @@ This example demonstrates one of the most powerful features of `syntropylog`: **
 
 This example simulates a producer and a consumer running in the same process but architected as if they were separate microservices. The key is how `syntropylog` seamlessly propagates the `X-Correlation-ID` from the producer's context to the consumer's context through the message headers.
 
-The project follows a clean, decoupled structure:
+The project follows a clean, modular structure:
 
-1.  **`src/adapters/KafkaAdapter.ts`**: Defines a reusable `KafkaAdapter` class that implements the `IBrokerAdapter` interface. It's responsible for the low-level logic of interacting with Kafka but knows nothing about how it's configured or instantiated.
+1. **`src/config.ts`**: Contains the SyntropyLog configuration using official framework types. Defines the Kafka adapter configuration and logging settings.
 
-2.  **`src/adapters/kafka-client.ts`**: Acts as a dependency injection container. It creates a single, shared instance (singleton) of the `kafkajs` client and uses it to instantiate and export a singleton of our `KafkaAdapter`. This ensures the entire application uses the same connection pool and broker client.
+2. **`src/boilerplate.ts`**: Handles SyntropyLog initialization and graceful shutdown. Provides reusable lifecycle management functions.
 
-3.  **`src/index.ts`**: The main application entry point. It orchestrates the example:
-    *   It imports the pre-configured `myKafkaBusAdapter` singleton.
-    *   It initializes `syntropylog` with this adapter.
-    *   It creates a producer context, sets a correlation ID, and publishes a message.
-    *   It runs a consumer that subscribes to the topic and processes the message, demonstrating that the correlation ID is preserved.
+3. **`src/index.ts`**: The main application entry point. It orchestrates the example:
+   * Initializes SyntropyLog using the boilerplate
+   * Connects to Kafka broker
+   * Sets up a consumer that subscribes to the topic
+   * Creates a producer context with correlation ID
+   * Publishes a message and demonstrates correlation preservation
 
 ## Prerequisites
 
-Before running this example, ensure the Docker services (including Kafka) are running. From the project's root directory, run:
+Before running this example, please ensure you have the following installed:
+- Node.js (v18 or higher is recommended)
+- Docker and Docker Compose
+
+## How to Run
+
+### Step 1: Start Kafka Infrastructure
+
+First, start the required Kafka infrastructure:
 
 ```bash
-# From the project root
+# Navigate to the example directory
+cd examples/23-kafka-full-stack
+
+# Start Kafka and Zookeeper
 docker compose up -d
 ```
 
-## Running the Example
+Wait a few seconds for Kafka to be ready.
 
-This example can be easily verified using the master script `run-example.sh` from the project's root directory.
+### Step 2: Run the Example
+
+Once Kafka is running, install dependencies and run the example:
 
 ```bash
-# From the project root
-sh ./run-example.sh examples/70-full-stack-correlation
+# Install dependencies
+npm install
+
+# Run the example
+npm run dev
+```
+
+### Alternative: Start Everything at Once
+
+If you prefer to start everything together:
+
+```bash
+docker compose up -d && npm install && npm run dev
 ```
 
 ## Expected Output
 
-When you run the script, you will see a series of logs. The most important thing to observe is that the `X-Correlation-ID` generated in the "producer" context is the same one that appears in the "consumer" logs, proving that the context was successfully propagated through Kafka.
+When you run the example, you will see a series of logs demonstrating the correlation flow. The most important thing to observe is that the `X-Correlation-ID` generated in the "producer" context is the same one that appears in the "consumer" logs, proving that the context was successfully propagated through Kafka.
 
 ```log
---- Running Broker Instrumentation Example ---
-...
-2025-07-13 12:31:47 INFO  [producer] [X-Correlation-ID="4899b756-8a59-4abb-8260-0db8ca548c8a"] :: Producer context created. Publishing message...
-...
-2025-07-13 12:31:47 INFO  [consumer] [X-Correlation-ID="4899b756-8a59-4abb-8260-0db8ca548c8a" payload="Hello, distributed world!"] :: Message processed by consumer.
-...
-✅ Broker example finished.
---- Verificación completada exitosamente para: examples/70-full-stack-correlation ---
+--- Running Kafka Full-Stack Correlation Example ---
+🚀 Initializing SyntropyLog for Kafka Full-Stack Example...
+✅ SyntropyLog initialized successfully for Kafka Full-Stack Example!
+✅ Connected to Kafka broker
+✅ Subscribed to topic: syntropylog-test-topic
+
+{"correlationId":"33ee0f47-0de4-430c-af1c-a1352739a595","X-Correlation-ID":"a1c930a9-b0ac-4ef3-a979-ba245d99fcfd","level":"info","timestamp":"2025-07-21T13:51:31.027Z","service":"producer","message":"Producer context created. Publishing message..."}
+✅ Message published with correlation ID: a1c930a9-b0ac-4ef3-a979-ba245d99fcfd
+
+{"correlationId":"db364926-57b7-44e7-abd0-cf8c3ab79c13","X-Correlation-ID":{"0":51,"1":51,"2":101,"3":101,"4":48,"5":102,"6":52,"7":55,"8":45,"9":48,"10":100,"11":101,"12":52,"13":45,"14":52,"15":51,"16":48,"17":99,"18":45,"19":97,"20":102,"21":49,"22":99,"23":45,"24":97,"25":49,"26":51,"27":53,"28":50,"29":55,"30":51,"31":57,"32":97,"33":53,"34":57,"35":53},"level":"info","timestamp":"2025-07-21T13:51:31.056Z","service":"consumer","message":"Message processed by consumer.","payload":"Hello, distributed world!"}
+
+🔄 Shutting down SyntropyLog gracefully...
+✅ SyntropyLog shutdown completed
+✅ Kafka Full-Stack example finished.
 ```
+
+**Key Observations:**
+- ✅ **Producer correlation ID**: `a1c930a9-b0ac-4ef3-a979-ba245d99fcfd`
+- ✅ **Consumer correlation ID**: Same ID (shown as Buffer but represents the same value)
+- ✅ **Message payload**: Successfully transmitted as "Hello, distributed world!"
+- ✅ **Automatic correlation**: No manual header passing required

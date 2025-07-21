@@ -11,288 +11,228 @@
 </p>
 # SyntropyLog Examples
 
-Welcome to the SyntropyLog examples. This section is designed to guide you through the framework's features, from the most basic setup to the most advanced use cases.
+Welcome to the SyntropyLog examples. This collection demonstrates how to use the framework for observability in Node.js applications.
 
-## 🚨 **TRANSPARENCY NOTICE**
+## 🎯 Philosophy
 
-**We believe in complete honesty about our project status.** This is an alpha release with examples in various stages of completion. We've tested what we can and documented what needs external services.
+> **"Simplicity over Complexity"** - Configure once, use anywhere.
 
-### **What We Guarantee:**
-- ✅ **Examples 00-13**: Fully tested and working
-- ✅ **Examples 20-22**: Tested with external services (Kafka, RabbitMQ, NATS)
-- ✅ **All examples compile** and have proper TypeScript configuration
+SyntropyLog unifies logging, HTTP clients, Redis, and message brokers in a single framework with automatic correlation.
 
-### **What Requires External Setup:**
-- 🐳 **Examples 12, 13, 20, 21, 22**: Need Docker services (Redis, Kafka, RabbitMQ, NATS)
-- 🔧 **Example 23**: Needs Kafka setup (not tested yet)
+## 📚 Learning Path
 
-### **What's Still in Development:**
-- 🚧 **Examples 30+**: Advanced patterns (NestJS, GraphQL, etc.)
+### **FUNDAMENTALS (00-09)** - Core Framework Features
+- **00**: Basic setup ✅
+- **01**: Hello world ✅
+- **02**: Basic context ✅
+- **03**: TypeScript ✅
+- **04**: Logging levels and transports 🆕
+- **05**: Configuration patterns 🆕
+- **06**: Error handling 🆕
+- **07**: Logger configuration 🆕
+- **08**: Logging matrix 🆕
+- **09**: HTTP configuration 🆕
 
-## 📖 Table of Contents
+### **INTEGRATION (10-19)** - HTTP & Redis with Different Frameworks
+- **10**: HTTP correlation ✅
+- **11**: Custom adapter ✅
+- **12**: HTTP + Redis (Express) ✅
+- **13**: HTTP + Redis (Fastify) ✅
+- **14**: Redis configuration 🆕
+- **15**: Message brokers configuration 🆕
+- **16**: Data masking 🆕
+- **17**: Custom serializers 🆕
+- **18**: Custom transports 🆕
+- **19**: Doctor CLI 🆕
 
-## Learning Path
+### **MESSAGING (20-24)** - Message Brokers & Correlation
+- **20**: Basic Kafka ✅
+- **21**: Basic RabbitMQ ✅
+- **22**: Basic NATS ✅
+- **23**: Kafka full-stack ✅
+- **24**: NATS microservices ✅ (Full-stack distributed tracing)
 
-Here is a list of the examples organized by category. The numbering follows a logical progression from basic concepts to advanced patterns:
+### **ENTERPRISE (25-27)** - Production & Complete Applications
+- **25**: Production configuration 🆕
+- **26**: Advanced context 🆕
+- **27**: Complete enterprise app 🎊 (¡MOMENTO SORPRESA!)
 
-### Foundation (00-09) ✅ **COMPLETE & TESTED**
-- **`00-setup-initialization`**: ✅ **Complete** - Learn how to properly initialize SyntropyLog with event handling and graceful shutdown.
-- **`01-hello-world`**: ✅ **Complete** - The perfect starting point for logging. Learn basic logging concepts in under 5 minutes.
-- **`02-basic-context`**: ✅ **Complete** - Learn the fundamental concept of automatic context propagation for tracing operations across function calls.
-- **`03-context-ts`**: ✅ **Complete** - TypeScript integration with interfaces for context management and correlation.
+## 🚀 Quick Start
 
-### HTTP Clients & Redis (10-19) ✅ **COMPLETE & TESTED**
-- **`10-basic-http-correlation`**: ✅ **Complete** - Discover how to use a built-in adapter (`axios`) to automatically propagate correlation IDs over HTTP calls.
-- **`11-custom-adapter`**: ✅ **Complete** - A more advanced example showing how to build your own adapter for a client that isn't supported out-of-the-box (`fetch`).
-- **`12-http-redis-axios`**: ✅ **Complete** - Complete system architecture with Redis caching, HTTP clients, and Express server. Production-ready patterns.
-- **`13-http-redis-fastify`**: ✅ **Complete** - Same functionality as example 12 but using Fastify instead of Express. Framework agnosticism demonstration.
+### Prerequisites
+- Node.js 18+
+- Docker (for examples with external services)
 
-### Message Brokers (20-29) ✅ **MOSTLY TESTED**
-- **`20-basic-kafka-correlation`**: ✅ **Tested with Docker** - Explore how to integrate SyntropyLog with messaging systems like Kafka using the official adapter. **Requires Kafka via Docker.**
-- **`21-basic-rabbitmq-broker`**: ✅ **Tested with Docker** - Basic RabbitMQ integration example. **Requires RabbitMQ via Docker.**
-- **`22-basic-nats-broker`**: ✅ **Tested with Docker** - Basic NATS integration example. **Requires NATS via Docker.**
-- **`23-kafka-full-stack`**: 🚧 **Needs Testing** - A comprehensive example showing how to correlate logs across multiple services using Kafka. **Requires Kafka setup.**
-- **`24-full-stack-nats`**: 🚧 **In Progress** - Advanced microservices architecture example using NATS.
-- **`25-multi-redis-kafks-nats-axios`**: 🚧 **In Progress** - Multi-service architecture with Redis, Kafka, NATS, and Axios.
-- **`29-advanced-rabbitmq-broker`**: 🚧 **In Progress** - Advanced RabbitMQ patterns and enterprise features.
+### Test All Examples (Recommended)
+```bash
+# Test all examples with default version (0.6.7)
+./test-all-examples.sh
 
-### Backend Frameworks (30-39) 🚧 **IN DEVELOPMENT**
-- **`30-data-masking`**: 🚧 **In Progress** - Learn how to protect sensitive data by automatically redacting it from your logs.
-- **`31-http-redis-nestjs`**: 🚧 **In Progress** - NestJS framework integration with Redis and HTTP correlation.
-- **`32-redis-GraphQL`**: 🚧 **In Progress** - GraphQL integration with Redis and correlation patterns.
-- **`33-kafka-enterprise-patterns`**: 🚧 **In Progress** - Kafka Streams, Exactly Once semantics, Schema Registry, and enterprise-grade streaming.
-- **`34-nats-enterprise-patterns`**: 🚧 **In Progress** - NATS JetStream, clustering, consumer groups, and high-performance messaging.
-- **`35-microservices-saga`**: 🚧 **In Progress** - Cross-service saga orchestration with distributed transactions.
-- **`36-event-sourcing-cqrs`**: 🚧 **In Progress** - Complete event sourcing with CQRS pattern implementation.
-- **`37-circuit-breaker-patterns`**: 🚧 **In Progress** - Resilience patterns for fault-tolerant distributed systems.
-- **`38-distributed-tracing`**: 🚧 **In Progress** - Jaeger/Zipkin integration for distributed tracing.
-- **`39-observability-dashboard`**: 🚧 **In Progress** - Grafana/Prometheus integration for comprehensive monitoring.
+# Test with specific version
+./test-all-examples.sh 0.6.8
+```
 
-### Advanced Patterns (40+) 🚧 **IN DEVELOPMENT**
-- **`41-custom-serializers`**: 🚧 **In Progress** - Shows how to create a custom serializer to safely log complex objects.
-- **`42-compliance-retention`**: 🚧 **In Progress** - Learn how to build a custom transport for compliance and centralized logging.
-- **`44-private-package-registry`**: 🚧 **In Progress** - Setup and configuration for private package registries.
-- **`45-github-packages-consumer`**: 🚧 **In Progress** - Integration with GitHub packages for distribution.
+### Individual Examples
+```bash
+cd 01-hello-world
+npm install
+npm start
+```
 
-### Diagnostics & Analysis (50+) 🚧 **IN DEVELOPMENT**
-- **`50-diagnostics-doctor`**: ✅ **OPERATIONAL** - Advanced configuration analyzer that validates multiple files (YAML, JSON, .env) across different environments with custom rules. Supports audit jobs, custom manifests, and comprehensive reporting. **Ready for production use today!**
-- **`51-diagnostics-comparison`**: 🚧 **In Progress** - Compare different configuration approaches and identify the optimal setup for your specific use case with performance benchmarking and migration planning.
-- **`52-diagnostics-performance`**: 🚧 **In Progress** - Comprehensive performance analysis and optimization with bottleneck detection, load testing, and automatic tuning recommendations.
-- **`53-diagnostics-security`**: 🚧 **In Progress** - Security analysis and compliance validation with vulnerability detection, SOC2/GDPR/HIPAA compliance, and security hardening recommendations.
-
-## 📋 **PLANNED EXAMPLES (54-73)**
-
-### **🔒 Security & Compliance Examples (54-57)**
-- **`54-security-credentials-validation`**: Rules to validate empty credentials in production
-- **`55-compliance-soc2-gdpr`**: SOC2 and GDPR compliance rules
-- **`56-corporate-security-rules`**: Custom corporate security rules
-- **`57-secrets-management`**: Integration with secrets management systems
-
-### **🏢 Enterprise & Corporate Examples (58-61)**
-- **`58-enterprise-audit-plan`**: Complete enterprise audit plan
-- **`59-team-consistency-rules`**: Rules for consistency across teams
-- **`60-custom-validation-rules`**: Creating custom validation rules
-- **`61-multi-environment-audit`**: Multi-environment auditing
-
-### **🛡️ DevSecOps Integration Examples (62-65)**
-- **`62-pipeline-security-gates`**: Security gates in CI/CD pipelines
-- **`63-security-team-integration`**: Integration with security teams
-- **`64-compliance-reporting`**: Compliance report generation
-- **`65-audit-trail-system`**: Audit trail system
-
-### **📊 Advanced Analysis Examples (66-69)**
-- **`66-performance-validation`**: Performance validation rules
-- **`67-architecture-compliance`**: Architecture compliance
-- **`68-best-practices-enforcement`**: Best practices enforcement
-- **`69-risk-assessment`**: Automated risk assessment
-
-### **🔧 Tooling & Automation Examples (70-73)**
-- **`70-automated-fixes`**: Automated fixes application
-- **`71-custom-reporting`**: Custom reporting
-- **`72-integration-examples`**: Integration with external tools
-- **`73-monitoring-integration`**: Integration with monitoring systems
-
-## 🧪 **Testing Status**
-
-### ✅ **Fully Tested (No External Dependencies)**
-- Examples 00, 01, 02, 03, 10, 11
-
-### ✅ **Tested with Docker Services**
-- Example 12: Redis + Express
-- Example 13: Redis + Fastify
-- Example 20: Kafka (with official adapter)
-- Example 21: RabbitMQ
-- Example 22: NATS
-
-### 🚧 **In Development**
-- Examples 23-29: Advanced broker patterns
-- Examples 30-39: Backend frameworks & Enterprise patterns (NestJS, GraphQL, Kafka Streams, NATS JetStream, Saga, CQRS, Circuit Breaker, Tracing, Monitoring)
-- Examples 41-45: Advanced patterns (serializers, compliance, etc.)
-- Examples 51-53: Diagnostics & analysis tools (comparison, performance, security)
-
-### ✅ **Operational Tools**
-- Example 50: Diagnostics doctor (fully functional, ready for production)
-
-**🔍 Doctor Capabilities:**
-- **Multi-File Analysis**: Validates YAML, JSON, and .env files
-- **Audit Jobs**: Analyzes multiple configurations in a single run
-- **Custom Rules**: Extensible rule system with custom manifests
-- **Environment Support**: Different rules for production, staging, development
-- **Comprehensive Reporting**: Aggregated results from multiple configurations
-
-**🎯 What You Can Do With The Doctor:**
-- **🔒 Security Validation**: Ensure credentials are empty in production (security team injects them)
-- **🏢 Corporate Rules**: Define organization-specific validation rules
-- **📋 Compliance Checking**: SOC2, GDPR, HIPAA compliance validation
-- **🚀 Pipeline Integration**: Block deployments with security issues
-- **👥 Team Consistency**: Ensure all teams follow the same standards
-- **🛡️ DevSecOps**: Integrate with security teams and processes
-- **📊 Audit Trails**: Complete validation history and reporting
-
-## 🐳 **Docker Setup for Examples**
-
-Some examples require external services. We provide Docker Compose files for easy setup:
-
-### **Example 12 (Redis + Express)**
+### With External Services
 ```bash
 cd 12-http-redis-axios
 docker-compose up -d redis
 npm install
-npm run dev
+npm start
 ```
 
-### **Example 13 (Fastify)**
+## 🐳 Docker Services
+
+Some examples require external services. We provide Docker Compose files:
+
+### Redis Examples (12, 13)
 ```bash
-cd 13-http-redis-fastify
 docker-compose up -d redis
-npm install
-npm run dev
 ```
 
-### **Example 20 (Kafka)**
+### Message Brokers (20, 21, 22, 23, 24)
 ```bash
-cd 20-basic-kafka-correlation
 docker-compose up -d
-npm install
-npm run dev
 ```
 
-### **Example 21 (RabbitMQ)**
-```bash
-cd 21-basic-rabbitmq-broker
-docker-compose up -d rabbitmq
-npm install
-npm run dev
+## 📊 Current Status
+
+### ✅ **Complete & Tested**
+- **00-03**: Fundamentals
+- **10-13**: HTTP & Redis integration
+- **20-22**: Basic message brokers
+- **23-24**: Advanced correlation ✅
+
+### 🆕 **In Development**
+- **04-09**: Framework fundamentals
+- **14-19**: Framework integrations
+- **25-27**: Enterprise patterns
+
+## 🎯 What You'll Learn
+
+### **Core Concepts:**
+- ✅ **Context propagation**: Automatic correlation across services
+- ✅ **HTTP instrumentation**: Request/response logging
+- ✅ **Redis integration**: Command logging and caching
+- ✅ **Message brokers**: Kafka, RabbitMQ, NATS correlation
+- ✅ **Custom adapters**: Extend for any HTTP client
+- ✅ **Multiple instances**: Multiple Redis/broker instances
+
+### **Real-World Patterns:**
+- ✅ **Microservices**: End-to-end correlation
+- ✅ **API Gateway**: Request tracing
+- ✅ **Event-driven**: Message correlation
+- ✅ **Caching**: Redis with observability
+- ✅ **Error handling**: Graceful degradation
+
+## 🔧 Framework Features
+
+### **Unified Configuration:**
+```typescript
+syntropyLog.init({
+  logger: { serviceName: 'my-app' },
+  http: { instances: [{ instanceName: 'api', adapter: axiosAdapter }] },
+  redis: { instances: [{ instanceName: 'cache', url: 'redis://localhost' }] },
+  brokers: { instances: [{ instanceName: 'events', adapter: kafkaAdapter }] }
+});
 ```
 
-### **Example 22 (NATS)**
-```bash
-cd 22-basic-nats-broker
-docker-compose up -d nats
-npm install
-npm run dev
+### **Simple Usage:**
+```typescript
+const logger = syntropyLog.getLogger();
+const http = syntropyLog.getHttp('api');
+const redis = syntropyLog.getRedis('cache');
+const broker = syntropyLog.getBroker('events');
+
+// All automatically correlated
+logger.info('User created', { userId: 123 });
+await http.get('/users/123');
+await redis.set('user:123', userData);
+await broker.publish('user.created', event);
 ```
 
-## How to Run the Examples
+## 🔗 GraphQL Integration (Conceptual)
 
-Each example is a self-contained Node.js project. To run it, navigate to the example's directory and follow the instructions in its own `README.md`. Generally, the steps are:
+SyntropyLog integrates easily with GraphQL for automatic correlation:
 
-```bash
-cd <example-directory>
-npm install
-npm run dev
+### **Correlation ID Propagation:**
+```typescript
+// HTTP Headers (same as REST)
+headers: {
+  'X-Correlation-ID': correlationId,
+  'Authorization': 'Bearer token'
+}
+
+// GraphQL Context
+const context = {
+  correlationId,
+  syntropyLog: syntropyLogInstance,
+  userId: req.user?.id
+}
 ```
 
-## Example Structure
+### **Resolver Integration:**
+```typescript
+const resolvers = {
+  Query: {
+    users: async (parent, args, context) => {
+      // Correlation propagates automatically
+      const users = await context.syntropyLog.http.get('/api/users');
+      return users.data;
+    }
+  }
+}
+```
 
-### Foundation Examples (00-09) ✅ **COMPLETE**
-- **00-setup-initialization**: Application setup and initialization
-- **01-hello-world**: Basic logging concepts
-- **02-basic-context**: Context management and correlation
-- **03-context-ts**: TypeScript integration with interfaces
+### **Real-time Subscriptions:**
+```typescript
+// WebSocket correlation for subscriptions
+const subscription = {
+  userUpdated: {
+    subscribe: (parent, args, context) => {
+      // Correlation ID maintained in WebSocket
+      return pubsub.asyncIterator(['USER_UPDATED']);
+    }
+  }
+}
+```
 
-### HTTP Clients & Redis (10-19) ✅ **COMPLETE**
-- **10-basic-http-correlation**: HTTP request correlation with built-in adapters
-- **11-custom-adapter**: Custom HTTP client adapters (fetch)
-- **12-http-redis-axios**: Complete system architecture with Redis + HTTP + Express
-- **13-http-redis-fastify**: Same as 12 but using Fastify instead of Express
+## 🚨 Alpha Version Notice
 
-### Message Brokers (20-29) ✅ **MOSTLY COMPLETE**
-- **20-basic-kafka-correlation**: Kafka message broker integration (tested with Docker)
-- **21-basic-rabbitmq-broker**: RabbitMQ integration (tested with Docker)
-- **22-basic-nats-broker**: NATS integration (tested with Docker)
-- **23-kafka-full-stack**: Kafka distributed tracing (needs testing)
-- **24-full-stack-nats**: Advanced NATS microservices architecture
-- **25-multi-redis-kafks-nats-axios**: Multi-service architecture
-- **29-advanced-rabbitmq-broker**: Advanced RabbitMQ patterns
+> **⚠️ ALPHA VERSION**: This is an alpha release (v0.6.4-alpha.0+). 
+> 
+> - **Not ready for production use**
+> - **API may change between versions**
+> - **Use for learning and experimentation only**
 
-### Backend Frameworks (30-39) 🚧 **IN DEVELOPMENT**
-- **30-data-masking**: Security and data protection
-- **31-http-redis-nestjs**: NestJS framework integration
-- **32-redis-GraphQL**: GraphQL integration
-- **33-kafka-enterprise-patterns**: Kafka Streams, Exactly Once, Schema Registry
-- **34-nats-enterprise-patterns**: NATS JetStream, clustering, consumer groups
-- **35-microservices-saga**: Cross-service saga orchestration
-- **36-event-sourcing-cqrs**: Event sourcing with CQRS
-- **37-circuit-breaker-patterns**: Resilience patterns
-- **38-distributed-tracing**: Jaeger/Zipkin integration
-- **39-observability-dashboard**: Grafana/Prometheus monitoring
+## 🤝 Contributing
 
-### Advanced Patterns (40+) 🚧 **IN DEVELOPMENT**
-- **41-custom-serializers**: Custom data handling
-- **42-compliance-retention**: Compliance and log retention
-- **44-private-package-registry**: Package management
-- **45-github-packages-consumer**: GitHub packages integration
+We welcome contributions! Please:
 
-### Diagnostics & Analysis (50+) 🚧 **IN DEVELOPMENT**
-- **50-diagnostics-doctor**: ✅ **OPERATIONAL** - The ultimate observability framework analyzer. Diagnose, validate, and optimize any SyntropyLog implementation with enterprise-grade insights. **Ready for production use today!**
-- **51-diagnostics-comparison**: Compare different configuration approaches and identify the optimal setup for your specific use case with performance benchmarking and migration planning.
-- **52-diagnostics-performance**: Comprehensive performance analysis and optimization with bottleneck detection, load testing, and automatic tuning recommendations.
-- **53-diagnostics-security**: Security analysis and compliance validation with vulnerability detection, SOC2/GDPR/HIPAA compliance, and security hardening recommendations.
+1. **Test examples** with real services
+2. **Add Docker Compose** for external dependencies
+3. **Keep examples simple** and focused on SyntropyLog
+4. **Document clearly** what each example demonstrates
 
-## Current Status Summary
+## 📝 Testing Philosophy
 
-### ✅ **Production Ready (15/45)**
-- **Foundation**: 00, 01, 02, 03
-- **HTTP & Redis**: 10, 11, 12, 13
-- **Message Brokers**: 20, 21, 22 (with Docker)
-- **Diagnostics**: 50 (doctor - operational)
-
-### 🚧 **Needs External Setup (1/45)**
-- **Message Brokers**: 23 (Kafka required)
-
-### 🚧 **In Development (39/45)**
-- **Message Brokers**: 24, 25, 29 (advanced patterns)
-- **Backend Frameworks**: 30, 31, 32, 33, 34, 35, 36, 37, 38, 39 (Enterprise patterns)
-- **Advanced Patterns**: 41, 42, 44, 45
-- **Diagnostics**: 51, 52, 53 (comparison, performance, security)
-
-## Version Information
-
-This examples collection is compatible with **SyntropyLog v0.6.4-alpha.0+**. The examples have been tested and verified to work with the latest alpha release.
-
-For the best experience, ensure you're using the same version as specified in each example's `package.json` file. 
-
-> **⚠️ Alpha Version Notice**: This is an alpha release. Features may change before the stable release. For production use, wait for the stable version.
-
-## 🤝 **Contributing**
-
-We welcome contributions! If you find issues or want to improve examples:
-
-1. **Test with external services** and document setup requirements
-2. **Add Docker Compose files** for examples that need external dependencies
-3. **Update this README** with accurate status information
-4. **Follow our transparency principle** - be honest about what works and what doesn't
-
-## 📝 **Our Testing Philosophy**
-
-We believe in **field testing over complex mocks**. Our examples are designed to work with real services rather than heavily mocked unit tests. This gives you confidence that the patterns actually work in production environments.
+We believe in **real integration over complex mocks**. Examples work with actual services to give you confidence for production use.
 
 **What we test:**
-- ✅ Our own code and patterns
-- ✅ Integration with real external services
+- ✅ SyntropyLog integration patterns
+- ✅ Real external service connections
 - ✅ Complete working examples
 
 **What we don't test:**
 - ❌ External libraries (they have their own tests)
-- ❌ Complex mocked scenarios that don't reflect reality 
+- ❌ Complex mocked scenarios
+
+---
+
+**Remember**: SyntropyLog is about **simplicity and productivity**. Configure once, use anywhere. 

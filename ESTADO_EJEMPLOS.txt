@@ -94,11 +94,9 @@ ESTADO DE EJEMPLOS - 19 Julio 2024
 
 ⏳ EJEMPLOS PENDIENTES - ENTERPRISE:
 
-29-enterprise-patterns: ⏳ PENDIENTE - CEREBRO DERRETIDO 🧠💥
-- RabbitMQ Enterprise Patterns (Dead Letter Exchanges, Saga, CQRS)
-- Kafka Enterprise Patterns (Stream Processing, Exactly Once)
-- Patrones que derriten el cerebro
-- Para los valientes del futuro
+~~29-enterprise-patterns~~ ❌ ELIMINADO - Patrones enterprise no enseñan el framework
+- Los patrones enterprise se enfocan en infraestructura, no en SyntropyLog
+- Se eliminaron ejemplos 25-29 por no estar enfocados en el framework
 
 ⏳ EJEMPLOS PENDIENTES - TITANES:
 
@@ -133,4 +131,4 @@ ESTADO DE EJEMPLOS - 19 Julio 2024
 🎯 ¡GOLAZO DE CABEZA, DE MEDIA CANCHA Y DE TACÓN AL ESTILO MARTIN PALERMO! ⚽
 
 ---
-*Última actualización: 20 Julio 2024 - Ejemplos 00-13 completos, TITANES marcados como pendientes* 
+*Última actualización: 21 Julio 2024 - Ejemplos 00-13 completos, ejemplos 25-29 eliminados (enterprise patterns), ejemplos 07-09 eliminados (performance/testing/DevOps enterprise), TITANES marcados como pendientes* 

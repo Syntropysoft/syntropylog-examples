@@ -4,17 +4,17 @@ FROM node:18-alpine AS builder
 WORKDIR /app
 
 # Copy package.json and package-lock.json from the example directory
-COPY examples/80-full-stack-nats/package.json ./
+COPY examples/24-full-stack-nats/package.docker.json ./package.json
 
 # Install dependencies. This will use the docker cache if the package
 # was previously installed in a parent image.
 RUN npm install
 
 # Copy the source code of the example
-COPY examples/80-full-stack-nats/src ./src
+COPY examples/24-full-stack-nats/src ./src
 
 # Copy the tsconfig.json for the example
-COPY examples/80-full-stack-nats/tsconfig.json ./
+COPY examples/24-full-stack-nats/tsconfig.docker.json ./tsconfig.json
 
 # Build the example
 RUN npm run build

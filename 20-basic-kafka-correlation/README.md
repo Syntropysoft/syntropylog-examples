@@ -1,3 +1,15 @@
+<p align="center">
+  <img src="https://raw.githubusercontent.com/Syntropysoft/syntropylog-examples-/main/assets/syntropyLog-logo.png" alt="SyntropyLog Logo" width="170"/>
+</p>
+
+<h1 align="center">SyntropyLog</h1>
+
+<p align="center">
+  <strong>The Observability Framework for High-Performance Teams.</strong>
+  <br />
+  Ship resilient, secure, and cost-effective Node.js applications with confidence.
+</p>
+
 # Example 20: Basic Kafka Correlation
 
 This example demonstrates how to use the **official Kafka Adapter** from `@syntropylog/adapters`. It showcases one of the core strengths of SyntropyLog: its decoupled, adapter-based architecture for message brokers.
@@ -93,24 +105,30 @@ npm run build
 
 ## Expected Output
 
-You should see logs from both the producer and the consumer. You might see some initial connection errors from `kafkajs` while the Kafka cluster starts up, which is normal. The important part is that the `correlationId` is the same for both the producer and consumer logs, demonstrating automatic context propagation.
+You should see logs from both the producer and the consumer. The key demonstration is that the same `correlationId` appears in both producer and consumer logs, showing automatic context propagation through Kafka messages.
 
 ```log
 --- Running Broker Instrumentation Example ---
-2025-07-13 INFO  [broker-manager] :: Broker client instance "my-kafka-bus" created successfully via adapter.
-2025-07-13 INFO  [syntropylog-main] :: SyntropyLog framework initialized successfully.
-2025-07-13 INFO  [my-kafka-bus] :: Connecting to broker...
-2025-07-13 INFO  [my-kafka-bus] :: Successfully connected to broker.
-2025-07-13 INFO  [my-kafka-bus] [topic="syntropylog-test-topic"] :: Subscribing to topic...
-2025-07-13 INFO  [my-kafka-bus] [topic="syntropylog-test-topic"] :: Successfully subscribed to topic.
-2025-07-13 INFO  [producer] [X-Correlation-ID="a1b2c3d4-e5f6-7890-abcd-ef1234567890"] :: Producer context created. Publishing message...
-2025-07-13 INFO  [my-kafka-bus] [X-Correlation-ID="a1b2c3d4-e5f6-7890-abcd-ef1234567890" topic="syntropylog-test-topic"] :: Publishing message...
-2025-07-13 INFO  [my-kafka-bus] [X-Correlation-ID="a1b2c3d4-e5f6-7890-abcd-ef1234567890" topic="syntropylog-test-topic"] :: Message published successfully.
-2025-07-13 INFO  [my-kafka-bus] [X-Correlation-ID="a1b2c3d4-e5f6-7890-abcd-ef1234567890" topic="syntropylog-test-topic"] :: Received message.
-2025-07-13 INFO  [consumer] [X-Correlation-ID="a1b2c3d4-e5f6-7890-abcd-ef1234567890" payload="Hello, distributed world!"] :: Message processed by consumer.
+🚀 Initializing SyntropyLog...
+2025-07-21 12:14:00 INFO  [syntropylog-main] [source="broker-manager" module="BrokerManager" message="Connecting to broker..."]
+2025-07-21 12:14:00 INFO  [syntropylog-main] [source="broker-manager" module="BrokerManager" message="Successfully connected to broker."]
+2025-07-21 12:14:00 INFO  [syntropylog-main] [message="SyntropyLog framework initialized successfully."]
+2025-07-21 12:14:00 INFO  [syntropylog-main] [source="broker-manager" module="BrokerManager" message="Broker client instance \"my-kafka-bus\" created and connected successfully."]
+✅ SyntropyLog initialized successfully!
+2025-07-21 12:14:00 INFO  [main] [message="🚀 Starting Kafka broker example..."]
+2025-07-21 12:14:00 INFO  [main] [message="✅ Connected to Kafka broker"]
+2025-07-21 12:14:00 INFO  [main] [message="✅ Subscribed to topic: syntropylog-test-topic"]
+2025-07-21 12:14:00 INFO  [producer] [x-correlation-id="0afb7d35-f282-42cd-815b-e1b2b10fabb9" message="Producer context created. Publishing message..."]
+2025-07-21 12:14:00 INFO  [main] [x-correlation-id="0afb7d35-f282-42cd-815b-e1b2b10fabb9" message="✅ Message published successfully"]
+2025-07-21 12:14:00 INFO  [consumer] [x-correlation-id="0afb7d35-f282-42cd-815b-e1b2b10fabb9" payload="Hello, distributed world!" message="Message processed by consumer."]
+2025-07-21 12:14:02 INFO  [main] [message="✅ Broker disconnected successfully"]
+🔄 Shutting down SyntropyLog gracefully...
+✅ SyntropyLog shutdown completed
 
 ✅ Broker example finished.
 ```
+
+**Key Observation**: Notice how the same `x-correlation-id` value (`0afb7d35-f282-42cd-815b-e1b2b10fabb9`) appears in both producer and consumer logs, demonstrating automatic context propagation through Kafka message headers.
 
 ## Key Benefits Demonstrated
 
@@ -121,6 +139,8 @@ You should see logs from both the producer and the consumer. You might see some 
 3. **Consistent Logging**: All logs follow the same format and include relevant context automatically.
 
 4. **Easy Testing**: You can easily mock the `IBrokerAdapter` interface for unit tests without needing a real Kafka instance.
+
+
 
 ## Troubleshooting
 

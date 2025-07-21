@@ -65,10 +65,10 @@ export class NatsAdapter implements IBrokerAdapter {
     (async () => {
       for await (const m of sub) {
         try {
-                  const msg: BrokerMessage = {
-          payload: Buffer.from(this.codec.decode(m.data) as any),
-          headers: this.natsHeadersToRecord(m.headers),
-        };
+          const msg: BrokerMessage = {
+            payload: Buffer.from(this.codec.decode(m.data) as any),
+            headers: this.natsHeadersToRecord(m.headers),
+          };
           // Call handler with the correct 2-argument signature
           await handler(msg, {
             ack: async () => {

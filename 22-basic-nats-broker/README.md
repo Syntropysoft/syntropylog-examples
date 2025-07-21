@@ -1,14 +1,26 @@
-# Example 21: Basic RabbitMQ Correlation 🐰
+<p align="center">
+  <img src="https://raw.githubusercontent.com/Syntropysoft/syntropylog-examples-/main/assets/syntropyLog-logo.png" alt="SyntropyLog Logo" width="170"/>
+</p>
 
-> **Simple and elegant RabbitMQ integration** - Producer/Consumer with correlation ID propagation
+<h1 align="center">SyntropyLog</h1>
+
+<p align="center">
+  <strong>The Observability Framework for High-Performance Teams.</strong>
+  <br />
+  Ship resilient, secure, and cost-effective Node.js applications with confidence.
+</p>
+
+# Example 22: Basic NATS Correlation 🚀
+
+> **Simple and elegant NATS integration** - Publisher/Subscriber with correlation ID propagation
 
 ## 🎯 What You'll Learn
 
-This example demonstrates **basic RabbitMQ integration** with SyntropyLog, showing how to:
+This example demonstrates **basic NATS integration** with SyntropyLog, showing how to:
 
-- **Connect to RabbitMQ** using SyntropyLog's broker adapter
+- **Connect to NATS** using SyntropyLog's broker adapter
 - **Publish messages** with automatic correlation ID propagation
-- **Consume messages** with context preservation
+- **Subscribe to topics** with context preservation
 - **Handle errors** gracefully
 - **Monitor performance** with built-in instrumentation
 
@@ -16,12 +28,12 @@ This example demonstrates **basic RabbitMQ integration** with SyntropyLog, showi
 
 ```
 ┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│   Producer      │    │    RabbitMQ      │    │   Consumer      │
+│   Publisher     │    │      NATS        │    │   Subscriber    │
 │                 │    │                  │    │                 │
-│ • Creates       │───►│ • Message Queue  │───►│ • Processes     │
+│ • Creates       │───►│ • Message Broker │───►│ • Processes     │
 │   messages      │    │ • Correlation    │    │   messages      │
 │ • Correlation   │    │   ID headers     │    │ • Same          │
-│   ID context    │    │ • Persistence    │    │   correlation   │
+│   ID context    │    │ • Pub/Sub        │    │   correlation   │
 └─────────────────┘    └──────────────────┘    └─────────────────┘
 ```
 
@@ -31,7 +43,7 @@ This example demonstrates **basic RabbitMQ integration** with SyntropyLog, showi
 - Docker and Docker Compose
 - Node.js 18+
 
-### 1. Start RabbitMQ
+### 1. Start NATS
 ```bash
 docker-compose up -d
 ```
@@ -49,22 +61,22 @@ npm run dev
 ## 🎭 Expected Output
 
 ```log
---- Running Basic RabbitMQ Correlation Example ---
+--- Running Basic NATS Correlation Example ---
 🚀 Initializing SyntropyLog...
 ✅ SyntropyLog initialized successfully!
-🐰 Connecting to RabbitMQ...
-✅ RabbitMQ connection established
+🚀 Connecting to NATS...
+✅ NATS connection established
 📤 Publishing message with correlation ID...
 ✅ Message published successfully
-📥 Consumer received message with same correlation ID
+📥 Subscriber received message with same correlation ID
 ✅ Correlation ID preserved: abc-123-def-456
-🐰 RabbitMQ example finished successfully!
+🚀 NATS example finished successfully!
 ```
 
 ## 🎯 Key Learning Points
 
 ### **Pattern 1: Basic Connection**
-- Simple RabbitMQ connection setup
+- Simple NATS connection setup
 - Automatic health checks
 - Graceful error handling
 
@@ -73,10 +85,10 @@ npm run dev
 - Automatic header injection
 - Performance monitoring
 
-### **Pattern 3: Message Consumption**
-- Subscribe to queues
+### **Pattern 3: Message Subscription**
+- Subscribe to topics
 - Process messages with context
-- Acknowledge messages properly
+- Handle message acknowledgments
 
 ### **Pattern 4: Error Handling**
 - Connection failures
@@ -85,88 +97,28 @@ npm run dev
 
 ## 🔧 Configuration
 
-### RabbitMQ Setup
+### NATS Setup
 ```yaml
 # docker-compose.yaml
 services:
-  rabbitmq:
-    image: rabbitmq:3-management-alpine
+  nats-server:
+    image: nats:2.9.25-alpine
     ports:
-      - "5672:5672"   # AMQP protocol
-      - "15672:15672" # Management UI
-    environment:
-      RABBITMQ_DEFAULT_USER: admin
-      RABBITMQ_DEFAULT_PASS: admin123
+      - "4222:4222"   # NATS protocol
+      - "8222:8222"   # HTTP monitor
 ```
 
-### SyntropyLog Configuration
-```typescript
-const config = {
-  brokers: {
-    instances: [
-      {
-        instanceName: 'rabbitmq-basic',
-        adapter: new RabbitMQAdapter({
-          url: 'amqp://admin:admin123@localhost:5672',
-          queue: 'test-queue',
-          exchange: 'test-exchange'
-        })
-      }
-    ]
-  }
-};
-```
+## 📊 Key Features
 
-## 🧪 Testing
-
-### Test 1: Basic Message Flow
-```bash
-npm run dev
-```
-
-### Test 2: Check RabbitMQ Management UI
-Open http://localhost:15672
-- Username: admin
-- Password: admin123
-
-### Test 3: Monitor Logs
-```bash
-docker-compose logs -f rabbitmq
-```
-
-## 🎨 Features
-
-### **Correlation ID Propagation**
-- Automatic correlation ID injection
-- Context preservation across services
-- Traceable message flow
-
-### **Performance Monitoring**
-- Message publish/consume times
-- Queue depth monitoring
-- Error rate tracking
-
-### **Graceful Shutdown**
-- Proper connection cleanup
-- Message acknowledgment
-- Resource cleanup
-
-## 🚨 Simple and Clean
-
-This example focuses on:
-- ✅ **Simplicity** - Easy to understand
-- ✅ **Reliability** - Proper error handling
-- ✅ **Observability** - Built-in monitoring
-- ✅ **Maintainability** - Clean code structure
+- **Automatic Correlation**: Correlation IDs are automatically propagated
+- **Structured Logging**: All operations are logged with context
+- **Performance Monitoring**: Built-in timing and metrics
+- **Error Handling**: Graceful error handling with proper logging
+- **Type Safety**: Full TypeScript support with proper types
 
 ## 🎯 Next Steps
 
-After mastering this example:
-- Explore advanced RabbitMQ patterns
-- Try different exchange types
-- Implement message persistence
-- Add more complex routing
-
----
-
-**Simple, elegant, and powerful!** 🐰✨ 
+After mastering this basic example, explore:
+- **Example 24**: Full-stack NATS microservices with distributed tracing
+- **Example 20**: Kafka integration patterns
+- **Example 21**: RabbitMQ integration patterns 

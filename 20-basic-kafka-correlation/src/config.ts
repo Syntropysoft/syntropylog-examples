@@ -3,7 +3,7 @@
 //  RESPONSIBILITY: Define configuration using official framework types
 // =================================================================
 
-import { SyntropyLogConfig } from 'syntropylog';
+import { SyntropyLogConfig, ClassicConsoleTransport } from 'syntropylog';
 import { KafkaAdapter } from '@syntropylog/adapters/brokers';
 import { Kafka, logLevel as kafkaLogLevel } from 'kafkajs';
 
@@ -13,10 +13,9 @@ export const syntropyConfig: SyntropyLogConfig = {
     level: 'info',
     serviceName: 'kafka-correlation-example',
     serializerTimeoutMs: 100,
+    transports:[new ClassicConsoleTransport()]
   },
-  context: {
-    correlationIdHeader: 'X-Correlation-ID',
-  },
+
   brokers: {
     instances: [
       {

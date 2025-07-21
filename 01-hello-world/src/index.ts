@@ -1,4 +1,5 @@
 import { syntropyLog } from 'syntropylog';
+import { randomUUID } from 'crypto';
 
 /**
  * Example 01: Hello World - Basic Logging
@@ -10,6 +11,7 @@ import { syntropyLog } from 'syntropylog';
  * - Getting a logger instance
  * - Basic log levels (info, warn, error)
  * - Structured logging with metadata
+ * - Context management and correlation IDs
  */
 
 // Reusable initialization boilerplate (same for all examples)
@@ -19,6 +21,9 @@ async function initializeSyntropyLog(serviceName: string = 'my-app') {
       serviceName,
       level: 'info',
       serializerTimeoutMs: 50,
+    },
+    context: {
+      correlationIdHeader: 'x-correlation-id-test',
     },
   });
 }
@@ -32,45 +37,59 @@ async function shutdownSyntropyLog() {
 async function demonstrateLogging() {
   // Get a logger instance
   const logger = syntropyLog.getLogger('hello-world');
+  const contextManager = syntropyLog.getContextManager();
 
-  // 1. Basic logging at different levels
-  logger.info('Hello World from SyntropyLog!');
-  logger.warn('This is a warning message.');
-  logger.error('This is an error message.');
+  // 1. Basic logging WITHOUT context - no correlationId
+  logger.info('Hello World from SyntropyLog! (no context)');
+  logger.warn('This is a warning message. (no context)');
+  logger.error('This is an error message. (no context)');
 
-  // 2. Structured logging with metadata
-  // This is useful for adding context to your logs
-  logger.info('User logged in successfully', {
-    userId: 'user-123',
-    tenantId: 'tenant-abc',
-    timestamp: new Date().toISOString()
-  });
+  // 2. Logging WITH context - correlationId will appear
+  await contextManager.run(async () => {
+    // Set correlation ID for this context
+    const correlationId = randomUUID();
+    contextManager.set(contextManager.getCorrelationIdHeaderName(), correlationId);
+    
+    logger.info('Hello World from SyntropyLog! (with context)');
+    logger.warn('This is a warning message. (with context)');
+    logger.error('This is an error message. (with context)');
 
-  // 3. Logging with different data types
-  logger.info('Processing user data', {
-    user: {
-      id: 123,
-      name: 'John Doe',
-      email: 'john@example.com'
-    },
-    actions: ['login', 'profile_update'],
-    metadata: {
-      source: 'web',
-      version: '1.0.0'
+    // 3. Structured logging with metadata
+    // This is useful for adding context to your logs
+    logger.info('User logged in successfully', {
+      userId: 'user-123',
+      tenantId: 'tenant-abc',
+      timestamp: new Date().toISOString()
+    });
+
+    // 4. Logging with different data types
+    logger.info('Processing user data', {
+      user: {
+        id: 123,
+        name: 'John Doe',
+        email: 'john@example.com'
+      },
+      actions: ['login', 'profile_update'],
+      metadata: {
+        source: 'web',
+        version: '1.0.0'
+      }
+    });
+
+    // 5. Error logging with context
+    try {
+      // Simulate an error
+      throw new Error('Something went wrong');
+    } catch (err) {
+      logger.error('An error occurred during processing', {
+        error: err instanceof Error ? err.message : String(err),
+        context: 'user-authentication'
+      });
     }
   });
 
-  // 4. Error logging with context
-  try {
-    // Simulate an error
-    throw new Error('Something went wrong');
-  } catch (err) {
-    logger.error('An error occurred during processing', {
-      error: err.message,
-      stack: err.stack,
-      context: 'user-authentication'
-    });
-  }
+  // 6. Logging outside context again - no correlationId
+  logger.info('Back outside context - no correlationId');
 
   console.log('✅ Hello World example completed!');
 }

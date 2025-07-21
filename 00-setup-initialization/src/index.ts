@@ -1,4 +1,4 @@
-import { syntropyLog } from 'syntropylog';
+import { syntropyLog, ClassicConsoleTransport } from 'syntropylog';
 
 /**
  * Example 00: Setup & Initialization
