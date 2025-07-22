@@ -205,11 +205,12 @@ const subscription = {
 
 ## 🚨 Alpha Version Notice
 
-> **⚠️ ALPHA VERSION**: This is an alpha release (v0.6.4-alpha.0+). 
+> **⚠️ ALPHA VERSION**: This is an alpha release (v0.6.8). 
 > 
-> - **Not ready for production use**
-> - **API may change between versions**
-> - **Use for learning and experimentation only**
+> - **Core features stable**: Logger, context, HTTP, Redis, brokers (tested)
+> - **Experimental features**: Doctor CLI (in development)
+> - **API may change**: Advanced features still in development
+> - **Use for learning**: Perfect for experimentation and early adoption
 
 ## 🤝 Contributing
 
