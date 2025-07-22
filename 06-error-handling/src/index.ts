@@ -75,8 +75,7 @@ async function demonstrateErrorHandling() {
     } catch (error) {
       logger.error('User validation failed', {
         error: error instanceof Error ? error.message : String(error),
-        errorType: error instanceof Error ? error.constructor.name : 'Unknown',
-        field: error instanceof ValidationError ? error.field : undefined
+        errorType: error instanceof Error ? error.constructor.name : 'Unknown'
       });
     }
 
@@ -86,30 +85,22 @@ async function demonstrateErrorHandling() {
       await validateUser({}); // This will fail
       logger.info('User validation successful');
     } catch (error) {
-      // Log error with full context
       logger.error('User validation failed with context', {
         error: error instanceof Error ? error.message : String(error),
         errorType: error instanceof Error ? error.constructor.name : 'Unknown',
-        field: error instanceof ValidationError ? error.field : undefined,
-        correlationId,
-        operation: contextManager.get('operation'),
-        userId: contextManager.get('userId')
+        correlationId: correlationId
       });
     }
 
     // Pattern 3: Error handling in async operations
     console.log('\n⚡ Pattern 3: Error Handling in Async Operations');
-    
-    const userData = {
-      email: 'user@example.com',
-      name: 'John Doe'
-    };
-
     try {
+      const userData = { email: 'user@example.com', name: 'John Doe' };
+      
       // Step 1: Validation
-      logger.info('Starting user registration process', { userId: userData.email });
+      logger.info('Validating user data');
       await validateUser(userData);
-      logger.info('User validation completed');
+      logger.info('User validation successful');
 
       // Step 2: Database operation
       logger.info('Saving user to database');
@@ -123,80 +114,52 @@ async function demonstrateErrorHandling() {
 
       logger.info('User registration completed successfully');
     } catch (error) {
-      // Comprehensive error handling
-      const errorContext = {
+      // Simple error handling
+      logger.error('User registration failed', {
         error: error instanceof Error ? error.message : String(error),
         errorType: error instanceof Error ? error.constructor.name : 'Unknown',
-        stack: error instanceof Error ? error.stack : undefined,
-        correlationId,
-        operation: contextManager.get('operation'),
-        userId: contextManager.get('userId')
-      };
-
-      // Add specific context based on error type
-      if (error instanceof ValidationError) {
-        errorContext.field = error.field;
-        logger.error('Validation error during user registration', errorContext);
-      } else if (error instanceof DatabaseError) {
-        errorContext.operation = error.operation;
-        logger.error('Database error during user registration', errorContext);
-      } else if (error instanceof ExternalServiceError) {
-        errorContext.service = error.service;
-        logger.error('External service error during user registration', errorContext);
-      } else {
-        logger.error('Unknown error during user registration', errorContext);
-      }
-    }
-
-    // Pattern 4: Error correlation across services
-    console.log('\n🔗 Pattern 4: Error Correlation Across Services');
-    
-    // Simulate a distributed operation
-    const distributedOperation = async () => {
-      try {
-        logger.info('Starting distributed operation');
-        
-        // Simulate multiple service calls
-        await new Promise(resolve => setTimeout(resolve, 100));
-        logger.info('Service A call completed');
-        
-        await new Promise(resolve => setTimeout(resolve, 100));
-        logger.info('Service B call completed');
-        
-        // Simulate an error in the middle
-        if (Math.random() > 0.5) {
-          throw new Error('Service C failed');
-        }
-        
-        await new Promise(resolve => setTimeout(resolve, 100));
-        logger.info('Service C call completed');
-        
-        logger.info('Distributed operation completed successfully');
-      } catch (error) {
-        logger.error('Distributed operation failed', {
-          error: error instanceof Error ? error.message : String(error),
-          correlationId,
-          operation: 'distributed-operation'
-        });
-        throw error; // Re-throw to demonstrate propagation
-      }
-    };
-
-    try {
-      await distributedOperation();
-    } catch (error) {
-      logger.error('Error propagated from distributed operation', {
-        error: error instanceof Error ? error.message : String(error),
-        correlationId,
-        operation: contextManager.get('operation')
+        correlationId: correlationId
       });
     }
 
+    // Pattern 4: HTTP Error Handling with Graceful Degradation
+    console.log('\n🌐 Pattern 4: HTTP Error Handling with Graceful Degradation');
+    
+    // Simulate HTTP client that fails but app continues
+    const simulateHttpError = async () => {
+      try {
+        logger.info('Making HTTP request to external API');
+        
+        // Simulate HTTP request that fails
+        if (Math.random() > 0.3) {
+          throw new Error('HTTP 500: External service unavailable');
+        }
+        
+        logger.info('HTTP request successful');
+        return { data: 'fresh-data' };
+      } catch (error) {
+        logger.error('HTTP request failed, using fallback', {
+          error: error instanceof Error ? error.message : String(error),
+          fallback: 'cached-data',
+          correlationId: correlationId
+        });
+        
+        // App continues with cached data
+        return { data: 'cached-data' };
+      }
+    };
+
+    const result = await simulateHttpError();
+    logger.info('Operation completed with data', {
+      dataSource: result.data,
+      correlationId: correlationId
+    });
+
     console.log('\n📊 Error Handling Pattern Summary:');
     console.log('✅ Simple: Basic try-catch with error logging');
-    console.log('✅ Context Preservation: Errors logged with full context');
+    console.log('✅ Context Preservation: Errors logged with correlation ID');
     console.log('✅ Async Operations: Error handling in complex async flows');
-    console.log('✅ Correlation: Errors correlated across distributed services');
+    console.log('✅ HTTP Errors: Graceful degradation when HTTP fails');
 
     console.log('\n✅ Error handling demonstration completed!');
   });

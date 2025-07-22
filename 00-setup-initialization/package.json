@@ -16,6 +16,6 @@
   },
   "dependencies": {
     "@syntropylog/types": "^0.1.5",
-    "syntropylog": "^0.6.7"
+    "syntropylog": "0.6.10"
   }
 }

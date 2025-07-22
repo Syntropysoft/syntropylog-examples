@@ -1,4 +1,4 @@
-import { syntropyLog, SyntropyLogConfig, ClassicConsoleTransport } from 'syntropyLog';
+import { syntropyLog, initializeSyntropyLog, gracefulShutdown } from './boilerplate';
 
 /**
  * Example 02: Basic Context and Correlation
@@ -12,50 +12,6 @@ import { syntropyLog, SyntropyLogConfig, ClassicConsoleTransport } from 'syntrop
  * - Automatic context inheritance
  * - Structured logging with context
  */
-
-// Complete boilerplate for SyntropyLog initialization and shutdown
-async function initializeSyntropyLog(): Promise<void> {
-  console.log('🚀 Initializing SyntropyLog...');
-  
-  return new Promise<void>((resolve, reject) => {
-    // Set up event listeners before initialization
-    syntropyLog.on('ready', () => {
-      console.log('✅ SyntropyLog initialized successfully!');
-      resolve();
-    });
-    
-    syntropyLog.on('error', (err) => {
-      console.error('❌ SyntropyLog initialization failed:', err);
-      reject(err);
-    });
-
-    // Initialize with configuration
-    const config: SyntropyLogConfig = {
-      logger: {
-        level: 'info',
-        serviceName: 'example-02-context',
-        transports: [new ClassicConsoleTransport()],
-        serializerTimeoutMs: 100,
-      },
-      context: {
-        correlationIdHeader: 'X-Correlation-ID',
-      },
-    };
-
-    syntropyLog.init(config);
-  });
-  }
-
-async function gracefulShutdown(): Promise<void> {
-  console.log('🔄 Shutting down SyntropyLog gracefully...');
-  
-  try {
-    await syntropyLog.shutdown();
-    console.log('✅ SyntropyLog shutdown completed');
-  } catch (err) {
-    console.error('❌ Error during shutdown:', err);
-  }
-}
 
 // Simple function that logs with context
 function processUser(userId: string): void {
@@ -156,4 +112,12 @@ process.on('SIGTERM', async () => {
 });
 
 // Run the example
-main().catch(console.error); 
+main()
+  .then(() => {
+    console.log('✅ Example completed successfully');
+    process.exit(0);
+  })
+  .catch((error) => {
+    console.error('❌ Example failed:', error);
+    process.exit(1);
+  }); 

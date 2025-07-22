@@ -1,5 +1,13 @@
 #!/bin/bash
 
+# Probar desde un índice específico
+# ./test-all-examples.sh 0.6.10 5    # Empezar desde ejemplo 05
+# ./test-all-examples.sh 0.6.10 10   # Empezar desde ejemplo 10
+# ./test-all-examples.sh 0.6.10 20   # Empezar desde ejemplo 20
+
+# Probar desde el principio
+./test-all-examples.sh 0.6.10
+
 # Script to test all SyntropyLog examples
 # Usage: ./test-all-examples.sh [version]
 
@@ -39,12 +47,32 @@ log_example() {
     echo -e "${CYAN}📦 $1${NC}"
 }
 
+# Function to get version from versions.txt
+get_version_from_file() {
+    if [ -f "versions.txt" ]; then
+        grep "^syntropylog=" versions.txt | cut -d'=' -f2
+    else
+        echo "0.6.10"  # fallback
+    fi
+}
+
 # Check arguments
+START_INDEX=0
 if [ $# -eq 0 ]; then
-    VERSION="0.6.7"
-    log_warning "No version specified, using: $VERSION"
-else
+    VERSION=$(get_version_from_file)
+    log_warning "No version specified, using: $VERSION (from versions.txt)"
+    log_warning "No start index specified, starting from the beginning"
+elif [ $# -eq 1 ]; then
     VERSION=$1
+    log_warning "No start index specified, starting from the beginning"
+elif [ $# -eq 2 ]; then
+    VERSION=$1
+    START_INDEX=$2
+    log_info "Starting from index: $START_INDEX"
+else
+    log_error "Usage: $0 [version] [start_index]"
+    log_error "Example: $0 0.6.10 5    # Start from example 05"
+    exit 1
 fi
 
 log_info "🚀 Starting test of all examples with syntropylog@$VERSION"
@@ -185,12 +213,18 @@ TOTAL=${#EXAMPLES[@]}
 CURRENT=0
 
 # Test each example
-for example in "${EXAMPLES[@]}"; do
-    CURRENT=$((CURRENT + 1))
+for i in "${!EXAMPLES[@]}"; do
+    # Skip examples before START_INDEX
+    if [ $i -lt $START_INDEX ]; then
+        continue
+    fi
+    
+    example="${EXAMPLES[$i]}"
+    CURRENT=$((i + 1))
     example_path="$example"
     
     if [ -d "$example_path" ]; then
-        log_info "Progress: $CURRENT/$TOTAL"
+        log_info "Progress: $CURRENT/$TOTAL (starting from index $START_INDEX)"
         test_example "$example_path"
     else
         log_error "Directory not found: $example_path"

@@ -1,7 +1,7 @@
 {
-  "name": "05-configuration-patterns",
+  "name": "05-universal-context-patterns",
   "version": "1.0.0",
-  "description": "SyntropyLog - Configuration Patterns Example",
+  "description": "SyntropyLog - Universal Context Patterns Example",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
@@ -10,7 +10,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "syntropylog": "0.6.7"
+    "syntropylog": "0.6.10"
   },
   "devDependencies": {
     "@types/node": "^18.0.0",
@@ -19,10 +19,14 @@
   },
   "keywords": [
     "syntropylog",
-    "configuration",
+    "universal",
+    "context",
     "patterns",
+    "serverless",
+    "workers",
+    "message-queues",
     "example"
   ],
   "author": "SyntropySoft",
   "license": "MIT"
-} 
+}

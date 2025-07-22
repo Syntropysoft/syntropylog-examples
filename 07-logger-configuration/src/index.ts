@@ -1,200 +1,95 @@
-import { syntropyLog, initializeSyntropyLog, gracefulShutdown, waitForReady } from './boilerplate';
+import { SyntropyLog } from 'syntropylog';
+import { PrettyConsoleTransport, ConsoleTransport } from 'syntropylog';
 
-// Different logger configurations
-const loggerConfigurations = {
-  // Basic logger configuration
-  basic: {
-    logger: {
-      serviceName: 'basic-service',
-      level: 'info'
-    }
-  },
-
-  // Development logger configuration
-  development: {
-    logger: {
-      serviceName: 'dev-service',
-      level: 'debug',
-      prettyPrint: true,
-      timeout: 5000
-    }
-  },
-
-  // Production logger configuration
-  production: {
-    logger: {
-      serviceName: 'prod-service',
-      level: 'warn',
-      prettyPrint: false,
-      timeout: 3000
-    }
-  },
-
-  // Multiple transports configuration
-  multipleTransports: {
-    logger: {
-      serviceName: 'multi-transport-service',
-      level: 'info',
-      transports: [
-        {
-          type: 'console',
-          level: 'info'
-        },
-        {
-          type: 'json',
-          level: 'error'
-        }
-      ]
-    }
-  },
-
-  // Custom serializers configuration
-  customSerializers: {
-    logger: {
-      serviceName: 'custom-serializer-service',
-      level: 'info',
-      serializers: {
-        user: (user: any) => ({
-          id: user.id,
-          email: user.email,
-          name: user.name
-        }),
-        order: (order: any) => ({
-          id: order.id,
-          total: order.total,
-          status: order.status
-        })
-      }
-    }
+// 🎯 Simple function that does something and logs
+async function processUserData(syntropyLog: SyntropyLog, userId: number, userName: string) {
+  const logger = syntropyLog.getLogger();
+  
+  logger.info('Processing user data', { userId, userName });
+  
+  // Simulate some processing
+  if (userId < 0) {
+    logger.error('Invalid user ID provided', { userId, error: 'ID must be positive' });
+    return false;
   }
-};
-
-async function demonstrateLoggerConfiguration() {
-  console.log('🎯 Example 07: Logger Configuration\n');
-
-  // Initialize SyntropyLog first
-  await initializeSyntropyLog();
-
-  // Wait for SyntropyLog to be ready before proceeding
-  await waitForReady();
-
-  const contextManager = syntropyLog.getContextManager();
-
-  await contextManager.run(async () => {
-    contextManager.set('operation', 'logger-config-demo');
-    contextManager.set('userId', 'demo-user-123');
-
-    console.log('📋 Demonstrating different logger configurations:\n');
-
-    // Configuration 1: Basic logger
-    console.log('🔧 Configuration 1: Basic Logger');
-    syntropyLog.init(loggerConfigurations.basic);
-    const basicLogger = syntropyLog.getLogger();
-    
-    basicLogger.info('Basic logger configured', {
-      serviceName: loggerConfigurations.basic.logger.serviceName,
-      level: loggerConfigurations.basic.logger.level
-    });
-
-    // Configuration 2: Development logger
-    console.log('\n🐛 Configuration 2: Development Logger');
-    syntropyLog.init(loggerConfigurations.development);
-    const devLogger = syntropyLog.getLogger();
-    
-    devLogger.debug('Development logger with debug level', {
-      serviceName: loggerConfigurations.development.logger.serviceName,
-      level: loggerConfigurations.development.logger.level,
-      prettyPrint: loggerConfigurations.development.logger.prettyPrint
-    });
-
-    // Configuration 3: Production logger
-    console.log('\n🏭 Configuration 3: Production Logger');
-    syntropyLog.init(loggerConfigurations.production);
-    const prodLogger = syntropyLog.getLogger();
-    
-    prodLogger.warn('Production logger with warn level', {
-      serviceName: loggerConfigurations.production.logger.serviceName,
-      level: loggerConfigurations.production.logger.level,
-      prettyPrint: loggerConfigurations.production.logger.prettyPrint
-    });
-
-    // Configuration 4: Multiple transports
-    console.log('\n🚚 Configuration 4: Multiple Transports');
-    syntropyLog.init(loggerConfigurations.multipleTransports);
-    const multiLogger = syntropyLog.getLogger();
-    
-    multiLogger.info('Multiple transports logger', {
-      serviceName: loggerConfigurations.multipleTransports.logger.serviceName,
-      transportCount: loggerConfigurations.multipleTransports.logger.transports?.length || 0
-    });
-
-    multiLogger.error('Error log with multiple transports', {
-      error: 'Sample error',
-      serviceName: loggerConfigurations.multipleTransports.logger.serviceName
-    });
-
-    // Configuration 5: Custom serializers
-    console.log('\n🔧 Configuration 5: Custom Serializers');
-    syntropyLog.init(loggerConfigurations.customSerializers);
-    const customLogger = syntropyLog.getLogger();
-    
-    const user = {
-      id: 123,
-      email: 'user@example.com',
-      name: 'John Doe',
-      password: 'secret123', // This should be masked
-      internalData: 'should-not-appear'
-    };
-
-    const order = {
-      id: 'order-456',
-      total: 99.99,
-      status: 'pending',
-      internalNotes: 'customer is VIP',
-      paymentDetails: 'should-be-masked'
-    };
-
-    customLogger.info('User data with custom serializer', {
-      user,
-      operation: 'user-login'
-    });
-
-    customLogger.info('Order data with custom serializer', {
-      order,
-      operation: 'order-created'
-    });
-
-    // Demonstrate logger levels
-    console.log('\n📊 Logger Level Demonstration:');
-    
-    const testLogger = syntropyLog.getLogger();
-    
-    testLogger.fatal('Fatal error - application will crash');
-    testLogger.error('Error occurred but application continues');
-    testLogger.warn('Warning condition detected');
-    testLogger.info('General information message');
-    testLogger.debug('Debug information (only in development)');
-    testLogger.trace('Trace information (very detailed)');
-
-    // Demonstrate service configuration
-    console.log('\n⚙️ Service Configuration:');
-    console.log('✅ Service Name: Identifies the service in logs');
-    console.log('✅ Log Level: Controls which messages are logged');
-    console.log('✅ Pretty Print: Human-readable vs structured logs');
-    console.log('✅ Timeout: Prevents slow logging operations');
-    console.log('✅ Transports: Multiple output destinations');
-    console.log('✅ Serializers: Custom object serialization');
-
-    console.log('\n✅ Logger configuration demonstration completed!');
+  
+  logger.debug('User details retrieved', { 
+    user: { id: userId, name: userName, status: 'active' } 
   });
   
-  // Exit gracefully after demonstration
-  console.log('\n🎉 Example completed successfully! Exiting...');
-  await gracefulShutdown('COMPLETION');
+  logger.info('User data processed successfully', { userId });
+  return true;
 }
 
-// Run the demonstration
-demonstrateLoggerConfiguration().catch((error) => {
-  console.error('❌ Error in demonstration:', error);
-  process.exit(1);
-}); 
+// 🎯 Demonstrate multiple transports configuration
+async function demonstrateMultipleTransports() {
+  console.log('\n🎛️  LOGGER CONFIGURATION DEMO');
+  console.log('================================\n');
+
+  console.log('🚀 CONFIGURATION: Multiple Transports');
+  console.log('─────────────────────────────────────');
+  console.log('✅ PrettyConsoleTransport: Human-readable for development');
+  console.log('✅ ConsoleTransport: JSON for production');
+  console.log('✅ Both active: Same logs, different formats\n');
+  
+  // 🌟 Single configuration with multiple transports
+  const syntropyLog = SyntropyLog.getInstance();
+  await syntropyLog.init({
+    logger: {
+      serviceName: 'user-processor-multi',
+      serializerTimeoutMs: 100,
+      transports: [
+        // Pretty transport for development
+        new PrettyConsoleTransport(),
+        // JSON transport for production
+        new ConsoleTransport()
+      ]
+    }
+  });
+  
+  // Set context for correlation ID
+  await syntropyLog.getContextManager().run(async () => {
+    console.log('\n📝 PROCESSING USER DATA:');
+    console.log('───────────────────────');
+    console.log('(You will see both Pretty and JSON outputs below)\n');
+    
+    await processUserData(syntropyLog, 123, 'John Doe');
+    await processUserData(syntropyLog, -1, 'Invalid User');
+    await processUserData(syntropyLog, 456, 'Jane Smith');
+  });
+  
+  await syntropyLog.shutdown();
+  
+  console.log('\n' + '─'.repeat(50) + '\n');
+  
+  // 📊 Summary
+  console.log('📊 CONFIGURATION SUMMARY:');
+  console.log('─────────────────────────');
+  console.log('✅ Single instance: No singleton conflicts');
+  console.log('✅ Multiple transports: Pretty + JSON');
+  console.log('✅ Same logs: Different output formats');
+  console.log('✅ Real-world pattern: Development + Production');
+  console.log('✅ Easy switching: Just change transport config');
+  
+  console.log('\n🎯 Key Takeaway:');
+  console.log('   Multiple transports = Same logs, multiple formats!');
+}
+
+// 🚀 Main execution
+async function main() {
+  try {
+    // Run the demonstration
+    await demonstrateMultipleTransports();
+    
+    console.log('\n✅ Logger configuration demo completed successfully!');
+    
+  } catch (error) {
+    console.error('❌ Error in logger configuration demo:', error);
+    process.exit(1);
+  }
+}
+
+// 🎯 Start the application
+if (require.main === module) {
+  main();
+} 

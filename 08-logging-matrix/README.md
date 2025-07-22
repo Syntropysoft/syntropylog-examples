@@ -12,117 +12,104 @@
 
 # Example 08: Logging Matrix 🧮
 
-> **Core Framework Feature** - Understanding SyntropyLog's logging matrix for smart context filtering based on log levels.
+> **Simple Concept** - Control what information appears in your logs to save costs and improve debugging.
 
 ## 🎯 What You'll Learn
 
 This example demonstrates SyntropyLog's logging matrix:
 
-- **Context filtering**: Control what context is included in logs
-- **Level-based filtering**: Different context for different log levels
-- **Smart logging**: Minimal context for success, full context for errors
-- **Cost optimization**: Reduce log ingestion costs with smart filtering
+- **Cost control**: Keep success logs lean and cheap
+- **Smart defaults**: Minimal info, full context on errors
+- **Declarative control**: Define exactly what gets logged
+- **Flexible configuration**: Customize to your needs
 
-## 🏗️ Architecture Overview
+## 🏗️ Simple Concept
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                    Logging Matrix Strategy                      │
-│                                                                 │
-│ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ │
-│ │ Success     │ │ Warning     │ │ Error       │ │ Debug       │ │
-│ │ Logs        │ │ Logs        │ │ Logs        │ │ Logs        │ │
-│ │             │ │             │ │             │ │             │ │
-│ │ • Minimal   │ │ • Medium    │ │ • Full      │ │ • Detailed  │ │
-│ │   Context   │ │   Context   │ │   Context   │ │   Context   │ │
-│ │ • Low Cost  │ │ • Moderate  │ │ • Complete  │ │ • Complete  │ │
-│ │ • Fast      │ │   Cost      │ │   Info      │ │   Info      │ │
-│ │ • Clean     │ │ • Important │ │ • High Cost │ │ • High Cost │ │
-│ │ • Cheap     │ │   Details   │ │ • Debugging │ │ • Debugging │ │
-│ │ • Simple    │ │ • Alerts    │ │ • Analysis  │ │ • Analysis  │ │
-│ └─────────────┘ └─────────────┘ └─────────────┘ └─────────────┘ │
-└─────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────┐
+│                Smart Log Information Control            │
+│                                                         │
+│ ┌─────────────────┐    ┌─────────────────┐             │
+│ │   SUCCESS       │    │     ERROR       │             │
+│ │   (Cheap)       │    │   (Complete)    │             │
+│ │                 │    │                 │             │
+│ │ correlationId   │    │ correlationId   │             │
+│ │ serviceName     │    │ userId          │             │
+│ │                 │    │ email           │             │
+│ │ Cost: $0.01     │    │ address         │             │
+│ │                 │    │ phone           │             │
+│ │                 │    │ errorDetails    │             │
+│ │                 │    │                 │             │
+│ │                 │    │ Cost: $0.05     │             │
+│ └─────────────────┘    └─────────────────┘             │
+│                                                         │
+│ 🎯 Same log call, different information based on level │
+└─────────────────────────────────────────────────────────┘
 ```
 
 ## 🎯 Learning Objectives
 
-### **Context Filtering:**
-- **Minimal context**: Only essential information for success logs
-- **Medium context**: Important details for warning logs
-- **Full context**: Complete information for error logs
-- **Debug context**: Detailed information for debugging
+### **Cost Control:**
+- **Success logs**: Minimal information, low cost
+- **Error logs**: Complete context, worth the cost
+- **Smart defaults**: Good starting point
+- **Customizable**: Full control over what appears
 
-### **Level-Based Filtering:**
-- **Info level**: correlationId, serviceName
-- **Warn level**: correlationId, userId, errorCode
-- **Error level**: Full context with all fields
-- **Debug level**: Complete context for debugging
+### **Smart Defaults:**
+- **INFO**: correlationId, serviceName (minimal)
+- **WARNING**: correlationId, userId, errorCode (important)
+- **ERROR**: Everything (*) (complete context)
+- **DEBUG**: Everything (*) (full details)
 
-### **Smart Logging:**
-- **Cost optimization**: Reduce log ingestion costs
+### **Real-World Usage:**
+- **Production**: Control log ingestion costs
+- **Development**: Full context for debugging
+- **Compliance**: Complete audit trail for errors
 - **Performance**: Faster logging with minimal context
-- **Debugging**: Rich context when needed
-- **Compliance**: Full audit trail for errors
-
-### **Configuration Patterns:**
-- **Default patterns**: Common logging matrix configurations
-- **Custom patterns**: Tailored to specific needs
-- **Environment patterns**: Different strategies for dev/prod
-- **Business patterns**: Context relevant to business logic
 
 ## 🚀 Implementation Plan
 
-### **Phase 1: Basic Logging Matrix**
-- [ ] Default logging matrix configuration
-- [ ] Level-based context filtering
-- [ ] Simple context fields
-- [ ] Basic cost optimization
+### **Phase 1: Default Behavior**
+- [x] Show default logging matrix
+- [x] Demonstrate minimal vs complete logs
+- [x] Explain cost implications
 
-### **Phase 2: Advanced Filtering**
-- [ ] Custom context fields
-- [ ] Business-specific context
-- [ ] Environment-based matrix
-- [ ] Conditional context inclusion
+### **Phase 2: Custom Configuration**
+- [x] Custom logging matrix
+- [x] Different fields per level
+- [x] Show flexibility
 
-### **Phase 3: Cost Optimization**
-- [ ] Success log optimization
-- [ ] Error log enrichment
-- [ ] Performance impact analysis
-- [ ] Cost comparison scenarios
-
-### **Phase 4: Real-World Patterns**
-- [ ] E-commerce patterns
-- [ ] API patterns
-- [ ] Microservice patterns
-- [ ] Production patterns
+### **Phase 3: Real-World Example**
+- [x] User request processing
+- [x] Success vs error scenarios
+- [x] Cost comparison
 
 ## 📊 Expected Outcomes
 
-### **Technical Demonstrations:**
-- ✅ **Logging matrix** configured correctly
-- ✅ **Context filtering** working by level
-- ✅ **Cost optimization** strategies implemented
-- ✅ **Smart logging** patterns demonstrated
+### **What You'll See:**
+- ✅ **Default behavior**: Minimal info for success, complete for errors
+- ✅ **Custom configuration**: Your own field selection
+- ✅ **Cost control**: Different information per level
+- ✅ **Flexibility**: Complete customization
 
-### **Learning Outcomes:**
-- ✅ **How to configure logging matrix** for different needs
-- ✅ **Context filtering** strategies
-- ✅ **Cost optimization** techniques
-- ✅ **Smart logging** best practices
+### **What You'll Learn:**
+- ✅ **Smart defaults** save money and time
+- ✅ **Error logs** get complete context automatically
+- ✅ **Success logs** stay lean and cheap
+- ✅ **Full control** over what information appears
 
 ## 🔧 Prerequisites
 
 - Node.js 18+
-- Understanding of basic logging concepts
-- Familiarity with examples 00-07 (basic setup through logger configuration)
+- Understanding of examples 00-07 (basic concepts)
+- Basic knowledge of log costs and debugging
 
 ## 📝 Notes for Implementation
 
-- **Start simple**: Basic logging matrix first
-- **Add complexity gradually**: One level at a time
-- **Focus on cost optimization**: Show real cost savings
-- **Document patterns**: Explain when to use what
-- **Real-world examples**: Show practical use cases
+- **Keep it simple**: Show defaults vs customization
+- **Focus on costs**: Explain why this matters
+- **Show flexibility**: Complete control over configuration
+- **Real-world value**: Production-ready patterns
 
 ## ⚠️ **IMPORTANT: Context Management in Examples**
 
@@ -180,6 +167,78 @@ In production applications, context is automatically created by:
 **For examples and quick tests**: Wrap all logging in `contextManager.run()`  
 **For production apps**: Use SyntropyLog's HTTP/broker adapters for automatic context
 
+## 🎯 Example Output
+
+When you run this example, you'll see how the same log call produces different information based on the log level:
+
+### **🌞 Success Log (INFO) - Minimal Configuration:**
+```
+12:56:00 [INFO] (logging-matrix-demo): User request processed successfully { status: 'completed', duration: '150ms' }
+{
+  "userId": 123,
+  "operation": "user-login"
+}
+```
+
+### **🏭 Error Log (ERROR) - Complete Context:**
+```
+12:56:00 [INFO] (logging-matrix-demo): User request processed successfully { status: 'completed', duration: '150ms' }
+{
+  "userId": 123,
+  "email": "user@example.com",
+  "password": "secret123",
+  "firstName": "John",
+  "lastName": "Doe",
+  "address": "123 Main St, New York, NY",
+  "phone": "+1-555-0123",
+  "ipAddress": "192.168.1.1",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+  "sessionId": "sess-789",
+  "requestId": "req-456",
+  "preferences": {
+    "theme": "dark",
+    "language": "en"
+  },
+  "metadata": {
+    "source": "web",
+    "version": "1.0"
+  },
+  "operation": "user-login"
+}
+```
+
+### **🎯 Key Insight:**
+**Same log call, different information!** This demonstrates:
+
+- **Cost control**: Success logs are lean and cheap (only 2 fields)
+- **Complete debugging**: Error logs have all the context (15+ fields)
+- **Smart defaults**: Good starting point for most applications
+- **Full customization**: You can change everything dynamically
+- **Hot configuration**: `reconfigureLoggingMatrix()` works seamlessly
+
+## 🔒 Security & Compliance Notice
+
+### **✅ Safe Dynamic Changes:**
+- **Logging Matrix**: Controls which context fields appear in logs
+- **Log Level**: Can be changed dynamically (trace, debug, info, warn, error, fatal)
+- **Masking Fields**: Can add new sensitive fields dynamically (additive only)
+
+### ** Immutable Configuration:**
+- **Transports**: Cannot be changed dynamically (console, file, remote services)
+- **Security Settings**: Core masking config (maskChar, maxDepth, style) cannot be modified
+- **Infrastructure**: Redis, HTTP, and broker configurations cannot be modified
+
+### **🎯 Compliance Guarantee:**
+- **GDPR/HIPAA**: Sensitive data remains masked regardless of any dynamic changes
+- **Audit Trail**: All security configurations are logged and immutable
+- **Zero Risk**: Dynamic changes only affect log verbosity, level, and additive masking
+- **Workaround**: New sensitive fields can be added without redeployment
+
+**This saves money and improves debugging!** In production:
+- **Success logs**: Minimal cost, essential information
+- **Error logs**: Worth the cost, complete context for debugging
+- **Custom control**: Define exactly what matters for your application
+
 ---
 
-**Status**: 🆕 **In Development** - This example will demonstrate SyntropyLog's logging matrix with simple, practical examples. 
+**Status**: ✅ **Complete** - This example demonstrates how to control log information and costs with SyntropyLog's logging matrix. 

@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "SyntropyLog - Logging Levels and Transports Example",
   "main": "dist/index.js",
-
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",
@@ -11,7 +10,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "syntropylog": "0.6.7"
+    "syntropylog": "0.6.10"
   },
   "devDependencies": {
     "@types/node": "^18.0.0",
@@ -26,4 +25,4 @@
   ],
   "author": "SyntropySoft",
   "license": "MIT"
-} 
+}

@@ -6,12 +6,12 @@
   "main": "src/index.ts",
   "scripts": {
     "start": "tsx src/index.ts",
-    "dev": "tsx --watch src/index.ts",
+    "dev": "tsx src/index.ts",
     "build": "tsc",
     "test": "echo \"No tests specified\" && exit 0"
   },
   "dependencies": {
-    "syntropylog": "^0.6.7"
+    "syntropylog": "0.6.10"
   },
   "devDependencies": {
     "tsx": "^4.7.0",

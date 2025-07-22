@@ -91,4 +91,12 @@ process.on('SIGTERM', async () => {
 });
 
 // Run the application
-main(); 
+main()
+  .then(() => {
+    console.log('✅ Example completed successfully');
+    process.exit(0);
+  })
+  .catch((error) => {
+    console.error('❌ Example failed:', error);
+    process.exit(1);
+  }); 

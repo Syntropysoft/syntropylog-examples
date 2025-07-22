@@ -10,7 +10,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "syntropylog": "0.6.7"
+    "syntropylog": "0.6.10"
   },
   "devDependencies": {
     "@types/node": "^18.0.0",
@@ -25,4 +25,4 @@
   ],
   "author": "SyntropySoft",
   "license": "MIT"
-} 
+}

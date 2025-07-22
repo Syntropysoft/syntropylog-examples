@@ -1,183 +1,174 @@
-import { syntropyLog, initializeSyntropyLog, gracefulShutdown, waitForReady } from './boilerplate';
+import { SyntropyLog } from 'syntropylog';
+import { PrettyConsoleTransport } from 'syntropylog';
 
-// Different logging matrix configurations
-const loggingMatrixConfigurations = {
-  // Minimal context for success logs
-  success: {
-    info: ['correlationId', 'serviceName'],
-    debug: ['correlationId', 'serviceName', 'operation']
-  },
-
-  // Medium context for warning logs
-  warning: {
-    warn: ['correlationId', 'userId', 'errorCode', 'operation']
-  },
-
-  // Full context for error logs
-  error: {
-    error: ['*'], // All context fields
-    fatal: ['*']  // All context fields
-  },
-
-  // Cost-optimized configuration
-  costOptimized: {
-    info: ['correlationId'],           // Minimal for success
-    warn: ['correlationId', 'userId'], // Medium for warnings
-    error: ['*'],                      // Full for errors
-    debug: ['correlationId', 'operation'], // Limited for debug
-    trace: ['*']                       // Full for trace
-  },
-
-  // Business-focused configuration
-  business: {
-    info: ['correlationId', 'userId', 'operation'],
-    warn: ['correlationId', 'userId', 'errorCode', 'orderId'],
-    error: ['*'],
-    debug: ['correlationId', 'operation', 'paymentId']
-  }
+// 🎯 Sample user request data with many fields
+const userRequest = {
+  userId: 123,
+  email: "user@example.com",
+  password: "secret123", // will be masked
+  firstName: "John",
+  lastName: "Doe",
+  address: "123 Main St, New York, NY",
+  phone: "+1-555-0123",
+  ipAddress: "192.168.1.1",
+  userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+  sessionId: "sess-789",
+  requestId: "req-456",
+  preferences: { theme: "dark", language: "en" },
+  metadata: { source: "web", version: "1.0" }
 };
 
-async function demonstrateLoggingMatrix() {
-  console.log('🎯 Example 08: Logging Matrix - Smart Context Filtering\n');
-
-  // Initialize SyntropyLog first
-  await initializeSyntropyLog();
-
-  // Wait for SyntropyLog to be ready before proceeding
-  await waitForReady();
-
+// 🎯 Simple function that processes user data
+async function processUserRequest(syntropyLog: SyntropyLog, userData: any, operation: string) {
+  const logger = syntropyLog.getLogger();
+  
+  // Set context with all the user data
   const contextManager = syntropyLog.getContextManager();
-
-  await contextManager.run(async () => {
-    // Set rich context for demonstration
-    const correlationId = contextManager.getCorrelationId();
-    contextManager.set('operation', 'payment-processing');
-    contextManager.set('userId', 'user-123');
-    contextManager.set('orderId', 'order-456');
-    contextManager.set('paymentId', 'payment-789');
-    contextManager.set('errorCode', 'PAYMENT_TIMEOUT');
-    contextManager.set('serviceName', 'payment-service');
-    contextManager.set('amount', 99.99);
-    contextManager.set('currency', 'USD');
-
-    console.log('🔗 Full Context Available:', contextManager.getAll());
-    console.log('\n📊 Demonstrating different logging matrix configurations:\n');
-
-    // Configuration 1: Success-focused matrix
-    console.log('✅ Configuration 1: Success-focused Matrix');
-    syntropyLog.init({
-      logger: {
-        serviceName: 'success-matrix-service',
-        level: 'info'
-      },
-      loggingMatrix: loggingMatrixConfigurations.success
+  Object.entries(userData).forEach(([key, value]) => {
+    contextManager.set(key, value as string | number | boolean);
+  });
+  contextManager.set('operation', operation);
+  
+  // Simulate processing
+  if (userData.userId < 0) {
+    logger.error('Invalid user ID provided', { 
+      error: 'ID must be positive',
+      errorCode: 'INVALID_USER_ID'
     });
-
-    const successLogger = syntropyLog.getLogger();
-    successLogger.info('Payment processed successfully', { amount: 99.99 });
-    successLogger.debug('Payment validation completed');
-
-    // Configuration 2: Warning-focused matrix
-    console.log('\n⚠️ Configuration 2: Warning-focused Matrix');
-    syntropyLog.init({
-      logger: {
-        serviceName: 'warning-matrix-service',
-        level: 'warn'
-      },
-      loggingMatrix: loggingMatrixConfigurations.warning
-    });
-
-    const warningLogger = syntropyLog.getLogger();
-    warningLogger.warn('Payment gateway slow response', { timeout: 5000 });
-
-    // Configuration 3: Error-focused matrix
-    console.log('\n❌ Configuration 3: Error-focused Matrix');
-    syntropyLog.init({
-      logger: {
-        serviceName: 'error-matrix-service',
-        level: 'error'
-      },
-      loggingMatrix: loggingMatrixConfigurations.error
-    });
-
-    const errorLogger = syntropyLog.getLogger();
-    errorLogger.error('Payment processing failed', { 
-      error: 'Gateway timeout',
-      retryCount: 3 
-    });
-
-    // Configuration 4: Cost-optimized matrix
-    console.log('\n💰 Configuration 4: Cost-optimized Matrix');
-    syntropyLog.init({
-      logger: {
-        serviceName: 'cost-optimized-service',
-        level: 'info'
-      },
-      loggingMatrix: loggingMatrixConfigurations.costOptimized
-    });
-
-    const costLogger = syntropyLog.getLogger();
-    costLogger.info('User login successful'); // Minimal context
-    costLogger.warn('High memory usage'); // Medium context
-    costLogger.error('Database connection failed'); // Full context
-    costLogger.debug('Processing user request'); // Limited context
-
-    // Configuration 5: Business-focused matrix
-    console.log('\n🏢 Configuration 5: Business-focused Matrix');
-    syntropyLog.init({
-      logger: {
-        serviceName: 'business-service',
-        level: 'info'
-      },
-      loggingMatrix: loggingMatrixConfigurations.business
-    });
-
-    const businessLogger = syntropyLog.getLogger();
-    businessLogger.info('Order created successfully');
-    businessLogger.warn('Payment verification pending');
-    businessLogger.error('Payment declined by bank');
-    businessLogger.debug('Processing payment details');
-
-    // Demonstrate cost savings
-    console.log('\n📈 Cost Optimization Analysis:');
-    
-    const scenarios = [
-      { level: 'info', context: 'minimal', cost: 'low' },
-      { level: 'warn', context: 'medium', cost: 'medium' },
-      { level: 'error', context: 'full', cost: 'high' },
-      { level: 'debug', context: 'limited', cost: 'low' }
-    ];
-
-    scenarios.forEach(scenario => {
-      console.log(`✅ ${scenario.level.toUpperCase()}: ${scenario.context} context (${scenario.cost} cost)`);
-    });
-
-    // Show context filtering by level
-    console.log('\n🔍 Context Filtering by Level:');
-    console.log('📝 INFO: Only correlationId, serviceName (minimal cost)');
-    console.log('⚠️ WARN: correlationId, userId, errorCode (medium cost)');
-    console.log('❌ ERROR: All context fields (full debugging)');
-    console.log('🐛 DEBUG: correlationId, operation (limited cost)');
-
-    // Demonstrate smart logging benefits
-    console.log('\n🧠 Smart Logging Benefits:');
-    console.log('✅ Cost Optimization: Minimal context for success logs');
-    console.log('✅ Debugging Power: Full context for error logs');
-    console.log('✅ Performance: Faster logging with less data');
-    console.log('✅ Compliance: Full audit trail for errors');
-    console.log('✅ Flexibility: Different strategies per environment');
-
-    console.log('\n✅ Logging matrix demonstration completed!');
+    return false;
+  }
+  
+  logger.info('User request processed successfully', { 
+    status: 'completed',
+    duration: '150ms'
   });
   
-  // Exit gracefully after demonstration
-  console.log('\n🎉 Example completed successfully! Exiting...');
-  await gracefulShutdown('COMPLETION');
+  logger.debug('Processing details', { 
+    steps: ['validation', 'processing', 'response'],
+    timestamp: new Date().toISOString()
+  });
+  
+  return true;
 }
 
-// Run the demonstration
-demonstrateLoggingMatrix().catch((error) => {
-  console.error('❌ Error in demonstration:', error);
-  process.exit(1);
-});
+// 🎯 Demonstrate logging matrix with hot configuration changes
+async function demonstrateLoggingMatrix() {
+  console.log('\n🧮 LOGGING MATRIX DEMO');
+  console.log('========================\n');
+
+  // 🌟 Initialize SyntropyLog with pretty transport
+  const syntropyLog = SyntropyLog.getInstance();
+  await syntropyLog.init({
+    logger: {
+      serviceName: 'logging-matrix-demo',
+      transports: [new PrettyConsoleTransport()],
+      serializerTimeoutMs: 100,
+    }
+  });
+
+  console.log('🚀 CONFIGURATION 1: Default Logging Matrix');
+  console.log('──────────────────────────────────────────');
+  console.log('✅ INFO: correlationId, serviceName (minimal)');
+  console.log('✅ ERROR: Everything (*) (complete context)\n');
+
+  // Set context for correlation ID
+  await syntropyLog.getContextManager().run(async () => {
+    console.log('📝 PROCESSING USER REQUEST (Default Config):');
+    console.log('─────────────────────────────────────────────\n');
+    
+    await processUserRequest(syntropyLog, userRequest, 'user-login');
+  });
+
+  console.log('\n' + '─'.repeat(60) + '\n');
+
+  // 🔄 Change configuration in hot
+  console.log('🔄 CHANGING CONFIGURATION IN HOT...\n');
+  
+  syntropyLog.reconfigureLoggingMatrix({
+    default: ['userId', 'operation', 'status'],
+    warn: ['userId', 'email', 'errorCode'],
+    error: ['userId', 'email', 'address', 'phone', 'errorDetails'],
+    debug: ['*']
+  });
+
+  console.log('🚀 CONFIGURATION 2: Custom Logging Matrix');
+  console.log('──────────────────────────────────────────');
+  console.log('✅ INFO: userId, operation, status');
+  console.log('✅ WARNING: userId, email, errorCode');
+  console.log('✅ ERROR: userId, email, address, phone, errorDetails');
+  console.log('✅ DEBUG: Everything (*)\n');
+
+  // Set context for correlation ID
+  await syntropyLog.getContextManager().run(async () => {
+    console.log('📝 PROCESSING USER REQUEST (Custom Config):');
+    console.log('─────────────────────────────────────────────\n');
+    
+    await processUserRequest(syntropyLog, userRequest, 'user-login');
+  });
+
+  console.log('\n' + '─'.repeat(60) + '\n');
+
+  // 🔄 Change to minimal configuration
+  console.log('🔄 CHANGING TO MINIMAL CONFIGURATION...\n');
+  
+  await syntropyLog.init({
+    logger: {
+      serviceName: 'logging-matrix-demo',
+      transports: [new PrettyConsoleTransport()],
+      serializerTimeoutMs: 100,
+    },
+    loggingMatrix: {
+      default: ['correlationId'],
+      error: ['correlationId', 'userId', 'errorCode']
+    }
+  });
+
+  console.log('🚀 CONFIGURATION 3: Minimal Logging Matrix');
+  console.log('──────────────────────────────────────────');
+  console.log('✅ INFO: Only correlationId (ultra minimal)');
+  console.log('✅ ERROR: correlationId, userId, errorCode (minimal error)\n');
+
+  // Set context for correlation ID
+  await syntropyLog.getContextManager().run(async () => {
+    console.log('📝 PROCESSING USER REQUEST (Minimal Config):');
+    console.log('─────────────────────────────────────────────\n');
+    
+    await processUserRequest(syntropyLog, userRequest, 'user-login');
+  });
+
+  await syntropyLog.shutdown();
+  
+  console.log('\n' + '─'.repeat(60) + '\n');
+  
+  // 📊 Summary
+  console.log('📊 LOGGING MATRIX SUMMARY:');
+  console.log('─────────────────────────');
+  console.log('✅ Same log call, different information based on configuration');
+  console.log('✅ Hot configuration changes work seamlessly');
+  console.log('✅ Cost control: Minimal info for success, complete for errors');
+  console.log('✅ Full customization: Define exactly what appears in each level');
+  console.log('✅ Smart defaults: Good starting point, completely customizable');
+  
+  console.log('\n🎯 Key Takeaway:');
+  console.log('   Control what information appears in your logs to save costs!');
+}
+
+// 🚀 Main execution
+async function main() {
+  try {
+    // Run the demonstration
+    await demonstrateLoggingMatrix();
+    
+    console.log('\n✅ Logging matrix demo completed successfully!');
+    
+  } catch (error) {
+    console.error('❌ Error in logging matrix demo:', error);
+    process.exit(1);
+  }
+}
+
+// 🎯 Start the application
+if (require.main === module) {
+  main();
+}
  
