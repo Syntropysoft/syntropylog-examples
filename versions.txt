@@ -2,5 +2,5 @@
 # Formato: paquete=version
 
 syntropylog=0.6.10
-@syntropylog/adapters=0.1.22
+@syntropylog/adapters=0.1.23
 @syntropylog/types=0.1.5 

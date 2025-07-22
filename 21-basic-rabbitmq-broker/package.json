@@ -23,7 +23,7 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "@syntropylog/adapters": "^0.1.22",
+    "@syntropylog/adapters": "^0.1.23",
     "@syntropylog/types": "^0.1.5",
     "amqplib": "^0.10.3",
     "syntropylog": "^0.6.10"

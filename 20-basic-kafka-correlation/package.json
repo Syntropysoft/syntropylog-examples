@@ -19,7 +19,7 @@
   "license": "Apache-2.0",
   "type": "commonjs",
   "dependencies": {
-    "@syntropylog/adapters": "^0.1.22",
+    "@syntropylog/adapters": "^0.1.23",
     "kafkajs": "^2.2.4",
     "syntropylog": "^0.6.10"
   },

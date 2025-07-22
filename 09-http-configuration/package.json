@@ -10,7 +10,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "syntropylog": "0.6.10",
+    "syntropylog": "^0.6.10",
     "axios": "^1.6.0"
   },
   "devDependencies": {

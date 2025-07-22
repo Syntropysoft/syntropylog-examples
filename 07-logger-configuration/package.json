@@ -19,7 +19,7 @@
     "production"
   ],
   "dependencies": {
-    "syntropylog": "0.6.10"
+    "syntropylog": "^0.6.10"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
