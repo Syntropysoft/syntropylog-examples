@@ -73,14 +73,65 @@ async function main() {
       const correlationId = message.headers?.['x-correlation-id'];
       const correlationIdStr = typeof correlationId === 'string' ? correlationId : correlationId?.toString();
       
+      // Handle payload - could be Buffer or object
+      let payload;
+      logger.info('DEBUG: Processing payload', { 
+        payloadType: typeof message.payload,
+        isBuffer: Buffer.isBuffer(message.payload),
+        hasType: message.payload && typeof message.payload === 'object' && 'type' in message.payload,
+        hasData: message.payload && typeof message.payload === 'object' && 'data' in message.payload
+      });
+      
+      if (Buffer.isBuffer(message.payload)) {
+        const bufferString = message.payload.toString();
+        logger.info('DEBUG: Buffer content', { 
+          bufferString: bufferString.substring(0, 100) + '...',
+          bufferLength: message.payload.length
+        });
+        
+        // First parse: get the JSON from the buffer
+        const parsedFromBuffer = JSON.parse(bufferString);
+        
+        // Second parse: if it's a Buffer object, extract the actual data
+        if (parsedFromBuffer && typeof parsedFromBuffer === 'object' && parsedFromBuffer.type === 'Buffer' && Array.isArray(parsedFromBuffer.data)) {
+          const actualBuffer = Buffer.from(parsedFromBuffer.data);
+          payload = JSON.parse(actualBuffer.toString());
+          logger.info('DEBUG: Double parsed Buffer payload (Buffer object)');
+        } else {
+          payload = parsedFromBuffer;
+          logger.info('DEBUG: Single parsed Buffer payload (direct JSON)');
+        }
+      } else if (typeof message.payload === 'string') {
+        payload = JSON.parse(message.payload);
+        logger.info('DEBUG: Parsed string payload');
+      } else if (message.payload && typeof message.payload === 'object' && 'type' in message.payload && 'data' in message.payload) {
+        // Handle Buffer object representation
+        const bufferObj = message.payload as any;
+        if (bufferObj.type === 'Buffer' && Array.isArray(bufferObj.data)) {
+          const buffer = Buffer.from(bufferObj.data);
+          payload = JSON.parse(buffer.toString());
+          logger.info('DEBUG: Parsed Buffer object payload');
+        } else {
+          payload = message.payload;
+          logger.info('DEBUG: Using original payload (not Buffer object)');
+        }
+      } else {
+        payload = message.payload;
+        logger.info('DEBUG: Using original payload (fallback)');
+      }
+      
       if (correlationIdStr) {
+        logger.info('DEBUG: Final payload to log', { 
+          payloadType: typeof payload,
+          payloadKeys: payload && typeof payload === 'object' ? Object.keys(payload) : 'not object'
+        });
         logger.info('Dispatch ready event received', { 
           correlationId: correlationIdStr,
-          payload: message.payload.toString()
+          payload: payload // This should now be the parsed JSON object
         });
       } else {
         logger.info('Dispatch ready event received (no correlation ID)', { 
-          payload: message.payload.toString()
+          payload: payload // This should now be the parsed JSON object
         });
       }
       

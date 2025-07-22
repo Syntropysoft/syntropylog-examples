@@ -49,7 +49,23 @@ export class NatsAdapter implements IBrokerAdapter {
         }
       }
     }
-    this.natsConnection.publish(topic, this.codec.encode(message.payload), {
+    
+    // Handle payload serialization
+    let payloadToSend;
+    if (Buffer.isBuffer(message.payload)) {
+      // If it's already a Buffer, decode it as JSON and re-encode
+      try {
+        const jsonString = message.payload.toString();
+        payloadToSend = JSON.parse(jsonString);
+      } catch {
+        // If it's not valid JSON, send as string
+        payloadToSend = message.payload.toString();
+      }
+    } else {
+      payloadToSend = message.payload;
+    }
+    
+    this.natsConnection.publish(topic, this.codec.encode(payloadToSend), {
       headers: natsHeaders,
     });
   }
@@ -65,8 +81,11 @@ export class NatsAdapter implements IBrokerAdapter {
     (async () => {
       for await (const m of sub) {
         try {
+          // Decode the JSON payload from NATS
+          const decodedPayload = this.codec.decode(m.data);
+          
           const msg: BrokerMessage = {
-            payload: Buffer.from(this.codec.decode(m.data) as any),
+            payload: Buffer.from(JSON.stringify(decodedPayload)),
             headers: this.natsHeadersToRecord(m.headers),
           };
           // Call handler with the correct 2-argument signature
