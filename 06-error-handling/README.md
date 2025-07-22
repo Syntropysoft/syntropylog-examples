@@ -124,6 +124,62 @@ This example demonstrates SyntropyLog's error handling capabilities:
 - **Document simple patterns**: Best practices for error handling
 - **Test error scenarios**: Ensure graceful handling
 
+## ⚠️ **IMPORTANT: Context Management in Examples**
+
+### **🔍 Why Context is Manual in Examples**
+
+In SyntropyLog, **context management is asynchronous** and uses Node.js `AsyncLocalStorage`. This means:
+
+1. **Context is NOT global by default** - it only exists within `contextManager.run()` blocks
+2. **Examples are quick demonstrations** - they don't have HTTP requests or message queues that automatically create context
+3. **Manual context creation** - we must wrap our logging operations in `contextManager.run()` to get correlation IDs
+
+### **🎯 The Solution: Global Context Wrapper**
+
+```typescript
+// ❌ WITHOUT context (no correlationId)
+logger.error('Database connection failed'); // No correlationId
+
+// ✅ WITH context (has correlationId)
+await contextManager.run(async () => {
+  logger.error('Database connection failed'); // Has correlationId automatically
+});
+```
+
+### **🔮 The Magic Middleware (2 Lines of Code)**
+
+In production applications, you'll use this simple middleware:
+
+```typescript
+app.use(async (req, res, next) => {
+  await contextManager.run(async () => {
+    // 🎯 MAGIC: Just 2 lines!
+    const correlationId = contextManager.getCorrelationId(); // Detects or generates
+    contextManager.set(contextManager.getCorrelationIdHeaderName(), correlationId); // Sets in context
+    
+    next();
+  });
+});
+```
+
+**Why this is marvelous:**
+- **Intelligent Detection**: `getCorrelationId()` uses existing ID or generates new one
+- **Automatic Configuration**: `getCorrelationIdHeaderName()` reads your config
+- **Automatic Propagation**: Once set, it propagates to all logs and operations
+
+### **🚀 In Real Applications**
+
+In production applications, context is automatically created by:
+- **HTTP middleware** (Express, Fastify, etc.)
+- **Message queue handlers** (Kafka, RabbitMQ, etc.)
+- **Background job processors**
+- **API gateways**
+
+### **📚 Key Takeaway**
+
+**For examples and quick tests**: Wrap all logging in `contextManager.run()`  
+**For production apps**: Use SyntropyLog's HTTP/broker adapters for automatic context
+
 ---
 
 **Status**: 🆕 **In Development** - This example will demonstrate SyntropyLog's error handling capabilities with simple, practical error scenarios. 
