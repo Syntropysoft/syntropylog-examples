@@ -67,14 +67,14 @@ SyntropyLog unifies logging, HTTP clients, Redis, and message brokers in a singl
 
 ### Test All Examples (Recommended)
 ```bash
-# Test all examples with default version (0.6.10)
+# Test all examples with default version (0.6.11)
 ./test-all-examples.sh
 
 # Test with specific version
-./test-all-examples.sh 0.6.10
+./test-all-examples.sh 0.6.11
 
 # Test from specific example
-./test-all-examples.sh 0.6.10 5  # Start from example 05
+./test-all-examples.sh 0.6.11 5  # Start from example 05
 ```
 
 ### Individual Examples
@@ -210,7 +210,7 @@ const subscription = {
 
 ## 🚀 Beta Version Notice
 
-> **🎯 BETA VERSION**: This is a beta release (v0.6.10). 
+> **🎯 BETA VERSION**: This is a beta release (v0.6.11). 
 > 
 > - **Core features stable**: Logger, context, HTTP, Redis, brokers (tested & proven)
 > - **Production ready**: 94.1% test coverage, comprehensive examples

@@ -1,0 +1,30 @@
+{
+  "name": "32-testing-transports-concepts",
+  "version": "1.0.0",
+  "description": "Testing Transports Concepts - Understanding how transports work as spies",
+  "main": "src/index.ts",
+  "scripts": {
+    "test": "vitest",
+    "test:watch": "vitest --watch",
+    "test:coverage": "vitest --run --coverage",
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "syntropylog": "^0.6.14"
+  },
+  "devDependencies": {
+    "vitest": "^1.6.1",
+    "typescript": "^5.0.0",
+    "@vitest/coverage-v8": "^1.6.1"
+  },
+  "keywords": [
+    "syntropylog",
+    "testing",
+    "transports",
+    "spies",
+    "concepts"
+  ],
+  "author": "SyntropySoft",
+  "license": "Apache-2.0"
+}
