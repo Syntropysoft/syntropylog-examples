@@ -1,132 +1,102 @@
-<p align="center">
-  <img src="https://raw.githubusercontent.com/Syntropysoft/syntropylog-examples-/main/assets/syntropyLog-logo.png" alt="SyntropyLog Logo" width="170"/>
-</p>
+# NestJS + SyntropyLog Example
 
-<h1 align="center">SyntropyLog</h1>
+Este ejemplo demuestra cómo integrar SyntropyLog con NestJS para logging estructurado, cache con Redis y propagación automática de correlation IDs.
 
-<p align="center">
-  <strong>The Observability Framework for High-Performance Teams.</strong>
-  <br />
-  Ship resilient, secure, and cost-effective Node.js applications with confidence.
-</p>
+## 🚀 Configuración
 
-# Example 14: HTTP + Redis with NestJS 🪺
-
-> **Framework Integration** - Integrating SyntropyLog with NestJS for HTTP APIs with Redis caching and correlation.
-
-## 🎯 What You'll Learn
-
-This example demonstrates SyntropyLog integration with NestJS:
-
-- **NestJS integration**: Decorators, interceptors, and providers
-- **HTTP correlation**: Request tracing across NestJS services
-- **Redis caching**: Caching strategies in NestJS applications
-- **Dependency injection**: SyntropyLog services in NestJS DI container
-
-## 🏗️ Architecture Overview
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    NestJS + SyntropyLog Integration             │
-│                                                                 │
-│ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ │
-│ │ Controllers │ │ Services    │ │ Interceptors│ │ Providers   │ │
-│ │             │ │             │ │             │ │             │ │
-│ │ • HTTP      │ │ • Business  │ │ • Request   │ │ • Logger    │ │
-│ │   Endpoints │ │   Logic     │ │   Logging   │ │ • Redis     │ │
-│ │ • Validation│ │ • Data      │ │ • Response  │ │ • HTTP      │ │
-│ │ • DTOs      │ │   Access    │ │   Logging   │ │   Client    │ │
-│ │ • Guards    │ │ • Caching   │ │ • Error     │ │ • Context   │ │
-│ │ • Filters   │ │ • External  │ │   Handling  │ │ • Metrics   │ │
-│ │ • Pipes     │ │   APIs      │ │ • Metrics   │ │ • Health    │ │
-│ └─────────────┘ └─────────────┘ └─────────────┘ └─────────────┘ │
-└─────────────────────────────────────────────────────────────────┘
+### 1. Instalar dependencias
+```bash
+npm install
 ```
 
-## 🎯 Learning Objectives
+### 2. Iniciar Redis
+```bash
+docker compose up -d redis
+```
 
-### **NestJS Integration:**
-- **Decorators**: Custom decorators for logging and correlation
-- **Interceptors**: Request/response logging interceptors
-- **Providers**: SyntropyLog services as NestJS providers
-- **Modules**: Modular SyntropyLog configuration
-- **Guards**: Authentication and authorization with logging
+### 3. Ejecutar la aplicación
+```bash
+npm run start:dev
+```
 
-### **HTTP Correlation:**
-- **Request tracing**: End-to-end request correlation
-- **Service calls**: Correlation across multiple services
-- **External APIs**: Correlation with third-party services
-- **Error tracking**: Error correlation across services
-- **Performance monitoring**: Request performance tracking
+## 📋 Endpoints
 
-### **Redis Caching:**
-- **Cache decorators**: NestJS cache decorators with SyntropyLog
-- **Cache strategies**: Different caching patterns
-- **Cache invalidation**: Intelligent cache management
-- **Cache monitoring**: Cache performance metrics
-- **Cache fallbacks**: Graceful cache failure handling
+- `GET /health` - Health check
+- `GET /products/:id` - Obtener producto (con cache)
+- `POST /products` - Crear producto
 
-### **Dependency Injection:**
-- **Logger injection**: SyntropyLog logger in services
-- **Redis injection**: Redis client injection
-- **HTTP client injection**: Instrumented HTTP client
-- **Context injection**: Request context injection
-- **Metrics injection**: Performance metrics injection
+## 🔧 Configuración de SyntropyLog
 
-## 🚀 Implementation Plan
+La configuración está en `src/main.ts`:
 
-### **Phase 1: Basic NestJS Setup**
-- [ ] NestJS application setup
-- [ ] SyntropyLog module configuration
-- [ ] Basic controller and service
-- [ ] Logger injection
+```typescript
+await syntropyLog.init({
+  logger: {
+    serviceName: 'nestjs-example',
+    level: 'info',
+    serializerTimeoutMs: 1000,
+  },
+  context: {
+    correlationIdHeader: 'x-correlation-id',
+    transactionIdHeader: 'x-trace-id',
+  },
+  redis: {
+    instances: [
+      {
+        mode: 'single',
+        instanceName: 'product-cache',
+        url: process.env.REDIS_URL || 'redis://localhost:6379',
+      },
+    ],
+  },
+});
+```
 
-### **Phase 2: HTTP Correlation**
-- [ ] Request interceptor implementation
-- [ ] Response interceptor implementation
-- [ ] Correlation ID propagation
-- [ ] Error handling interceptor
+## 🔗 Correlation IDs
 
-### **Phase 3: Redis Integration**
-- [ ] Redis provider setup
-- [ ] Cache decorators implementation
-- [ ] Cache strategies demonstration
-- [ ] Cache monitoring
+Los correlation IDs se propagan automáticamente:
 
-### **Phase 4: Advanced Features**
-- [ ] Custom decorators
-- [ ] Guards with logging
-- [ ] Filters with correlation
-- [ ] Health checks
+- **Automático**: Se genera si no se envía
+- **Personalizado**: Enviar header `x-correlation-id`
+- **Logs**: Aparecen en todos los logs del servicio
+- **Respuestas**: Se devuelven en headers de respuesta
 
-## 📊 Expected Outcomes
+## 📝 Ejemplos de uso
 
-### **Technical Demonstrations:**
-- ✅ **NestJS application** with SyntropyLog integration
-- ✅ **HTTP correlation** across NestJS services
-- ✅ **Redis caching** with performance monitoring
-- ✅ **Dependency injection** of SyntropyLog services
+### Obtener producto (correlation ID automático)
+```bash
+curl http://localhost:3000/products/123
+```
 
-### **Learning Outcomes:**
-- ✅ **How to integrate SyntropyLog** with NestJS
-- ✅ **HTTP correlation** in NestJS applications
-- ✅ **Redis caching** strategies with monitoring
-- ✅ **NestJS best practices** with observability
+### Obtener producto (correlation ID personalizado)
+```bash
+curl -H "x-correlation-id: mi-correlation-id" http://localhost:3000/products/123
+```
 
-## 🔧 Prerequisites
+### Crear producto
+```bash
+curl -X POST http://localhost:3000/products \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Nuevo Producto","price":999,"description":"Descripción"}'
+```
 
-- Node.js 18+
-- Understanding of NestJS framework
-- Familiarity with examples 10-13 (HTTP + Redis basics)
+## 🏗️ Estructura del proyecto
 
-## 📝 Notes for Implementation
+```
+src/
+├── main.ts                    # Configuración de SyntropyLog
+├── app.module.ts             # Módulo principal
+├── context.middleware.ts     # Middleware para correlation IDs
+└── products/
+    ├── products.controller.ts # Controlador REST
+    ├── products.service.ts    # Lógica de negocio + Redis
+    └── products.module.ts     # Módulo de productos
+```
 
-- **Start with basic NestJS**: Simple controller and service
-- **Add SyntropyLog gradually**: Step-by-step integration
-- **Focus on correlation**: Request tracing across services
-- **Include caching examples**: Real-world caching scenarios
-- **Document integration patterns**: Best practices for NestJS
+## ✨ Características
 
----
-
-**Status**: 🆕 **In Development** - This example will demonstrate SyntropyLog integration with NestJS for building observable HTTP APIs with Redis caching. 
+- ✅ **Logging estructurado** con correlation IDs
+- ✅ **Cache con Redis** automático
+- ✅ **Propagación de contexto** en requests HTTP
+- ✅ **Headers de respuesta** con correlation IDs
+- ✅ **Graceful shutdown** de SyntropyLog
