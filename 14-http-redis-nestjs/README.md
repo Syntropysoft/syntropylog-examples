@@ -1,20 +1,20 @@
 # NestJS + SyntropyLog Example
 
-Este ejemplo demuestra cómo integrar SyntropyLog con NestJS para logging estructurado, cache con Redis y propagación automática de correlation IDs.
+This example demonstrates how to integrate SyntropyLog with NestJS for structured logging, Redis caching, and automatic correlation ID propagation.
 
-## 🚀 Configuración
+## 🚀 Setup
 
-### 1. Instalar dependencias
+### 1. Install dependencies
 ```bash
 npm install
 ```
 
-### 2. Iniciar Redis
+### 2. Start Redis
 ```bash
 docker compose up -d redis
 ```
 
-### 3. Ejecutar la aplicación
+### 3. Run the application
 ```bash
 npm run start:dev
 ```
@@ -22,12 +22,12 @@ npm run start:dev
 ## 📋 Endpoints
 
 - `GET /health` - Health check
-- `GET /products/:id` - Obtener producto (con cache)
-- `POST /products` - Crear producto
+- `GET /products/:id` - Get product (with cache)
+- `POST /products` - Create product
 
-## 🔧 Configuración de SyntropyLog
+## 🔧 SyntropyLog Configuration
 
-La configuración está en `src/main.ts`:
+Configuration is in `src/main.ts`:
 
 ```typescript
 await syntropyLog.init({
@@ -54,49 +54,49 @@ await syntropyLog.init({
 
 ## 🔗 Correlation IDs
 
-Los correlation IDs se propagan automáticamente:
+Correlation IDs are automatically propagated:
 
-- **Automático**: Se genera si no se envía
-- **Personalizado**: Enviar header `x-correlation-id`
-- **Logs**: Aparecen en todos los logs del servicio
-- **Respuestas**: Se devuelven en headers de respuesta
+- **Automatic**: Generated if not provided
+- **Custom**: Send `x-correlation-id` header
+- **Logs**: Appear in all service logs
+- **Responses**: Returned in response headers
 
-## 📝 Ejemplos de uso
+## 📝 Usage Examples
 
-### Obtener producto (correlation ID automático)
+### Get product (automatic correlation ID)
 ```bash
 curl http://localhost:3000/products/123
 ```
 
-### Obtener producto (correlation ID personalizado)
+### Get product (custom correlation ID)
 ```bash
-curl -H "x-correlation-id: mi-correlation-id" http://localhost:3000/products/123
+curl -H "x-correlation-id: my-correlation-id" http://localhost:3000/products/123
 ```
 
-### Crear producto
+### Create product
 ```bash
 curl -X POST http://localhost:3000/products \
   -H "Content-Type: application/json" \
-  -d '{"title":"Nuevo Producto","price":999,"description":"Descripción"}'
+  -d '{"title":"New Product","price":999,"description":"Description"}'
 ```
 
-## 🏗️ Estructura del proyecto
+## 🏗️ Project Structure
 
 ```
 src/
-├── main.ts                    # Configuración de SyntropyLog
-├── app.module.ts             # Módulo principal
-├── context.middleware.ts     # Middleware para correlation IDs
+├── main.ts                    # SyntropyLog configuration
+├── app.module.ts             # Main module
+├── context.middleware.ts     # Correlation ID middleware
 └── products/
-    ├── products.controller.ts # Controlador REST
-    ├── products.service.ts    # Lógica de negocio + Redis
-    └── products.module.ts     # Módulo de productos
+    ├── products.controller.ts # REST controller
+    ├── products.service.ts    # Business logic + Redis
+    └── products.module.ts     # Products module
 ```
 
-## ✨ Características
+## ✨ Features
 
-- ✅ **Logging estructurado** con correlation IDs
-- ✅ **Cache con Redis** automático
-- ✅ **Propagación de contexto** en requests HTTP
-- ✅ **Headers de respuesta** con correlation IDs
-- ✅ **Graceful shutdown** de SyntropyLog
+- ✅ **Structured logging** with correlation IDs
+- ✅ **Redis cache** automatic
+- ✅ **Context propagation** in HTTP requests
+- ✅ **Response headers** with correlation IDs
+- ✅ **Graceful shutdown** of SyntropyLog
