@@ -11,7 +11,7 @@
     "test:simple": "vitest --config vitest.config.simple.ts"
   },
   "dependencies": {
-    "syntropylog": "^0.6.14"
+    "syntropylog": "file:../../.."
   },
   "devDependencies": {
     "@types/node": "^20.10.5",

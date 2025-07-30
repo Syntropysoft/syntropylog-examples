@@ -1,0 +1,23 @@
+{
+  "name": "14-http-redis-nestjs",
+  "version": "1.0.0",
+  "description": "SyntropyLog 14-http-redis-nestjs Example",
+  "main": "src/index.ts",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "syntropylog": "file:../../..",
+    "@syntropylog/types": "0.1.5",
+    "@syntropylog/adapters": "0.1.23"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "tsx": "^4.0.0",
+    "vitest": "^1.0.0"
+  }
+}

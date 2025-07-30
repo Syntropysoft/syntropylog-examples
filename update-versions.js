@@ -53,7 +53,7 @@ examples.forEach(example => {
         Object.keys(VERSIONS).forEach(pkg => {
           if (packageJson[depType][pkg]) {
             const oldVersion = packageJson[depType][pkg];
-            packageJson[depType][pkg] = `^${VERSIONS[pkg]}`;
+            packageJson[depType][pkg] = `${VERSIONS[pkg]}`;
             if (oldVersion !== packageJson[depType][pkg]) {
               console.log(`  ${pkg}: ${oldVersion} → ${packageJson[depType][pkg]}`);
               changed = true;

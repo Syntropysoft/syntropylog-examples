@@ -1,0 +1,35 @@
+{
+  "name": "33-tree-shaking-minimal",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "SyntropyLog Tree Shaking - Minimal Import Example",
+  "main": "dist/index.js",
+  "scripts": {
+    "clean": "rm -rf dist",
+    "build": "tsc",
+    "start": "npm run clean && npm run build && node dist/index.js",
+    "dev": "npm run clean && tsx index.ts",
+    "build:analyze": "rollup -c rollup.config.js --analyze"
+  },
+  "dependencies": {
+    "syntropylog": "file:../../.."
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^25.0.7",
+    "@rollup/plugin-json": "^6.1.0",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-typescript": "^11.1.6",
+    "rollup": "^3.29.5",
+    "rollup-plugin-visualizer": "^5.12.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.8.3"
+  },
+  "keywords": [
+    "syntropylog",
+    "tree-shaking",
+    "bundle-size",
+    "minimal-import"
+  ],
+  "author": "SyntropyLog Team",
+  "license": "MIT"
+}
