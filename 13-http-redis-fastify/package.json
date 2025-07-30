@@ -13,10 +13,13 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "@syntropylog/types": "^0.1.5",
+    "@fastify/request-context": "^4.2.0",
+    "@syntropylog/types": "0.1.5",
+    "@types/uuid": "^10.0.0",
     "fastify": "^4.24.3",
     "redis": "^4.6.15",
-    "syntropylog": "^0.6.14"
+    "syntropylog": "file:../../..",
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",

@@ -4,8 +4,9 @@
 // =================================================================
 
 import express, { Request, Response } from 'express';
-import { ILogger } from 'syntropylog';
+import { ILogger, syntropyLog } from 'syntropylog';
 import { ProductDataService, Product } from './ProductDataService';
+import { syntropyContextMiddleware } from './contextMiddleware';
 
 export class ProductServer {
   private readonly app: express.Application;
@@ -24,15 +25,9 @@ export class ProductServer {
 
   private setupMiddleware(): void {
     this.app.use(express.json());
-    this.app.use((req: Request, res: Response, next) => {
-      this.logger.info(`${req.method} ${req.path}`, {
-        method: req.method, 
-        path: req.path,
-        query: req.query as any,
-        body: req.body,
-      });
-      next();
-    });
+    
+    // Use SyntropyLog context middleware
+    this.app.use(syntropyContextMiddleware());
   }
 
   private setupRoutes(): void {

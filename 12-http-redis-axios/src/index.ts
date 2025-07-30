@@ -1,8 +1,3 @@
-// =================================================================
-//  index.ts - Product Service with Redis Cache Example
-//  RESPONSIBILITY: Orchestrate ProductDataService and ProductServer
-// =================================================================
-
 import { syntropyLog } from 'syntropylog';
 import { initializeSyntropyLog, gracefulShutdown } from './boilerplate';
 import { ProductDataService } from './ProductDataService';

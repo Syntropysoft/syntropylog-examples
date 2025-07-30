@@ -26,35 +26,29 @@ export class ProductDataService {
   async getProduct(id: string): Promise<Product | null> {
     const cacheKey = `product:${id}`;
     
-    try {
-      // Try to get from cache first
-      const cached = await this.redis.get(cacheKey);
-      console.log('cache!!', cached);
-      if (cached) {
-        this.logger.debug('Product found in cache', { id });
-        return JSON.parse(cached);
-      }
-
-      // Cache miss - simulate DB delay
-      this.logger.debug('Cache miss, fetching from DB', { id });
-      await this.simulateDbDelay();
-      
-      // Simulate DB query
-      const product = await this.getProductFromDb(id);
-      if (!product) {
-        this.logger.debug('Product not found in DB', { id });
-        return null;
-      }
-
-      // Cache the result
-      await this.redis.set(cacheKey, JSON.stringify(product), this.cacheTTL);
-      this.logger.debug('Product cached', { id, ttl: this.cacheTTL });
-      
-      return product;
-    } catch (error) {
-      this.logger.error('Error getting product', { id, error: error instanceof Error ? error.message : String(error) });
-      throw error;
+    // Try to get from cache first
+    const cached = await this.redis.get(cacheKey);
+    
+    if (cached) {
+      return JSON.parse(cached);
     }
+    
+    // Simulate database delay
+    await this.simulateDbDelay();
+    
+    // Create a mock product
+    const product: Product = {
+      id,
+      name: 'Laptop Gaming',
+      price: 1299.99,
+      description: 'High-performance gaming laptop',
+      createdAt: '2024-01-01T00:00:00.000Z'
+    };
+    
+    // Cache the result
+    await this.redis.set(cacheKey, JSON.stringify(product), 30);
+    
+    return product;
   }
 
   async createProduct(productData: Omit<Product, 'id' | 'createdAt'>): Promise<Product> {
