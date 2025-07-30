@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@syntropylog/types": "0.1.5",
-    "syntropylog": "file:../../.."
+    "syntropylog": "0.7.2"
   },
   "devDependencies": {
     "tsx": "^4.0.0",

@@ -17,7 +17,7 @@
     "smart-defaults"
   ],
   "dependencies": {
-    "syntropylog": "file:../../.."
+    "syntropylog": "0.7.2"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

@@ -1,6 +1,9 @@
 # Versiones actuales del framework y adapters
 # Formato: paquete=version
+##no borrar
+#syntropylog=file:../../..
+#########
 
-syntropylog=file:../../..
+syntropylog=0.7.2
 @syntropylog/adapters=0.1.24
 @syntropylog/types=0.1.5 

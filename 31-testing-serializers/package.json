@@ -11,7 +11,7 @@
     "build": "tsc"
   },
   "dependencies": {
-    "syntropylog": "file:../../.."
+    "syntropylog": "0.7.2"
   },
   "devDependencies": {
     "typescript": "^5.8.3",

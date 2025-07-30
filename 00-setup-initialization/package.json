@@ -16,6 +16,6 @@
   },
   "dependencies": {
     "@syntropylog/types": "0.1.5",
-    "syntropylog": "file:../../.."
+    "syntropylog": "0.7.2"
   }
 }

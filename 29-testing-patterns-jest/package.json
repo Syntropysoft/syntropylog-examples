@@ -10,7 +10,7 @@
     "test:coverage": "jest --coverage"
   },
   "dependencies": {
-    "syntropylog": "file:../../.."
+    "syntropylog": "0.7.2"
   },
   "devDependencies": {
     "@types/jest": "^29.0.0",

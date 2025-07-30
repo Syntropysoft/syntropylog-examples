@@ -22,10 +22,10 @@
   "author": "gabriel70",
   "license": "ISC",
   "dependencies": {
-    "@syntropylog/adapters": "0.1.23",
+    "@syntropylog/adapters": "0.1.24",
     "@syntropylog/types": "0.1.5",
     "nats": "^2.20.0",
-    "syntropylog": "file:../../.."
+    "syntropylog": "0.7.2"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",

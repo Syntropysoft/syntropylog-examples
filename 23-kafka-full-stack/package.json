@@ -13,9 +13,9 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "@syntropylog/adapters": "0.1.23",
+    "@syntropylog/adapters": "0.1.24",
     "kafkajs": "^2.2.4",
-    "syntropylog": "file:../../.."
+    "syntropylog": "0.7.2"
   },
   "devDependencies": {
     "nock": "^13.5.6",
