@@ -11,8 +11,6 @@ import { SyntropyContextMiddleware } from './context.middleware';
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer
-      .apply(SyntropyContextMiddleware)
-      .forRoutes('*');
+    consumer.apply(SyntropyContextMiddleware).forRoutes('*');
   }
 }

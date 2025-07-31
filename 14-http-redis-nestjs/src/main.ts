@@ -10,7 +10,7 @@ async function bootstrap() {
     logger: {
       serviceName: 'nestjs-example',
       level: 'info',
-      serializerTimeoutMs: 1000,
+      serializerTimeoutMs: 50,
     },
     context: {
       correlationIdHeader: 'x-correlation-id',

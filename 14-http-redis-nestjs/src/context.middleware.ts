@@ -14,9 +14,7 @@ export class SyntropyContextMiddleware implements NestMiddleware {
     const transactionIdHeader = contextManager.getTransactionIdHeaderName();
 
     // Extract or generate correlation ID
-    const correlationId =
-      (req.headers[correlationIdHeader] as string) ||
-      `req-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const correlationId = contextManager.getCorrelationId();
 
     const transactionId = req.headers[transactionIdHeader] as string;
 
@@ -38,4 +36,4 @@ export class SyntropyContextMiddleware implements NestMiddleware {
       next();
     });
   }
-} 
+}
