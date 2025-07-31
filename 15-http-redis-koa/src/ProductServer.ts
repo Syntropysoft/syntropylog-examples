@@ -8,6 +8,7 @@ import Router from '@koa/router';
 import bodyParser from 'koa-bodyparser';
 import { ILogger } from 'syntropylog';
 import { ProductDataService } from './ProductDataService';
+import { contextMiddleware } from './contextMiddleware';
 
 export class ProductServer {
   private readonly app: Koa;
@@ -28,6 +29,9 @@ export class ProductServer {
   }
 
   private setupMiddleware(): void {
+    // Use context middleware first
+    this.app.use(contextMiddleware());
+    
     // Use body parser for JSON requests
     this.app.use(bodyParser());
     
@@ -39,9 +43,18 @@ export class ProductServer {
   private setupRoutes(): void {
     // Health check
     this.router.get('/health', async (ctx) => {
+      this.logger.info('Health check requested', {
+        correlationId: ctx.state.correlationId,
+        traceId: ctx.state.traceId
+      });
+      
       ctx.body = { 
         status: 'OK', 
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        context: {
+          correlationId: ctx.state.correlationId,
+          traceId: ctx.state.traceId
+        }
       };
     });
 
@@ -49,6 +62,13 @@ export class ProductServer {
     this.router.get('/product/:id', async (ctx) => {
       try {
         const { id } = ctx.params;
+        
+        this.logger.info('Product requested', {
+          id,
+          correlationId: ctx.state.correlationId,
+          traceId: ctx.state.traceId
+        });
+        
         const product = await this.dataService.getProduct(id);
         
         if (!product) {
@@ -76,6 +96,13 @@ export class ProductServer {
     this.router.post('/product', async (ctx) => {
       try {
         const { name, price, description } = ctx.request.body as { name: string; price: number; description: string };
+        
+        this.logger.info('Product creation requested', {
+          name,
+          price,
+          correlationId: ctx.state.correlationId,
+          traceId: ctx.state.traceId
+        });
         
         // Validate required fields
         if (!name || !price || !description) {

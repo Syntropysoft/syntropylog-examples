@@ -12,17 +12,18 @@
 
 # Example 15: HTTP + Redis with Koa 🌊
 
-> **Basic Skeleton** - Basic Koa HTTP server with Redis caching, without context or correlationId (skeleton implementation).
+> **Context Middleware** - Koa HTTP server with Redis caching and context propagation middleware.
 
 ## 🎯 What You'll Learn
 
-This example demonstrates basic Koa integration with SyntropyLog:
+This example demonstrates Koa integration with SyntropyLog context middleware:
 
 - **Koa server setup**: Basic Koa application with router
+- **Context middleware**: Correlation ID and trace ID propagation
 - **HTTP endpoints**: Product API with GET and POST routes
-- **Redis caching**: Basic caching without context
+- **Redis caching**: Caching with context propagation
 - **Error handling**: Standard error handling patterns
-- **Skeleton structure**: Foundation for future context implementation
+- **Context logging**: Request context in all operations
 
 ## 🏗️ Architecture Overview
 
@@ -37,7 +38,7 @@ This example demonstrates basic Koa integration with SyntropyLog:
 └─────────────────┘    └──────────────────┘    └─────────────────┘
 ```
 
-**Note**: This is a basic skeleton without context propagation or correlationId.
+**Note**: This example includes context middleware for correlation ID and trace ID propagation.
 
 ## 🎯 Learning Objectives
 
@@ -54,10 +55,10 @@ This example demonstrates basic Koa integration with SyntropyLog:
 - **Error handling**: Redis error handling
 
 ### **SyntropyLog Integration:**
-- **Logger setup**: Basic logging without context
-- **Redis client**: SyntropyLog Redis client
-- **Error logging**: Standard error logging
-- **Service structure**: Foundation for future enhancements
+- **Logger setup**: Context-aware logging
+- **Redis client**: SyntropyLog Redis client with context
+- **Error logging**: Standard error logging with context
+- **Context middleware**: Correlation ID and trace ID propagation
 
 ## 🚀 Implementation Plan
 
@@ -67,11 +68,11 @@ This example demonstrates basic Koa integration with SyntropyLog:
 - [x] Basic routes and handlers
 - [x] Logger integration
 
-### **Phase 2: Context Integration 🚧 PLANNED**
-- [ ] Context middleware implementation
-- [ ] Correlation ID propagation
-- [ ] Request context injection
-- [ ] Context-aware logging
+### **Phase 2: Context Integration ✅ COMPLETE**
+- [x] Context middleware implementation
+- [x] Correlation ID propagation
+- [x] Request context injection
+- [x] Context-aware logging
 
 ### **Phase 3: Advanced Features 🚧 PLANNED**
 - [ ] Custom middleware
