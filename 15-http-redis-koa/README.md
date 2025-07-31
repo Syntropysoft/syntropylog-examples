@@ -12,92 +12,72 @@
 
 # Example 15: HTTP + Redis with Koa 🌊
 
-> **Framework Integration** - Integrating SyntropyLog with Koa for lightweight HTTP APIs with Redis caching and correlation.
+> **Basic Skeleton** - Basic Koa HTTP server with Redis caching, without context or correlationId (skeleton implementation).
 
 ## 🎯 What You'll Learn
 
-This example demonstrates SyntropyLog integration with Koa:
+This example demonstrates basic Koa integration with SyntropyLog:
 
-- **Koa middleware**: Custom middleware for logging and correlation
-- **HTTP correlation**: Request tracing across Koa applications
-- **Redis caching**: Caching strategies in Koa applications
-- **Context propagation**: SyntropyLog context in Koa ctx
+- **Koa server setup**: Basic Koa application with router
+- **HTTP endpoints**: Product API with GET and POST routes
+- **Redis caching**: Basic caching without context
+- **Error handling**: Standard error handling patterns
+- **Skeleton structure**: Foundation for future context implementation
 
 ## 🏗️ Architecture Overview
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                    Koa + SyntropyLog Integration                │
-│                                                                 │
-│ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ │
-│ │ Middleware  │ │ Routes      │ │ Services    │ │ Context     │ │
-│ │             │ │             │ │             │ │             │ │
-│ │ • Logging   │ │ • HTTP      │ │ • Business  │ │ • Request   │ │
-│ │ • Correlation│ │   Endpoints │ │   Logic     │ │   Context   │ │
-│ │ • Error     │ │ • Validation│ │ • Data      │ │ • Correlation│ │
-│ │   Handling  │ │ • Caching   │ │   Access    │ │ • State     │ │
-│ │ • Metrics   │ │ • Auth      │ │ • External  │ │ • Headers   │ │
-│ │ • Health    │ │ • Rate      │ │   APIs      │ │ • Params    │ │
-│ │   Checks    │ │   Limiting  │ │ • Caching   │ │ • Body      │ │
-│ └─────────────┘ └─────────────┘ └─────────────┘ └─────────────┘ │
-└─────────────────────────────────────────────────────────────────┘
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│   Koa           │    │  ProductData     │    │     Redis       │
+│   Server        │◄──►│  Service         │◄──►│     Cache       │
+│                 │    │                  │    │                 │
+│ • HTTP Routes   │    │ • Business Logic │    │ • Product Cache │
+│ • Request/Resp  │    │ • Cache Logic    │    │ • TTL: 30s      │
+│ • Validation    │    │ • DB Simulation  │    │ • Auto Cleanup  │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
 ```
+
+**Note**: This is a basic skeleton without context propagation or correlationId.
 
 ## 🎯 Learning Objectives
 
-### **Koa Middleware:**
-- **Logging middleware**: Request/response logging
-- **Correlation middleware**: Correlation ID propagation
-- **Error handling middleware**: Centralized error handling
-- **Metrics middleware**: Performance metrics collection
-- **Health check middleware**: System health monitoring
+### **Basic Koa Setup:**
+- **Koa application**: Basic Koa server with router
+- **Middleware setup**: Body parser and router middleware
+- **Route handling**: HTTP endpoints for products
+- **Error handling**: Standard error responses
 
-### **HTTP Correlation:**
-- **Request tracing**: End-to-end request correlation
-- **Context propagation**: Correlation across middleware
-- **External calls**: Correlation with third-party services
-- **Error tracking**: Error correlation across requests
-- **Performance monitoring**: Request performance tracking
+### **Redis Integration:**
+- **Basic caching**: Product caching without context
+- **Cache operations**: GET and SET operations
+- **TTL management**: 30-second cache expiration
+- **Error handling**: Redis error handling
 
-### **Redis Caching:**
-- **Cache middleware**: Koa cache middleware with SyntropyLog
-- **Cache strategies**: Different caching patterns
-- **Cache invalidation**: Intelligent cache management
-- **Cache monitoring**: Cache performance metrics
-- **Cache fallbacks**: Graceful cache failure handling
-
-### **Context Integration:**
-- **Context injection**: SyntropyLog context in Koa ctx
-- **State management**: Request state with correlation
-- **Header propagation**: Correlation headers
-- **Parameter logging**: Request parameters logging
-- **Body logging**: Request/response body logging
+### **SyntropyLog Integration:**
+- **Logger setup**: Basic logging without context
+- **Redis client**: SyntropyLog Redis client
+- **Error logging**: Standard error logging
+- **Service structure**: Foundation for future enhancements
 
 ## 🚀 Implementation Plan
 
-### **Phase 1: Basic Koa Setup**
-- [ ] Koa application setup
-- [ ] SyntropyLog configuration
-- [ ] Basic routes and handlers
-- [ ] Logger integration
+### **Phase 1: Basic Skeleton ✅ COMPLETE**
+- [x] Koa application setup
+- [x] SyntropyLog configuration
+- [x] Basic routes and handlers
+- [x] Logger integration
 
-### **Phase 2: Middleware Implementation**
-- [ ] Logging middleware
-- [ ] Correlation middleware
-- [ ] Error handling middleware
-- [ ] Metrics middleware
+### **Phase 2: Context Integration 🚧 PLANNED**
+- [ ] Context middleware implementation
+- [ ] Correlation ID propagation
+- [ ] Request context injection
+- [ ] Context-aware logging
 
-### **Phase 3: Redis Integration**
-- [ ] Redis client setup
-- [ ] Cache middleware implementation
-- [ ] Cache strategies demonstration
-- [ ] Cache monitoring
-
-### **Phase 4: Advanced Features**
+### **Phase 3: Advanced Features 🚧 PLANNED**
 - [ ] Custom middleware
-- [ ] Route-specific logging
 - [ ] Performance optimization
 - [ ] Health checks
+- [ ] Metrics collection
 
 ## 📊 Expected Outcomes
 
