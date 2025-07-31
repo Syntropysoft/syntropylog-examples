@@ -8,7 +8,7 @@ import { ILogger, syntropyLog } from 'syntropylog';
 import { ProductDataService, Product } from './ProductDataService';
 import { syntropyContextMiddleware } from './contextMiddleware';
 
-export class ProductServer {
+export class  ProductServer {
   private readonly app: express.Application;
   private readonly logger: ILogger;
   private readonly dataService: ProductDataService;
@@ -18,19 +18,23 @@ export class ProductServer {
     this.app = express();
     this.dataService = dataService;
     this.logger = logger.child({ module: 'ProductServer' });
-    
-    this.setupMiddleware();
-    this.setupRoutes();
   }
 
-  private setupMiddleware(): void {
+  async init(): Promise<void> {
+    await this.setupMiddleware();
+    await this.setupRoutes();
+  }
+
+  private async setupMiddleware(): Promise<void> {
     this.app.use(express.json());
     
     // Use SyntropyLog context middleware
     this.app.use(syntropyContextMiddleware());
   }
 
-  private setupRoutes(): void {
+  private async setupRoutes(): Promise<void> {
+
+    console.log('setupRoutes context', syntropyLog.getContextManager().getAll());
     // Health check
     this.app.get('/health', (req: Request, res: Response) => {
       res.json({ status: 'OK', timestamp: new Date().toISOString() });

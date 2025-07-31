@@ -146,3 +146,50 @@ api-gateway-1 | {"correlationId":"e1f72ab3-9050-4b2b-bf7f-6affaec74936","x-corre
 ## Status: ✅ WORKING
 
 This example is fully functional and demonstrates real-world distributed tracing capabilities with SyntropyLog. 
+
+para revisar
+------------
+
+SyntropyLog Doctor CLI – Roadmap y Features
+
+Fases de Implementación
+
+Phase 1: Basic Doctor CLI
+	•	Basic configuration validation
+	•	Simple health checks (Redis, HTTP, Brokers)
+	•	Basic diagnostic tools (log/error scan)
+	•	Best practices basics (config patterns)
+
+Phase 2: Advanced Validation
+	•	Advanced configuration validation (schema/env)
+	•	Custom validation rules
+	•	Environment-specific validation
+	•	Production validation
+
+Phase 3: Comprehensive Health Checks
+	•	All service health checks (DB, external services)
+	•	Network connectivity checks
+	•	Performance health checks
+	•	Security health checks
+
+Phase 4: Advanced Diagnostics
+	•	Advanced diagnostic tools (metrics, traces)
+	•	Performance analysis
+	•	Security analysis
+	•	Compliance analysis
+
+⸻
+
+Arquitectura (recordatorio)
+	•	Modular CLI por comandos:
+	•	validate-config
+	•	health
+	•	diagnostics
+	•	best-practices
+	•	Soporte para salida estándar: tabla, JSON, exit code
+	•	Plugins/extensiones custom para checks propios
+	•	Documentación clara en el CLI y README
+	•	Ejemplos prácticos de integración CI/CD y readiness endpoints
+
+  
+

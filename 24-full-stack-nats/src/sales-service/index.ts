@@ -16,6 +16,7 @@ async function main() {
 
     const broker = syntropyLog.getBroker('nats-broker');
     const logger = syntropyLog.getLogger('sales-service');
+    const context = syntropyLog.getContextManager();
 
     // Connect to NATS
     await broker.connect();
@@ -23,7 +24,7 @@ async function main() {
 
     // Subscribe to new sales
     await broker.subscribe('sales.new', async (message, controls) => {
-      const correlationId = message.headers?.['x-correlation-id'];
+      const correlationId = message.headers?.[context.getCorrelationIdHeaderName()];
       const correlationIdStr = typeof correlationId === 'string' ? correlationId : correlationId?.toString();
       const saleData = JSON.parse(message.payload.toString());
 

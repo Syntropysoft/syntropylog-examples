@@ -10,7 +10,7 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "syntropylog": "0.7.2"
+    "syntropylog": "0.7.3"
   },
   "devDependencies": {
     "@types/node": "^20.10.5",

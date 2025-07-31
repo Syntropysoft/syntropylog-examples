@@ -1,7 +1,6 @@
 import { syntropyLog, CompactConsoleTransport } from 'syntropylog';
 import { initializeSyntropyLog, gracefulShutdown } from './boilerplate';
 import { CustomFetchAdapter } from './CustomFetchAdapter';
-import { randomUUID } from 'crypto';
 import nock from 'nock';
 
 const MOCK_API_URL = 'https://api.example.com';
@@ -73,7 +72,7 @@ async function main() {
     // 3. Create a context for the operation
     const contextManager = syntropyLog.getContextManager();
     await contextManager.run(async () => {
-      const correlationId = randomUUID();
+      const correlationId = contextManager.getCorrelationId();
       contextManager.set(contextManager.getCorrelationIdHeaderName(), correlationId);
       
       logger.info('🛠️ Context created. Testing custom adapter...');

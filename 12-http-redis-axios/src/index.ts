@@ -27,6 +27,7 @@ async function main() {
 
     // Create and start HTTP server
     const server = new ProductServer(dataService, logger);
+    await server.init();
     server.start(3000);
 
     logger.info('✅ Product Service started successfully!');

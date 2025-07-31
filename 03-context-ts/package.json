@@ -16,7 +16,7 @@
   "author": "Gabriel Alejandro Gomez",
   "license": "MIT",
   "dependencies": {
-    "syntropylog": "0.7.2"
+    "syntropylog": "0.7.3"
   },
   "devDependencies": {
     "ts-node": "^10.9.2",

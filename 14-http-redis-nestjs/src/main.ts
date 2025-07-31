@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { syntropyLog } from 'syntropylog';
+import { syntropyLog, ClassicConsoleTransport } from 'syntropylog';
 
 async function bootstrap() {
   console.log('🚀 Starting NestJS + SyntropyLog Example');
@@ -10,7 +10,8 @@ async function bootstrap() {
     logger: {
       serviceName: 'nestjs-example',
       level: 'info',
-      serializerTimeoutMs: 50,
+      serializerTimeoutMs: 100,
+      transports: [new ClassicConsoleTransport()],
     },
     context: {
       correlationIdHeader: 'x-correlation-id',
