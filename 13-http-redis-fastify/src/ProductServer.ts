@@ -5,20 +5,19 @@
 
 import Fastify, { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { ILogger, syntropyLog } from 'syntropylog';
-import { ProductDataService, Product } from './ProductDataService';
-import { v4 as uuidv4 } from 'uuid';
+import { ProductDataService } from './ProductDataService';
 
-interface ProductRequest {
-  Params: { id: string };
+// Extend FastifyRequest to include SyntropyLog context
+declare module 'fastify' {
+  interface FastifyRequest {
+    syntropyContext?: {
+      correlationId?: string;
+      traceId?: string;
+    };
+  }
 }
 
-interface CreateProductRequest {
-  Body: {
-    name: string;
-    price: number;
-    description: string;
-  };
-}
+
 
 export class ProductServer {
   private readonly app: FastifyInstance;
@@ -31,6 +30,9 @@ export class ProductServer {
     });
     this.dataService = dataService;
     this.logger = logger.child({ module: 'ProductServer' });
+    
+    // Decorate request with SyntropyLog context
+    this.app.decorateRequest('syntropyContext', undefined);
   }
 
   async init(): Promise<void> {
@@ -39,60 +41,33 @@ export class ProductServer {
   }
 
   private async setupMiddleware(): Promise<void> {
-    // Simple middleware to set context for each request
-    this.app.addHook('preHandler', async (request: FastifyRequest, reply: FastifyReply) => {
+    this.app.addHook('onRequest', (request, reply, done) => {
       const contextManager = syntropyLog.getContextManager();
       
-      // Extract correlation ID from headers or generate one
-      const correlationId = request.headers['x-correlation-id'] as string || `fastify-${uuidv4()}`;
-      const transactionId = request.headers['x-transaction-id'] as string;
-      
-      // Set context directly
-      contextManager.set(contextManager.getCorrelationIdHeaderName(), correlationId);
-      contextManager.set(contextManager.getTransactionIdHeaderName(), transactionId);
-      contextManager.set('requestId', request.id);
-      contextManager.set('method', request.method);
-      contextManager.set('url', request.url);
-      contextManager.set('framework', 'fastify');
+      contextManager.run(async () => {
+        const correlationId = request.headers[contextManager.getCorrelationIdHeaderName()] as string || contextManager.getCorrelationId();
+        const transactionId = request.headers[contextManager.getTransactionIdHeaderName()] as string;
+        
+        contextManager.set(contextManager.getCorrelationIdHeaderName(), correlationId);
+        contextManager.set(contextManager.getTransactionIdHeaderName(), transactionId);
+        
+        request.syntropyContext = {
+          correlationId,
+          traceId: transactionId,
+        };
+        
+        done();
+      });
     });
   }
 
   private setupRoutes(): void {
+
     // Health check
     this.app.get('/health', async (request: FastifyRequest, reply: FastifyReply) => {
-      return { status: 'OK', timestamp: new Date().toISOString() };
-    });
-
-    // Debug context endpoint
-    this.app.get('/debug-context', async (request: FastifyRequest, reply: FastifyReply) => {
-      const contextManager = syntropyLog.getContextManager();
-      
-      // Get SyntropyLog context
-      const syntropyContext = {
-        correlationId: contextManager.get(contextManager.getCorrelationIdHeaderName()),
-        transactionId: contextManager.get(contextManager.getTransactionIdHeaderName()),
-        requestId: contextManager.get('requestId'),
-        method: contextManager.get('method'),
-        url: contextManager.get('url'),
-        framework: contextManager.get('framework'),
-        allContext: contextManager.getAll()
-      };
-      
-      // Get request headers
-      const headers = {
-        'x-correlation-id': request.headers['x-correlation-id'],
-        'x-transaction-id': request.headers['x-transaction-id'],
-        allHeaders: request.headers
-      };
-      
-      return {
-        timestamp: new Date().toISOString(),
-        requestId: request.id,
-        method: request.method,
-        url: request.url,
-        syntropyContext,
-        headers,
-        message: 'SyntropyLog context debug information'
+      return { 
+        status: 'OK', 
+        timestamp: new Date().toISOString()
       };
     });
 
@@ -111,7 +86,9 @@ export class ProductServer {
 
         return product;
       } catch (error) {
-        this.logger.error('Error in GET /product/:id');
+        this.logger.error('Error in GET /product/:id', { 
+          error: error instanceof Error ? error.message : String(error)
+        });
         return reply.status(500).send({ 
           error: 'Internal server error' 
         });
@@ -139,7 +116,9 @@ export class ProductServer {
 
         return reply.status(201).send(product);
       } catch (error) {
-        this.logger.error('Error in POST /product');
+        this.logger.error('Error in POST /product', { 
+          error: error instanceof Error ? error.message : String(error)
+        });
         return reply.status(500).send({ 
           error: 'Internal server error' 
         });
@@ -159,9 +138,10 @@ export class ProductServer {
     try {
       await this.app.listen({ port, host: '127.0.0.1' });
       this.logger.info('🚀 Product Server started', { port });
-      console.log(`🏪 Product Service running on http://localhost:${port}`);
     } catch (error) {
-      this.logger.error('Failed to start server', { error });
+      this.logger.error('Failed to start server', {
+        error: JSON.stringify(error),
+      });
       throw error;
     }
   }
@@ -171,7 +151,7 @@ export class ProductServer {
       await this.app.close();
         this.logger.info('Product Server stopped');
     } catch (error) {
-      this.logger.error('Error stopping server', { error });
+      this.logger.error('Error stopping server', { error: JSON.stringify(error) });
     }
   }
 } 

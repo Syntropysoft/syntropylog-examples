@@ -22,9 +22,11 @@ This example demonstrates **framework agnosticism** by implementing the same pro
 ### 🎯 Key Concepts
 
 - **Framework Agnosticism**: Same business logic, different HTTP framework
+- **Context Propagation**: Proper correlation ID propagation from HTTP to Redis
+- **AsyncLocalStorage Integration**: Seamless context management with Fastify
 - **Performance Comparison**: Fastify vs Express
 - **Separation of Concerns**: HTTP server vs data service
-- **Redis Caching**: Automatic cache management
+- **Redis Caching**: Automatic cache management with context
 - **Graceful Shutdown**: Proper lifecycle management
 
 ## 🏗️ Architecture
@@ -35,9 +37,17 @@ This example demonstrates **framework agnosticism** by implementing the same pro
 │   Server        │◄──►│  Service         │◄──►│     Cache       │
 │                 │    │                  │    │                 │
 │ • HTTP Routes   │    │ • Business Logic │    │ • Product Cache │
-│ • Request/Resp  │    │ • Cache Logic    │    │ • TTL: 30s      │
-│ • Validation    │    │ • DB Simulation  │    │ • Auto Cleanup  │
+│ • Context Mgmt  │    │ • Cache Logic    │    │ • TTL: 30s      │
+│ • Validation    │    │ • DB Simulation  │    │ • Context Logs  │
 └─────────────────┘    └──────────────────┘    └─────────────────┘
+```
+
+### 🔄 Context Flow
+
+```
+HTTP Request → Fastify Middleware → AsyncLocalStorage → Redis Operations
+     ↓              ↓                    ↓                ↓
+Correlation ID → Context Setup → Context Persistence → Context Logs
 ```
 
 ## 🚀 Quick Start
@@ -89,18 +99,56 @@ curl -X POST http://127.0.0.1:3000/product \
   }'
 ```
 
-## ⚠️ Important: IPv4 Configuration
+## ⚠️ Important: Context Propagation Solution
 
-**Fastify Configuration Fix**: This example includes a critical fix for IPv4/IPv6 connectivity issues.
+**Fastify Context Management**: This example demonstrates the correct way to handle context propagation with Fastify and AsyncLocalStorage.
+
+### 🔧 Context Middleware Implementation
 
 ```typescript
-// ProductServer.ts - Line 108
+// ProductServer.ts - setupMiddleware()
+private async setupMiddleware(): Promise<void> {
+  this.app.addHook('onRequest', (request, reply, done) => {
+    const contextManager = syntropyLog.getContextManager();
+    
+    // ✅ CRITICAL: Wrap everything in contextManager.run()
+    contextManager.run(async () => {
+      const correlationId = request.headers[contextManager.getCorrelationIdHeaderName()] as string || contextManager.getCorrelationId();
+      const transactionId = request.headers[contextManager.getTransactionIdHeaderName()] as string;
+      
+      // Set context within the run() scope
+      contextManager.set(contextManager.getCorrelationIdHeaderName(), correlationId);
+      contextManager.set(contextManager.getTransactionIdHeaderName(), transactionId);
+      
+      request.syntropyContext = {
+        correlationId,
+        traceId: transactionId,
+      };
+      
+      done();
+    });
+  });
+}
+```
+
+### 🎯 Why This Solution Works
+
+- **AsyncLocalStorage Scope**: Context persists only within `contextManager.run()`
+- **Request Lifecycle**: All subsequent operations (Redis, logging) have access to context
+- **Framework Compatibility**: Works seamlessly with Fastify's async nature
+- **Performance**: No overhead, context is automatically available
+
+### ⚠️ IPv4 Configuration Fix
+
+**Fastify Configuration Fix**: This example also includes a critical fix for IPv4/IPv6 connectivity issues.
+
+```typescript
+// ProductServer.ts - start()
 async start(port: number): Promise<void> {
   try {
     // ✅ Use 127.0.0.1 instead of 0.0.0.0 to force IPv4
     await this.app.listen({ port, host: '127.0.0.1' });
     this.logger.info('🚀 Product Server started', { port });
-    console.log(`🏪 Product Service running on http://localhost:${port}`);
   } catch (error) {
     this.logger.error('Failed to start server', { error });
     throw error;
@@ -171,6 +219,21 @@ redis: {
 this.app = Fastify({
   logger: false, // We use SyntropyLog instead
 });
+
+// Decorate request with SyntropyLog context
+this.app.decorateRequest('syntropyContext', undefined);
+```
+
+### Context Configuration
+
+```typescript
+// config.ts
+export const syntropyConfig: SyntropyLogConfig = {
+  context: {
+    correlationIdHeader: 'X-Correlation-ID', // ✅ Custom correlation ID header
+  },
+  // ... other config
+};
 ```
 
 ## 📁 Project Structure
@@ -278,6 +341,15 @@ Create a new product.
    curl http://127.0.0.1:3000/product/999
    ```
 
+7. **Context Propagation Test:**
+   ```bash
+   # Test with custom correlation ID
+   curl -H "X-Correlation-ID: test-123" http://127.0.0.1:3000/product/1
+   
+   # Test with trace ID
+   curl -H "X-Correlation-ID: test-456" -H "x-trace-id: trace-789" http://127.0.0.1:3000/product/1
+   ```
+
 ### Performance Testing
 
 ```bash
@@ -333,11 +405,11 @@ cache!! {"id":"1","name":"Laptop Gaming","price":1299.99,"description":"High-per
 
 ### Key Log Insights
 
-- **Cache Miss**: `cache!! null` → Redis SET operation
-- **Cache Hit**: `cache!! {"id":"1",...}` → Redis GET operation (instant)
-- **TTL Working**: 30-second cache expiration working correctly
-- **Performance**: Redis operations complete in 1-2ms
-- **Product Creation**: Auto-generated IDs and proper caching
+- **✅ Context Propagation**: `X-Correlation-ID="72562ad8-e699-4918-9353-1c9660a263cd"` appears in all Redis logs
+- **✅ Unique Correlation IDs**: Each request gets a unique correlation ID for tracing
+- **✅ Trace ID Consistency**: `x-trace-id="example-123"` maintained across operations
+- **✅ Performance**: Redis operations complete in 2-3ms with context overhead
+- **✅ Cache Working**: Both cache hits and misses show proper context propagation
 
 ## 🛠️ Development
 

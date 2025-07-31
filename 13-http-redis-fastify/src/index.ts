@@ -37,9 +37,9 @@ async function main() {
 
     logger.info('✅ Product Service started successfully!');
     logger.info('📋 Available endpoints:');
-    logger.info('   GET  http://localhost:3000/product/:id  - Get product (with cache)');
-    logger.info('   POST http://localhost:3000/product/     - Create product');
-    logger.info('   GET  http://localhost:3000/health       - Health check');
+    logger.info('   GET  http://127.0.0.1:3000/product/:id  - Get product (with cache)');
+    logger.info('   POST http://127.0.0.1:3000/product/     - Create product');
+    logger.info('   GET  http://127.0.0.1:3000/health       - Health check');
 
     // Keep the server running
     process.on('SIGINT', async () => {

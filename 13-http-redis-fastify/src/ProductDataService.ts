@@ -42,7 +42,7 @@ export class ProductDataService {
       name: 'Laptop Gaming',
       price: 1299.99,
       description: 'High-performance gaming laptop',
-      createdAt: '2024-01-01T00:00:00.000Z'
+      createdAt: new Date()
     };
     
     // Cache the result
@@ -74,27 +74,7 @@ export class ProductDataService {
     }
   }
 
-  private async getProductFromDb(id: string): Promise<Product | null> {
-    // Simulate DB query - in real app this would be a database call
-    const mockProducts: Record<string, Product> = {
-      '1': {
-        id: '1',
-        name: 'Laptop Gaming',
-        price: 1299.99,
-        description: 'High-performance gaming laptop',
-        createdAt: new Date('2024-01-01')
-      },
-      '2': {
-        id: '2',
-        name: 'Wireless Mouse',
-        price: 49.99,
-        description: 'Ergonomic wireless mouse',
-        createdAt: new Date('2024-01-02')
-      }
-    };
 
-    return mockProducts[id] || null;
-  }
 
   private async simulateDbDelay(): Promise<void> {
     // Simulate database delay - 1 second for cache miss
