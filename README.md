@@ -36,8 +36,8 @@ SyntropyLog unifies logging, HTTP clients, Redis, and message brokers in a singl
 ### **INTEGRATION (10-13)** - HTTP & Redis with Different Frameworks ✅ COMPLETE
 - **10**: HTTP correlation ✅
 - **11**: Custom adapter ✅
-- **12**: HTTP + Redis (Express) ✅
-- **13**: HTTP + Redis (Fastify) ✅
+- **12**: HTTP + Redis (Express) ✅ (Reviewed & Fixed)
+- **13**: HTTP + Redis (Fastify) ✅ (Reviewed & Fixed)
 
 ### **ADVANCED FEATURES (14-19)** - Advanced Framework Features 🚧 IN DEVELOPMENT
 - **14**: HTTP + Redis (NestJS) ✅
@@ -118,6 +118,12 @@ docker-compose up -d
 - **25-27**: Enterprise Patterns
 
 > **🎯 BETA READY**: Examples 00-14 and 20-24 are **fully functional** and ready for production use. All examples include complete boilerplate, context propagation, structured logging, and automatic termination.
+
+### 🔧 **Recent Improvements & Fixes**
+- **Example 12 (Express)**: Fixed async initialization pattern for better lifecycle management
+- **Example 13 (Fastify)**: Resolved AsyncLocalStorage context propagation issue with proper `contextManager.run()` implementation
+- **Example 14 (NestJS)**: Enhanced TypeScript configuration and added proper package-lock.json
+- **All Examples**: Updated to latest SyntropyLog version 0.7.3 with improved context management
 
 ## 🎯 What You'll Learn
 
