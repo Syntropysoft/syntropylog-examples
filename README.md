@@ -41,7 +41,7 @@ SyntropyLog unifies logging, HTTP clients, Redis, and message brokers in a singl
 
 ### **ADVANCED FEATURES (14-19)** - Advanced Framework Features 🚧 IN DEVELOPMENT
 - **14**: HTTP + Redis (NestJS) ✅
-- **15**: HTTP + Redis (Koa) 🚧
+- **15**: HTTP + Redis (Koa) ✅
 - **16**: HTTP + Redis (Hapi) 🚧
 - **17**: Custom serializers 🚧
 - **18**: Custom transports 🚧
@@ -108,21 +108,22 @@ docker-compose up -d
 
 ## 📊 Current Status
 
-### ✅ **Complete & Tested (00-14, 20-24)**
+### ✅ **Complete & Tested (00-15, 20-24)**
 - **00-09**: Core Framework Features ✅
-- **10-14**: HTTP & Redis Integration ✅
+- **10-15**: HTTP & Redis Integration ✅
 - **20-24**: Message Brokers & Correlation ✅
 
 ### 🚧 **In Development**
 - **14-19**: Advanced Framework Features
 - **25-27**: Enterprise Patterns
 
-> **🎯 BETA READY**: Examples 00-14 and 20-24 are **fully functional** and ready for production use. All examples include complete boilerplate, context propagation, structured logging, and automatic termination.
+> **🎯 BETA READY**: Examples 00-15 and 20-24 are **fully functional** and ready for production use. All examples include complete boilerplate, context propagation, structured logging, and automatic termination.
 
 ### 🔧 **Recent Improvements & Fixes**
 - **Example 12 (Express)**: Fixed async initialization pattern for better lifecycle management
 - **Example 13 (Fastify)**: Resolved AsyncLocalStorage context propagation issue with proper `contextManager.run()` implementation
 - **Example 14 (NestJS)**: Enhanced TypeScript configuration and added proper package-lock.json
+- **Example 15 (Koa)**: Implemented context middleware with AsyncLocalStorage for proper context propagation throughout request lifecycle
 - **All Examples**: Updated to latest SyntropyLog version 0.7.3 with improved context management
 
 ## 🎯 What You'll Learn
