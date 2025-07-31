@@ -4,7 +4,7 @@ import { syntropyLog } from 'syntropylog';
 
 async function bootstrap() {
   console.log('🚀 Starting NestJS + SyntropyLog Example');
-  
+
   // Initialize SyntropyLog
   await syntropyLog.init({
     logger: {
@@ -26,19 +26,19 @@ async function bootstrap() {
       ],
     },
   });
-  
+
   const app = await NestFactory.create(AppModule);
   app.enableCors();
-  
+
   const port = process.env.PORT || 3000;
   await app.listen(port);
-  
+
   console.log(`✅ Server running on http://localhost:${port}`);
   console.log('📋 Endpoints:');
   console.log(`   GET  /health`);
   console.log(`   GET  /products/:id`);
   console.log(`   POST /products`);
-  
+
   // Graceful shutdown
   process.on('SIGINT', async () => {
     console.log('🛑 Shutting down...');
