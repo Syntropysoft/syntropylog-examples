@@ -11,7 +11,7 @@
     "test": "vitest"
   },
   "dependencies": {
-    "syntropylog": "0.7.3",
+    "syntropylog": "0.7.4",
     "@syntropylog/types": "0.1.5",
     "@syntropylog/adapters": "0.1.24",
     "koa": "^2.15.0",

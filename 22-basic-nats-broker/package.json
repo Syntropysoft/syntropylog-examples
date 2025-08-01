@@ -25,7 +25,7 @@
     "@syntropylog/adapters": "0.1.24",
     "@syntropylog/types": "0.1.5",
     "nats": "^2.20.0",
-    "syntropylog": "0.7.3"
+    "syntropylog": "0.7.4"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",

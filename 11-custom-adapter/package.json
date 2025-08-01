@@ -13,7 +13,7 @@
     "node": ">=18.0.0"
   },
   "dependencies": {
-    "syntropylog": "0.7.3"
+    "syntropylog": "0.7.4"
   },
   "devDependencies": {
     "tsx": "^4.0.0",

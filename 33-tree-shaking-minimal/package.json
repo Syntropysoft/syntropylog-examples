@@ -12,7 +12,7 @@
     "build:analyze": "rollup -c rollup.config.js --analyze"
   },
   "dependencies": {
-    "syntropylog": "0.7.3"
+    "syntropylog": "0.7.4"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^25.0.7",

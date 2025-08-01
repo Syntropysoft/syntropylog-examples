@@ -10,124 +10,185 @@
   Ship resilient, secure, and cost-effective Node.js applications with confidence.
 </p>
 
-# Example 19: Doctor CLI 🩺
+# Example 19: Doctor CLI - Configuration Validation 🩺
 
-> **Core Framework Feature** - Understanding SyntropyLog's Doctor CLI for configuration validation and health checks.
+> **Core Framework Feature** - Understanding SyntropyLog's Doctor CLI for configuration validation and diagnostic rules.
 
 ## 🎯 What You'll Learn
 
-This example demonstrates SyntropyLog's Doctor CLI:
+This example demonstrates SyntropyLog's **actual** Doctor CLI capabilities:
 
-- **Configuration validation**: Validating SyntropyLog configuration
-- **Health checks**: Checking system health and connectivity
-- **Diagnostic tools**: Using diagnostic tools for troubleshooting
-- **Best practices**: Following SyntropyLog best practices
+- **Configuration validation**: Validating SyntropyLog configuration against schema
+- **Diagnostic rules**: Using built-in and custom diagnostic rules
+- **Rule management**: Creating custom rule manifests
+- **Audit workflows**: Running comprehensive configuration audits
 
-## 🏗️ Architecture Overview
+## 🏗️ What Actually Exists
 
+### **✅ Available Commands:**
+```bash
+# Initialize configuration files
+syntropylog init --rules          # Generate rule manifest
+syntropylog init --audit          # Generate audit plan
+
+# Validate single configuration
+syntropylog doctor config.yaml    # Run diagnostics on config file
+
+# Run comprehensive audit
+syntropylog audit                 # Execute full audit plan
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                    Doctor CLI Strategy                         │
-│                                                                 │
-│ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ │
-│ │ Configuration│ │ Health      │ │ Diagnostic  │ │ Best        │ │
-│ │ Validation  │ │ Checks      │ │ Tools       │ │ Practices   │ │
-│ │             │ │             │ │             │ │             │ │
-│ │ • Schema    │ │ • Redis     │ │ • Logs      │ │ • Patterns  │ │
-│ │ • Required  │ │ • Brokers   │ │ • Metrics   │ │ • Security  │ │
-│ │ • Optional  │ │ • HTTP      │ │ • Traces    │ │ • Performance│ │
-│ │ • Custom    │ │ • Database  │ │ • Errors    │ │ • Monitoring│ │
-│ │ • Environment│ │ • External  │ │ • Warnings  │ │ • Compliance│ │
-│ │ • Production│ │ • Services  │ │ • Info      │ │ • Standards │ │
-│ │ • Development│ │ • Network   │ │ • Debug     │ │ • Guidelines│ │
-│ └─────────────┘ └─────────────┘ └─────────────┘ └─────────────┘ │
-└─────────────────────────────────────────────────────────────────┘
+
+### **✅ Built-in Validation Rules:**
+- **Logger Level**: Warns if logger level is too verbose for production
+- **Transport Validation**: Errors if no logger transports are defined
+- **Masking Rules**: Warns if no data masking rules are defined
+- **Redis Sentinel**: Ensures Redis Sentinel instances have master name
+- **Instance Names**: Errors if multiple Redis instances share same name
+
+### **✅ Custom Rule System:**
+- **Local manifests**: Create `syntropylog.doctor.ts` for custom rules
+- **Rule disabling**: Disable specific rules via configuration
+- **Error handling**: Robust error handling for rule execution
+
+## 🚀 Implementation
+
+### **Step 1: Create Configuration File**
+```yaml
+# config.yaml
+logger:
+  serviceName: 'my-app'
+  level: 'debug'  # ⚠️ This will trigger a warning in production
+
+redis:
+  instances:
+    - instanceName: 'cache'
+      url: 'redis://localhost:6379'
+    - instanceName: 'cache'  # ⚠️ This will trigger an error (duplicate name)
+      url: 'redis://localhost:6380'
+
+masking:
+  rules: []  # ⚠️ This will trigger a warning (no masking rules)
 ```
+
+### **Step 2: Run Doctor CLI**
+```bash
+# Basic validation
+syntropylog doctor config.yaml
+
+# Expected output:
+# 🩺 Running syntropylog doctor on: config.yaml
+# ✅ Config structure for "config.yaml" is valid.
+# [WARN] Production Log Level - Logger level 'debug' is too verbose for production
+# [ERROR] Duplicate Redis Instance Name - Multiple Redis instances share the name 'cache'
+# [WARN] No Masking Rules - No data masking rules are defined
+```
+
+### **Step 3: Create Custom Rules**
+```typescript
+// syntropylog.doctor.ts
+import { DiagnosticRule } from 'syntropylog';
+
+export default [
+  {
+    id: 'custom-service-name',
+    description: 'Ensures service name follows naming convention',
+    check: (config) => {
+      const serviceName = config.logger?.serviceName;
+      if (serviceName && !serviceName.includes('-')) {
+        return [{
+          level: 'WARN',
+          title: 'Service Naming Convention',
+          message: `Service name '${serviceName}' should use kebab-case`,
+          recommendation: 'Use format like "my-service" instead of "myService"'
+        }];
+      }
+      return [];
+    }
+  }
+];
+```
+
+### **Step 4: Run Audit**
+```bash
+# Create audit plan
+syntropylog init --audit
+
+# Run comprehensive audit
+syntropylog audit
+```
+
+## 📊 Real Capabilities
+
+### **✅ What Works:**
+- **Schema validation** with detailed error messages
+- **Built-in diagnostic rules** for common issues
+- **Custom rule system** with TypeScript support
+- **Rule disabling** via configuration
+- **Audit workflows** across multiple files
+- **Color-coded output** (ERROR/WARN/INFO)
+- **Detailed recommendations** for fixes
+
+### **🚧 What's NOT Available (Future):**
+- Health checks (Redis, brokers, HTTP)
+- Performance analysis
+- Security scanning
+- Log analysis tools
+- Metrics collection
+- Compliance checks
 
 ## 🎯 Learning Objectives
 
 ### **Configuration Validation:**
-- **Schema validation**: Validating configuration against schema
-- **Required fields**: Checking required configuration fields
-- **Optional fields**: Validating optional configuration fields
-- **Custom validation**: Creating custom validation rules
-- **Environment validation**: Validating environment-specific config
+- ✅ **Schema validation**: Validating against SyntropyLog schema
+- ✅ **Required fields**: Checking required configuration fields
+- ✅ **Custom rules**: Creating and using custom diagnostic rules
+- ✅ **Rule management**: Disabling and organizing rules
 
-### **Health Checks:**
-- **Redis health**: Checking Redis connectivity and health
-- **Broker health**: Checking message broker connectivity
-- **HTTP health**: Checking HTTP client connectivity
-- **Database health**: Checking database connectivity
-- **External services**: Checking external service connectivity
+### **Diagnostic System:**
+- ✅ **Built-in rules**: Using core diagnostic rules
+- ✅ **Custom rules**: Creating application-specific rules
+- ✅ **Rule execution**: Understanding rule execution flow
+- ✅ **Error handling**: Managing rule execution errors
 
-### **Diagnostic Tools:**
-- **Log analysis**: Analyzing log patterns and issues
-- **Metrics collection**: Collecting system metrics
-- **Trace analysis**: Analyzing trace data
-- **Error analysis**: Analyzing error patterns
-- **Performance analysis**: Analyzing performance issues
-
-### **Best Practices:**
-- **Configuration patterns**: Following configuration best practices
-- **Security practices**: Following security best practices
-- **Performance practices**: Following performance best practices
-- **Monitoring practices**: Following monitoring best practices
-- **Compliance practices**: Following compliance best practices
-
-## 🚀 Implementation Plan
-
-### **Phase 1: Basic Doctor CLI**
-- [ ] Basic configuration validation
-- [ ] Simple health checks
-- [ ] Basic diagnostic tools
-- [ ] Best practices basics
-
-### **Phase 2: Advanced Validation**
-- [ ] Advanced configuration validation
-- [ ] Custom validation rules
-- [ ] Environment-specific validation
-- [ ] Production validation
-
-### **Phase 3: Comprehensive Health Checks**
-- [ ] All service health checks
-- [ ] Network connectivity checks
-- [ ] Performance health checks
-- [ ] Security health checks
-
-### **Phase 4: Advanced Diagnostics**
-- [ ] Advanced diagnostic tools
-- [ ] Performance analysis
-- [ ] Security analysis
-- [ ] Compliance analysis
-
-## 📊 Expected Outcomes
-
-### **Technical Demonstrations:**
-- ✅ **Configuration validation** working correctly
-- ✅ **Health checks** functioning properly
-- ✅ **Diagnostic tools** providing useful information
-- ✅ **Best practices** being followed
-
-### **Learning Outcomes:**
-- ✅ **How to use Doctor CLI** for different needs
-- ✅ **Configuration validation** strategies
-- ✅ **Health check** techniques
-- ✅ **Diagnostic** best practices
+### **Audit Workflows:**
+- ✅ **Single file validation**: Using `doctor` command
+- ✅ **Multi-file audits**: Using `audit` command
+- ✅ **Rule manifests**: Creating custom rule sets
+- ✅ **Audit plans**: Organizing comprehensive audits
 
 ## 🔧 Prerequisites
 
 - Node.js 18+
-- Understanding of CLI concepts
+- Understanding of YAML configuration
 - Familiarity with examples 00-18 (basic setup through custom transports)
 
-## 📝 Notes for Implementation
+## 📝 Implementation Notes
 
-- **Start simple**: Basic validation first
-- **Add complexity gradually**: One feature at a time
-- **Focus on practical use**: Show real diagnostic scenarios
-- **Document patterns**: Explain when to use what
-- **Real-world examples**: Show practical use cases
+- **Start with built-in rules**: Use core rules first
+- **Add custom rules gradually**: One rule at a time
+- **Test rule execution**: Verify custom rules work correctly
+- **Use audit workflows**: For comprehensive validation
+- **Follow naming conventions**: For service names and instances
+
+## 🚀 Quick Start
+
+```bash
+# 1. Create a configuration file
+echo "logger: { serviceName: 'test-app', level: 'debug' }" > config.yaml
+
+# 2. Run basic validation
+syntropylog doctor config.yaml
+
+# 3. Create custom rules
+syntropylog init --rules
+
+# 4. Add your custom validation logic
+# Edit syntropylog.doctor.ts
+
+# 5. Run with custom rules
+syntropylog doctor config.yaml
+```
 
 ---
 
-**Status**: 🆕 **In Development** - This example will demonstrate SyntropyLog's Doctor CLI with simple, practical examples. 
+**Status**: ✅ **WORKING** - This example demonstrates the actual Doctor CLI capabilities for configuration validation and diagnostic rules. 
