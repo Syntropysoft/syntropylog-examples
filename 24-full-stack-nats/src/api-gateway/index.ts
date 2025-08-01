@@ -6,10 +6,64 @@
 import express from 'express';
 import { syntropyLog } from 'syntropylog';
 import { initializeSyntropyLog } from './boilerplate.js';
-import { BrokerMessage } from 'syntropylog';
-import { v4 as uuidv4 } from 'uuid';
 
 const PORT = parseInt(process.env.PORT || '3000');
+
+// Middleware to handle SyntropyLog context for HTTP requests
+function syntropyContextMiddleware() {
+  return (
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ) => {
+    const contextManager = syntropyLog.getContextManager();
+
+    // Create a new context for this request
+    contextManager.run(async () => {
+      // Extract correlation ID from headers or generate one
+      const correlationId =
+        (req.headers[contextManager.getCorrelationIdHeaderName()] as string) ||
+        contextManager.getCorrelationId();
+
+      // Set the correlation ID in the context
+      contextManager.set(
+        contextManager.getCorrelationIdHeaderName(),
+        correlationId
+      );
+
+      res.setHeader(
+        contextManager.getCorrelationIdHeaderName(),
+        correlationId
+      );
+
+      // Continue with the request
+      next();
+    });
+  };
+}
+
+// Middleware to handle SyntropyLog context for broker messages
+function brokerContextMiddleware(messageHandler: (message: any, controls: any) => Promise<void>) {
+  return async (message: any, controls: any) => {
+    const contextManager = syntropyLog.getContextManager();
+    
+    // Extract correlation ID from message headers
+    const correlationId = message.headers?.[contextManager.getCorrelationIdHeaderName()];
+    
+    // Create a new context for this message processing
+    contextManager.run(async () => {
+      // Set the correlation ID in the current context if available
+      if (correlationId) {
+        // Ensure correlationId is a string, not an array
+        const correlationIdStr = Array.isArray(correlationId) ? correlationId[0] : correlationId;
+        contextManager.set(contextManager.getCorrelationIdHeaderName(), correlationIdStr);
+      }
+      
+      // Process the message in the current context
+      await messageHandler(message, controls);
+    });
+  };
+}
 
 async function main() {
   console.log('--- Running API Gateway Service ---');
@@ -25,126 +79,66 @@ async function main() {
     await broker.connect();
     logger.info('✅ Connected to NATS broker');
 
-  const app = express();
+    const app = express();
     app.use(express.json());
 
-  // Middleware to attach logger to request
-  app.use((req, res, next) => {
-    (req as any).logger = logger;
-    next();
-  });
+    // Use SyntropyLog context middleware
+    app.use(syntropyContextMiddleware());
 
-  // Endpoint to create a new sale
-  app.post('/sales', async (req: express.Request, res: express.Response) => {
-    const saleData = req.body;
-      const correlationId = uuidv4();
+    // Endpoint to create a new sale
+    app.post('/sales', async (req: express.Request, res: express.Response) => {
+      const saleData = req.body;
+      const contextManager = syntropyLog.getContextManager();
+      const correlationId = contextManager.get(
+        contextManager.getCorrelationIdHeaderName()
+      ) as string;
 
-    const saleMessage: BrokerMessage = {
-      payload: saleData,
-        headers: { 'x-correlation-id': correlationId },
-    };
+      try {
+        logger.info('Received new sale request', { saleData, correlationId });
 
-    try {
-        logger.info('Received new sale request', { 
-          saleData, 
-          correlationId 
+        await broker.publish('sales.new', { 
+          payload: Buffer.from(JSON.stringify(saleData)),
+          headers: {
+            [contextManager.getCorrelationIdHeaderName()]: correlationId
+          }
         });
-        
-      await broker.publish('sales.new', saleMessage);
-        logger.info('Sale event published to NATS', { 
-          correlationId 
-        });
-        
-        res.status(202).json({ 
+        logger.info('Sale event published to NATS', { correlationId });
+
+        res.status(202).json({
           message: 'Sale processing started',
-          correlationId 
+          correlationId,
         });
-    } catch (error) {
-      logger.error('Failed to publish sale event', {
-        error: error instanceof Error ? error.message : String(error),
-          correlationId
-      });
-      res.status(500).json({ message: 'Internal Server Error' });
-    }
-  });
+      } catch (error) {
+        logger.error('Failed to publish sale event', {
+          error: error instanceof Error ? error.message : String(error),
+          correlationId,
+        });
+        res.status(500).json({ message: 'Internal Server Error' });
+      }
+    });
 
     // Subscribe to dispatch ready events
-    await broker.subscribe('dispatch.ready', async (message, controls) => {
-      const correlationId = message.headers?.['x-correlation-id'];
-      const correlationIdStr = typeof correlationId === 'string' ? correlationId : correlationId?.toString();
-      
-      // Handle payload - could be Buffer or object
+    await broker.subscribe('dispatch.ready', brokerContextMiddleware(async (message, controls) => {
       let payload;
-      logger.info('DEBUG: Processing payload', { 
-        payloadType: typeof message.payload,
-        isBuffer: Buffer.isBuffer(message.payload),
-        hasType: message.payload && typeof message.payload === 'object' && 'type' in message.payload,
-        hasData: message.payload && typeof message.payload === 'object' && 'data' in message.payload
-      });
-      
+
       if (Buffer.isBuffer(message.payload)) {
-        const bufferString = message.payload.toString();
-        logger.info('DEBUG: Buffer content', { 
-          bufferString: bufferString.substring(0, 100) + '...',
-          bufferLength: message.payload.length
-        });
-        
-        // First parse: get the JSON from the buffer
-        const parsedFromBuffer = JSON.parse(bufferString);
-        
-        // Second parse: if it's a Buffer object, extract the actual data
-        if (parsedFromBuffer && typeof parsedFromBuffer === 'object' && parsedFromBuffer.type === 'Buffer' && Array.isArray(parsedFromBuffer.data)) {
-          const actualBuffer = Buffer.from(parsedFromBuffer.data);
-          payload = JSON.parse(actualBuffer.toString());
-          logger.info('DEBUG: Double parsed Buffer payload (Buffer object)');
-        } else {
-          payload = parsedFromBuffer;
-          logger.info('DEBUG: Single parsed Buffer payload (direct JSON)');
-        }
+        payload = JSON.parse(message.payload.toString());
       } else if (typeof message.payload === 'string') {
         payload = JSON.parse(message.payload);
-        logger.info('DEBUG: Parsed string payload');
-      } else if (message.payload && typeof message.payload === 'object' && 'type' in message.payload && 'data' in message.payload) {
-        // Handle Buffer object representation
-        const bufferObj = message.payload as any;
-        if (bufferObj.type === 'Buffer' && Array.isArray(bufferObj.data)) {
-          const buffer = Buffer.from(bufferObj.data);
-          payload = JSON.parse(buffer.toString());
-          logger.info('DEBUG: Parsed Buffer object payload');
-        } else {
-          payload = message.payload;
-          logger.info('DEBUG: Using original payload (not Buffer object)');
-        }
       } else {
         payload = message.payload;
-        logger.info('DEBUG: Using original payload (fallback)');
       }
-      
-      if (correlationIdStr) {
-        logger.info('DEBUG: Final payload to log', { 
-          payloadType: typeof payload,
-          payloadKeys: payload && typeof payload === 'object' ? Object.keys(payload) : 'not object'
-        });
-        logger.info('Dispatch ready event received', { 
-          correlationId: correlationIdStr,
-          payload: payload // This should now be the parsed JSON object
-        });
-      } else {
-        logger.info('Dispatch ready event received (no correlation ID)', { 
-          payload: payload // This should now be the parsed JSON object
-        });
-      }
-      
+
+      logger.info('Dispatch ready event received', { payload });
       await controls.ack();
-    });
+    }));
 
     logger.info('✅ Subscribed to dispatch.ready topic');
 
     app.listen(PORT, () => {
       logger.info(`API Gateway listening on port ${PORT}`);
       console.log(`🚀 API Gateway running on http://localhost:${PORT}`);
-  });
-
+    });
   } catch (error) {
     console.error('❌ API Gateway failed to start:', error);
     process.exit(1);

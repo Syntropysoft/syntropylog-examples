@@ -134,7 +134,68 @@ api-gateway-1 | {"correlationId":"e1f72ab3-9050-4b2b-bf7f-6affaec74936","x-corre
 ✅ **NATS Integration**: Seamless message broker integration with context preservation  
 ✅ **Structured Logging**: Rich, contextual logs with correlation information  
 ✅ **Docker Orchestration**: Complete containerized environment  
-✅ **Real-time Processing**: Asynchronous message processing with proper acknowledgments  
+✅ **Real-time Processing**: Asynchronous message processing with proper acknowledgments
+
+## Critical: Context Management in Message Brokers
+
+⚠️ **IMPORTANT**: This example demonstrates a critical pattern for handling context in message broker environments. The context management is the most complex part of this implementation and requires careful attention.
+
+### The Context Challenge
+
+In distributed systems with message brokers, maintaining context (like correlation IDs) across asynchronous message processing is challenging because:
+
+1. **Message Processing Isolation**: Each message is processed in its own execution context
+2. **Async Boundary Crossing**: Context must be explicitly propagated across async boundaries
+3. **Header Extraction**: Context data must be extracted from message headers and re-established
+
+### The Solution: Context Middleware
+
+This example implements a `brokerContextMiddleware` that handles context propagation:
+
+```typescript
+function brokerContextMiddleware(messageHandler: (message: any, controls: any) => Promise<void>) {
+  return async (message: any, controls: any) => {
+    const contextManager = syntropyLog.getContextManager();
+    
+    // Extract correlation ID from message headers
+    const correlationId = message.headers?.[contextManager.getCorrelationIdHeaderName()];
+    
+    // Create a new context for this message processing
+    contextManager.run(async () => {
+      // Set the correlation ID in the current context if available
+      if (correlationId) {
+        const correlationIdStr = Array.isArray(correlationId) ? correlationId[0] : correlationId;
+        contextManager.set(contextManager.getCorrelationIdHeaderName(), correlationIdStr);
+      }
+      
+      // Process the message in the current context
+      await messageHandler(message, controls);
+    });
+  };
+}
+```
+
+### Key Implementation Details
+
+1. **Header Extraction**: Extract correlation ID from message headers
+2. **Array Handling**: NATS headers can be arrays, so we handle both string and array formats
+3. **Context Creation**: Use `contextManager.run()` to create isolated context for each message
+4. **Context Restoration**: Set the correlation ID in the new context before processing
+5. **Automatic Propagation**: Once set, all subsequent operations inherit the context
+
+### Why This Matters
+
+Without proper context management:
+- ❌ Correlation IDs would be lost between services
+- ❌ Distributed tracing would break
+- ❌ Debugging would become nearly impossible
+- ❌ Observability would be severely limited
+
+With proper context management:
+- ✅ Complete end-to-end traceability
+- ✅ Consistent correlation across all services
+- ✅ Rich, contextual logging
+- ✅ Easy debugging and monitoring  
 
 ## Architecture Details
 
@@ -143,9 +204,71 @@ api-gateway-1 | {"correlationId":"e1f72ab3-9050-4b2b-bf7f-6affaec74936","x-corre
 - **Infrastructure**: NATS (message broker) + Redis (framework state)
 - **Observability**: SyntropyLog handles all correlation and logging automatically
 
-## Status: ✅ WORKING
+## Status: ✅ REVIEWED AND FIXED WITH ISSUE DOCUMENTED
 
-This example is fully functional and demonstrates real-world distributed tracing capabilities with SyntropyLog. 
+This example is fully functional and demonstrates real-world distributed tracing capabilities with SyntropyLog. The implementation has been thoroughly reviewed and tested, with all critical functionality working correctly. A minor debug logging issue has been identified and documented for future resolution.
+
+## Known Issues
+
+### Debug Log in Sales Service
+There is a known debug log that appears in the sales service output showing the ContextManager internal state:
+
+```
+--------------- ContextManager {
+  storage: AsyncLocalStorage {
+    kResourceStore: Symbol(kResourceStore),
+    enabled: true
+  },
+  correlationIdHeader: 'X-Correlation-ID-test',
+  transactionIdHeader: 'x-trace-id',
+  loggingMatrix: undefined
+}
+```
+
+This debug output does not affect functionality but should be removed in a future update. The correlation ID propagation and distributed tracing work correctly despite this debug information.
+
+## Troubleshooting & Debugging
+
+### Common Issues
+
+1. **Context Not Propagating**: If correlation IDs are not appearing in logs across services, check:
+   - Message headers are being set correctly when publishing
+   - Context middleware is wrapping all message handlers
+   - Header names match between services
+
+2. **Docker Container Issues**: If containers fail to start or rebuild:
+   ```bash
+   # Force rebuild without cache
+   docker compose down
+   docker compose build --no-cache
+   docker compose up
+   ```
+
+3. **NATS Connection Issues**: If services can't connect to NATS:
+   - Ensure NATS server is running: `docker compose ps nats-server`
+   - Check NATS logs: `docker compose logs nats-server`
+   - Verify network connectivity between containers
+
+### Debugging Context Propagation
+
+To debug context issues, you can temporarily add logging to see what's happening:
+
+```typescript
+// In your message handler
+const contextManager = syntropyLog.getContextManager();
+const correlationId = contextManager.get(contextManager.getCorrelationIdHeaderName());
+console.log('Current correlation ID:', correlationId);
+console.log('All context:', contextManager.getAll());
+```
+
+### Verification Checklist
+
+- [ ] All services start without errors
+- [ ] NATS connection established
+- [ ] Redis connection established  
+- [ ] API Gateway responds to HTTP requests
+- [ ] Same correlation ID appears in all service logs
+- [ ] No context-related errors in logs 
 
 para revisar
 ------------

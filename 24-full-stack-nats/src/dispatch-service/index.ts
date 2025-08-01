@@ -5,7 +5,29 @@
 
 import { syntropyLog } from 'syntropylog';
 import { initializeSyntropyLog } from './boilerplate.js';
-import { BrokerMessage } from 'syntropylog';
+
+// Middleware to handle SyntropyLog context for broker messages
+function brokerContextMiddleware(messageHandler: (message: any, controls: any) => Promise<void>) {
+  return async (message: any, controls: any) => {
+    const contextManager = syntropyLog.getContextManager();
+    
+    // Extract correlation ID from message headers
+    const correlationId = message.headers?.[contextManager.getCorrelationIdHeaderName()];
+    
+    // Create a new context for this message processing
+    contextManager.run(async () => {
+      // Set the correlation ID in the current context if available
+      if (correlationId) {
+        // Ensure correlationId is a string, not an array
+        const correlationIdStr = Array.isArray(correlationId) ? correlationId[0] : correlationId;
+        contextManager.set(contextManager.getCorrelationIdHeaderName(), correlationIdStr);
+      }
+      
+      // Process the message in the current context
+      await messageHandler(message, controls);
+    });
+  };
+}
 
 async function main() {
   console.log('--- Running Dispatch Service ---');
@@ -22,77 +44,55 @@ async function main() {
     logger.info('✅ Connected to NATS broker');
 
     // Subscribe to processed sales
-    await broker.subscribe('sales.processed', async (message, controls) => {
-      const correlationId = message.headers?.['x-correlation-id'];
-      const correlationIdStr = typeof correlationId === 'string' ? correlationId : correlationId?.toString();
+    await broker.subscribe('sales.processed', brokerContextMiddleware(async (message, controls) => {
       const saleData = JSON.parse(message.payload.toString());
+      const contextManager = syntropyLog.getContextManager();
+      const correlationId = contextManager.get(contextManager.getCorrelationIdHeaderName()) as string;
 
       try {
-        if (correlationIdStr) {
-          logger.info('Processing dispatch for sale', { 
-            correlationId: correlationIdStr,
-            saleId: saleData.saleId 
-          });
-        } else {
-          logger.info('Processing dispatch for sale (no correlation ID)', { 
-            saleId: saleData.saleId 
-          });
-        }
+        logger.info('Processing dispatch for sale', { 
+          saleId: saleData.saleId,
+          correlationId
+        });
 
         // Simulate dispatch processing
         await new Promise(resolve => setTimeout(resolve, 1500));
         
         const trackingNumber = `TRK-${Date.now()}`;
         
-        if (correlationIdStr) {
-          logger.info('Dispatch prepared successfully', { 
-            correlationId: correlationIdStr,
-            saleId: saleData.saleId,
-            trackingNumber
-          });
-        } else {
-          logger.info('Dispatch prepared successfully (no correlation ID)', { 
-            saleId: saleData.saleId,
-            trackingNumber
-          });
-        }
+        logger.info('Dispatch prepared successfully', { 
+          saleId: saleData.saleId,
+          trackingNumber,
+          correlationId
+        });
 
         // Notify API Gateway that dispatch is ready
-        const readyMessage: BrokerMessage = {
+        const contextCorrelationId = contextManager.get(contextManager.getCorrelationIdHeaderName()) as string;
+
+        await broker.publish('dispatch.ready', {
           payload: Buffer.from(JSON.stringify({
             saleId: saleData.saleId,
             trackingNumber,
             status: 'ready_for_pickup',
-            estimatedDelivery: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+            estimatedDelivery: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+            correlationId: contextCorrelationId // solo de control y no se propaga
           })),
-          headers: correlationIdStr ? { 'x-correlation-id': correlationIdStr } : {},
-        };
-
-        await broker.publish('dispatch.ready', readyMessage);
+          headers: {
+            [contextManager.getCorrelationIdHeaderName()]: contextCorrelationId
+          }
+        });
         
-        if (correlationIdStr) {
-          logger.info('Dispatch ready notification sent', { 
-            correlationId: correlationIdStr 
-          });
-        } else {
-          logger.info('Dispatch ready notification sent (no correlation ID)');
-        }
+        logger.info('Dispatch ready notification sent', { correlationId });
 
         await controls.ack();
       } catch (error) {
-        if (correlationIdStr) {
-          logger.error('Failed to process dispatch', {
-            error: error instanceof Error ? error.message : String(error),
-            correlationId: correlationIdStr
-          });
-        } else {
-          logger.error('Failed to process dispatch (no correlation ID)', {
-            error: error instanceof Error ? error.message : String(error)
-          });
-        }
+        logger.error('Failed to process dispatch', {
+          error: error instanceof Error ? error.message : String(error),
+          correlationId
+        });
         await controls.nack();
       }
-    });
+    }));
 
     logger.info('✅ Subscribed to sales.processed topic');
     console.log('📦 Dispatch Service running - waiting for sales...');

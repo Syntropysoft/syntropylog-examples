@@ -5,7 +5,29 @@
 
 import { syntropyLog } from 'syntropylog';
 import { initializeSyntropyLog } from './boilerplate.js';
-import { BrokerMessage } from 'syntropylog';
+
+// Middleware to handle SyntropyLog context for broker messages
+function brokerContextMiddleware(messageHandler: (message: any, controls: any) => Promise<void>) {
+  return async (message: any, controls: any) => {
+    const contextManager = syntropyLog.getContextManager();
+    
+    // Extract correlation ID from message headers
+    const correlationId = message.headers?.[contextManager.getCorrelationIdHeaderName()];
+    
+    // Create a new context for this message processing
+    contextManager.run(async () => {
+      // Set the correlation ID in the current context if available
+      if (correlationId) {
+        // Ensure correlationId is a string, not an array
+        const correlationIdStr = Array.isArray(correlationId) ? correlationId[0] : correlationId;
+        contextManager.set(contextManager.getCorrelationIdHeaderName(), correlationIdStr);
+      }
+      
+      // Process the message in the current context
+      await messageHandler(message, controls);
+    });
+  };
+}
 
 async function main() {
   console.log('--- Running Sales Service ---');
@@ -16,82 +38,52 @@ async function main() {
 
     const broker = syntropyLog.getBroker('nats-broker');
     const logger = syntropyLog.getLogger('sales-service');
-    const context = syntropyLog.getContextManager();
 
     // Connect to NATS
     await broker.connect();
     logger.info('✅ Connected to NATS broker');
 
     // Subscribe to new sales
-    await broker.subscribe('sales.new', async (message, controls) => {
-      const correlationId = message.headers?.[context.getCorrelationIdHeaderName()];
-      const correlationIdStr = typeof correlationId === 'string' ? correlationId : correlationId?.toString();
+    await broker.subscribe('sales.new', brokerContextMiddleware(async (message, controls) => {
       const saleData = JSON.parse(message.payload.toString());
-
+      const contextManager = syntropyLog.getContextManager();
+      const correlationId = contextManager.get(contextManager.getCorrelationIdHeaderName()) as string;
       try {
-        if (correlationIdStr) {
-          logger.info('Processing new sale', { 
-            correlationId: correlationIdStr,
-            saleData 
-          });
-        } else {
-          logger.info('Processing new sale (no correlation ID)', { 
-            saleData 
-          });
-        }
+        logger.info('Processing new sale', { saleData, correlationId });
 
         // Simulate sales processing
         await new Promise(resolve => setTimeout(resolve, 1000));
         
         const saleId = `SALE-${Date.now()}`;
         
-        if (correlationIdStr) {
-          logger.info('Sale processed successfully', { 
-            correlationId: correlationIdStr,
-            saleId 
-          });
-        } else {
-          logger.info('Sale processed successfully (no correlation ID)', { 
-            saleId 
-          });
-        }
+        logger.info('Sale processed successfully', { saleId, correlationId });
 
-        // Publish to dispatch service
-        const dispatchMessage: BrokerMessage = {
-          payload: Buffer.from(JSON.stringify({
-            saleId,
-            customerId: saleData.customerId,
-            items: saleData.items,
-            total: saleData.total
-          })),
-          headers: correlationIdStr ? { 'x-correlation-id': correlationIdStr } : {},
-        };
-
-        await broker.publish('sales.processed', dispatchMessage);
+        await broker.publish('sales.processed', {
+          payload: Buffer.from(
+            JSON.stringify({
+              saleId,
+              customerId: saleData.customerId,
+              items: saleData.items,
+              total: saleData.total,
+              correlationId: correlationId, // esto es solo de control y no se propaga
+            })
+          ),
+          headers: {
+            [contextManager.getCorrelationIdHeaderName()]: correlationId
+          }
+        });
         
-        if (correlationIdStr) {
-          logger.info('Sale sent to dispatch service', { 
-            correlationId: correlationIdStr 
-          });
-        } else {
-          logger.info('Sale sent to dispatch service (no correlation ID)');
-        }
+        logger.info('Sale sent to dispatch service', { correlationId });
 
         await controls.ack();
       } catch (error) {
-        if (correlationIdStr) {
-          logger.error('Failed to process sale', {
-            error: error instanceof Error ? error.message : String(error),
-            correlationId: correlationIdStr
-          });
-        } else {
-          logger.error('Failed to process sale (no correlation ID)', {
-            error: error instanceof Error ? error.message : String(error)
-          });
-        }
+        logger.error('Failed to process sale', {
+          error: error instanceof Error ? error.message : String(error),
+          correlationId
+        });
         await controls.nack();
       }
-    });
+    }));
 
     logger.info('✅ Subscribed to sales.new topic');
     console.log('🛍️ Sales Service running - waiting for sales...');
