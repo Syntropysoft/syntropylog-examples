@@ -1,0 +1,139 @@
+[1;33m📊 SyntropyLog Benchmark Suite[0m
+[1;33m=============================[0m
+
+[0;34m🖥️  SYSTEM INFORMATION[0m
+[0;34m=====================[0m
+  OS: macOS 15.5
+  Architecture: x86_64
+  Kernel: 24.5.0
+  CPU: Apple M2
+  Cores: 8
+  Memory: 24576 MB
+  Node.js: v18.20.3
+  NPM: 10.8.3
+
+[0;34m🔨 Building all projects in parallel...[0m
+  -> Building [1mSyntropyLog[0m...
+  -> Building [1mNo Logger[0m...
+  -> Building [1mPino Logger[0m...
+  -> Done building [1mPino Logger[0m.
+  -> Done building [1mNo Logger[0m.
+  -> Done building [1mSyntropyLog[0m.
+[0;32m✅ All projects built successfully.[0m
+
+[0;34m📦 Analyzing bundle sizes...[0m
+  -> [1mSyntropyLog[0m: 6124 bytes
+  -> [1mNo Logger[0m: 6114 bytes
+  -> [1mPino Logger[0m: 5921 bytes
+
+[0;34m⚡ Running performance benchmarks (sequentially)...[0m
+  -> Running [1mSyntropyLog[0m (3 iterations)...
+    Iteration 1/3...
+    -> Iteration 1: 3040ms, 0MB, 0% CPU
+    Iteration 2/3...
+    -> Iteration 2: 3039ms, 0MB, 0% CPU
+    Iteration 3/3...
+    -> Iteration 3: 3058ms, 0MB, 0% CPU
+    -> Average: 3045ms, 0MB, 0% CPU (Peak: 0MB)
+  -> Running [1mNo Logger[0m (3 iterations)...
+    Iteration 1/3...
+    -> Iteration 1: 3031ms, 0MB, 0% CPU
+    Iteration 2/3...
+    -> Iteration 2: 3060ms, 0MB, 0% CPU
+    Iteration 3/3...
+    -> Iteration 3: 3058ms, 0MB, 0% CPU
+    -> Average: 3049ms, 0MB, 0% CPU (Peak: 0MB)
+  -> Running [1mPino Logger[0m (3 iterations)...
+    Iteration 1/3...
+    -> Iteration 1: 3057ms, 0MB, 0% CPU
+    Iteration 2/3...
+    -> Iteration 2: 3032ms, 0MB, 0% CPU
+    Iteration 3/3...
+    -> Iteration 3: 3065ms, 0MB, 0% CPU
+    -> Average: 3051ms, 0MB, 0% CPU (Peak: 0MB)
+[0;32m✅ Performance benchmarks completed.[0m
+
+[1;33m📊 BENCHMARK RESULTS[0m
+[1;33m=====================[0m
+
+[0;34m📈 BASIC METRICS[0m
+[1mLogger       |   Size(KB) |   Time(ms) |  Mem(MB) |   CPU%[0m
+-------------------------------------------------------
+No Logger    |          5 |       3049 |      0,0 |    0,0
+Pino         |          5 |       3051 |      0,0 |    0,0
+SyntropyLog  |          5 |       3045 |      0,0 |    0,0
+
+[0;34m📊 COMPARISONS[0m
+  📦 Bundle Size:
+    • SyntropyLog vs No Logger: 10 bytes
+    • SyntropyLog vs Pino: 203 bytes (1.03x)
+  ⚡ Performance:
+    • SyntropyLog vs Pino: -6 ms (.99x)
+  💾 Memory Usage:
+    • SyntropyLog vs No Logger: 0 MB
+    • SyntropyLog vs Pino: 0 MB (N/Ax)
+  🔥 CPU Usage:
+    • SyntropyLog vs No Logger: 0%
+    • SyntropyLog vs Pino: 0% (N/Ax)
+
+[0;34m💡 Analysis:[0m
+  • ✅ Bundle size impact vs Pino is reasonable
+  • ✅ Performance impact vs Pino is minimal
+  • ⚠️  Memory usage vs Pino is higher than expected
+  • ⚠️  CPU usage vs Pino is noticeable
+
+[0;34m🎯 Recommendations:[0m
+  • Use SyntropyLog when you need:
+    - Structured logging with context
+    - Distributed tracing
+    - Advanced observability features
+  • Use Pino when you need:
+    - Maximum performance
+    - Minimal bundle size
+    - Simple JSON logging
+  • Consider no logger when:
+    - Performance is absolutely critical
+    - Bundle size is paramount
+    - Logging is not required
+[0;32m✅ Benchmark comparison completed![0m
+[1;33m📊 SyntropyLog Benchmark Suite[0m
+[1;33m=============================[0m
+
+[0;34m🖥️  SYSTEM INFORMATION[0m
+[0;34m=====================[0m
+  OS: macOS 15.5
+  Architecture: x86_64
+  Kernel: 24.5.0
+  CPU: Apple M2
+  Cores: 8
+  Memory: 24576 MB
+  Node.js: v18.20.3
+  NPM: 10.8.3
+
+[0;34m🔨 Building all projects in parallel...[0m
+  -> Building [1mSyntropyLog[0m...
+  -> Building [1mNo Logger[0m...
+  -> Building [1mPino Logger[0m...
+  -> Done building [1mNo Logger[0m.
+  -> Done building [1mPino Logger[0m.
+  -> Done building [1mSyntropyLog[0m.
+[0;32m✅ All projects built successfully.[0m
+
+[0;34m📦 Analyzing bundle sizes...[0m
+  -> [1mSyntropyLog[0m: 6124 bytes
+  -> [1mNo Logger[0m: 6114 bytes
+  -> [1mPino Logger[0m: 5921 bytes
+
+[0;34m⚡ Running performance benchmarks (sequentially)...[0m
+  -> Running [1mSyntropyLog[0m (3 iterations)...
+    Iteration 1/3...
+    -> Iteration 1: 3055ms, 0MB, 0% CPU
+    Iteration 2/3...
+    -> Iteration 2: 3052ms, 0MB, 0% CPU
+    Iteration 3/3...
+    -> Iteration 3: 3055ms, 0MB, 0% CPU
+    -> Average: 3054ms, 0MB, 0% CPU (Peak: 0MB)
+  -> Running [1mNo Logger[0m (3 iterations)...
+    Iteration 1/3...
+    -> Iteration 1: 3052ms, 0MB, 0% CPU
+    Iteration 2/3...

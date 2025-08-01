@@ -15,6 +15,7 @@ export async function initializeSyntropyLog(): Promise<void> {
     logger: {
       serviceName: 'doctor-cli-example',
       level: 'info',
+      serializerTimeoutMs: 5000,
     },
     context: {
       correlationIdHeader: 'X-Correlation-ID',
