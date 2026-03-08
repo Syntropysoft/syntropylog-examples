@@ -21,7 +21,10 @@
   "dependencies": {
     "@syntropylog/adapters": "0.1.24",
     "kafkajs": "^2.2.4",
-    "syntropylog": "0.7.4"
+    "syntropylog": "0.9.16",
+    "@syntropylog/types": "0.1.5",
+    "redis": "^4.6.12",
+    "chalk": "^5.4.1"
   },
   "devDependencies": {
     "nock": "^13.5.6",

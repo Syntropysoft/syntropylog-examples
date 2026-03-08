@@ -1,5 +1,4 @@
-import { SyntropyLog } from 'syntropylog';
-import { PrettyConsoleTransport, ConsoleTransport } from 'syntropylog';
+import { SyntropyLog, ClassicConsoleTransport, ConsoleTransport } from 'syntropylog';
 
 // 🎯 Simple function that does something and logs
 async function processUserData(syntropyLog: SyntropyLog, userId: number, userName: string) {
@@ -28,7 +27,7 @@ async function demonstrateMultipleTransports() {
 
   console.log('🚀 CONFIGURATION: Multiple Transports');
   console.log('─────────────────────────────────────');
-  console.log('✅ PrettyConsoleTransport: Human-readable for development');
+  console.log('✅ ClassicConsoleTransport: Colored, human-readable for development');
   console.log('✅ ConsoleTransport: JSON for production');
   console.log('✅ Both active: Same logs, different formats\n');
   
@@ -39,10 +38,8 @@ async function demonstrateMultipleTransports() {
       serviceName: 'user-processor-multi',
       serializerTimeoutMs: 100,
       transports: [
-        // Pretty transport for development
-        new PrettyConsoleTransport(),
-        // JSON transport for production
-        new ConsoleTransport()
+        new ClassicConsoleTransport(), // colored, human-readable
+        new ConsoleTransport(),        // JSON for production
       ]
     }
   });
@@ -66,7 +63,7 @@ async function demonstrateMultipleTransports() {
   console.log('📊 CONFIGURATION SUMMARY:');
   console.log('─────────────────────────');
   console.log('✅ Single instance: No singleton conflicts');
-  console.log('✅ Multiple transports: Pretty + JSON');
+  console.log('✅ Multiple transports: Classic (colored) + JSON');
   console.log('✅ Same logs: Different output formats');
   console.log('✅ Real-world pattern: Development + Production');
   console.log('✅ Easy switching: Just change transport config');

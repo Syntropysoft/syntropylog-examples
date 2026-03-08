@@ -26,7 +26,9 @@
     "@syntropylog/adapters": "0.1.24",
     "@syntropylog/types": "0.1.5",
     "amqplib": "^0.10.3",
-    "syntropylog": "0.7.4"
+    "syntropylog": "0.9.16",
+    "redis": "^4.6.12",
+    "chalk": "^5.4.1"
   },
   "devDependencies": {
     "@types/amqplib": "^0.10.4",

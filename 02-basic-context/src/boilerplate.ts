@@ -1,4 +1,4 @@
-import { syntropyLog, ClassicConsoleTransport } from 'syntropylog';
+import { syntropyLog, ClassicConsoleTransport, ConsoleTransport } from 'syntropylog';
 
 /**
  * Initialize SyntropyLog with basic configuration
@@ -10,7 +10,7 @@ export async function initializeSyntropyLog(): Promise<void> {
     logger: {
       level: 'info',
       serializerTimeoutMs: 100,
-      transports: [new ClassicConsoleTransport()]
+      transports: [new ClassicConsoleTransport(), new ConsoleTransport()]
     },
     context: {
       correlationIdHeader: 'X-Correlation-ID'

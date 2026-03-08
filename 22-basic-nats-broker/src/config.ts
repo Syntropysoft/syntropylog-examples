@@ -3,7 +3,7 @@
 //  RESPONSIBILITY: Define configuration using official framework types
 // =================================================================
 
-import { ClassicConsoleTransport, SyntropyLogConfig } from 'syntropylog';
+import { ClassicConsoleTransport, ConsoleTransport, SyntropyLogConfig } from 'syntropylog';
 import { NatsAdapter } from '@syntropylog/adapters';
 
 // ✅ Using official framework types
@@ -12,7 +12,7 @@ export const syntropyConfig: SyntropyLogConfig = {
     level: 'info',
     serviceName: 'nats-correlation-example',
     serializerTimeoutMs: 100,
-    transports: [new ClassicConsoleTransport()],
+    transports: [new ClassicConsoleTransport(), new ConsoleTransport()],
   },
   context: {
     correlationIdHeader: 'X-Correlation-ID',

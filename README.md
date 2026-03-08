@@ -31,7 +31,7 @@ SyntropyLog unifies logging, HTTP clients, Redis, and message brokers in a singl
 - **06**: Error handling ✅
 - **07**: Logger configuration ✅
 - **08**: Logging matrix ✅
-- **09**: HTTP configuration ✅
+- **09**: All transports ✅
 
 ### **INTEGRATION (10-13)** - HTTP & Redis with Different Frameworks ✅ COMPLETE
 - **10**: HTTP correlation ✅
@@ -67,21 +67,29 @@ SyntropyLog unifies logging, HTTP clients, Redis, and message brokers in a singl
 
 ### Test All Examples (Recommended)
 ```bash
-# Test all examples with default version (0.6.11)
+# Usa la versión en versions.txt por defecto
 ./test-all-examples.sh
 
-# Test with specific version
-./test-all-examples.sh 0.6.11
+# Con versión concreta
+./test-all-examples.sh 0.9.12
 
-# Test from specific example
-./test-all-examples.sh 0.6.11 5  # Start from example 05
+# A partir de un ejemplo
+./test-all-examples.sh 0.9.12 5  # Empezar desde ejemplo 05
 ```
 
 ### Individual Examples
 ```bash
+# Ejemplo 00: Setup e inicialización (el que figura en este README)
+cd 00-setup-initialization
+npm install
+npm run dev
+```
+
+```bash
+# Otro ejemplo mínimo
 cd 01-hello-world
 npm install
-npm start
+npm run dev
 ```
 
 ### With External Services
@@ -91,6 +99,12 @@ docker-compose up -d redis
 npm install
 npm start
 ```
+
+### Ejemplo 09: All transports (fuera de la lista)
+El **09** es el ejemplo con todos los transportes de consola: pool de transportes (json, classic, pretty, compact, colorful), **override** por nombre para elegir salida, y operaciones **agregar / sacar / remover** transportes en tiempo de ejecución. Es el ejemplo de referencia con “todos los chiches” del logging.
+
+### Transports y chalk
+La librería **ya no requiere chalk**. `ClassicConsoleTransport` funciona igual con o sin chalk: si está disponible usa colores; si no, salida sin colores. Los ejemplos pueden usar `ClassicConsoleTransport` sin declarar chalk en dependencias.
 
 ## 🐳 Docker Services
 
@@ -124,7 +138,7 @@ docker-compose up -d
 - **Example 13 (Fastify)**: Resolved AsyncLocalStorage context propagation issue with proper `contextManager.run()` implementation
 - **Example 14 (NestJS)**: Enhanced TypeScript configuration and added proper package-lock.json
 - **Example 15 (Koa)**: Implemented context middleware with AsyncLocalStorage for proper context propagation throughout request lifecycle
-- **All Examples**: Updated to latest SyntropyLog version 0.7.3 with improved context management
+- **All Examples**: Versiones gestionadas vía `versions.txt` y `./update-all-dependencies.sh`
 
 ## 🎯 What You'll Learn
 
@@ -145,28 +159,33 @@ docker-compose up -d
 
 ## 🔧 Framework Features
 
-### **Unified Configuration:**
+### **Setup e inicialización (ejemplo 00):**
 ```typescript
+import { syntropyLog } from 'syntropylog';
+
+// Escuchar eventos antes de init
+syntropyLog.on('ready', () => console.log('✅ Listo'));
+syntropyLog.on('error', (err) => console.error('❌', err));
+
 syntropyLog.init({
-  logger: { serviceName: 'my-app' },
-  http: { instances: [{ instanceName: 'api', adapter: axiosAdapter }] },
-  redis: { instances: [{ instanceName: 'cache', url: 'redis://localhost' }] },
-  brokers: { instances: [{ instanceName: 'events', adapter: kafkaAdapter }] }
+  logger: {
+    serviceName: 'my-app',
+    level: 'info',
+    serializerTimeoutMs: 100,
+  },
 });
+
+const logger = syntropyLog.getLogger('main');
+logger.info('Application startup complete', { version: '1.0.0' });
+
+// Al cerrar la app
+await syntropyLog.shutdown();
 ```
 
-### **Simple Usage:**
+### **Uso básico:**
 ```typescript
-const logger = syntropyLog.getLogger();
-const http = syntropyLog.getHttp('api');
-const redis = syntropyLog.getRedis('cache');
-const broker = syntropyLog.getBroker('events');
-
-// All automatically correlated
+const logger = syntropyLog.getLogger('main');
 logger.info('User created', { userId: 123 });
-await http.get('/users/123');
-await redis.set('user:123', userData);
-await broker.publish('user.created', event);
 ```
 
 ## 🔗 GraphQL Integration (Conceptual)
@@ -215,14 +234,10 @@ const subscription = {
 }
 ```
 
-## 🚀 Beta Version Notice
+## 🚀 Versión
 
-> **🎯 BETA VERSION**: This is a beta release (v0.6.11). 
-> 
-> - **Core features stable**: Logger, context, HTTP, Redis, brokers (tested & proven)
-> - **Production ready**: 94.1% test coverage, comprehensive examples
-> - **API stable**: Core functionality locked, backward compatible
-> - **Ready for adoption**: Perfect for production applications
+> Las versiones del framework y dependencias se definen en **`versions.txt`**.  
+> El ejemplo **00-setup-initialization** es la referencia de setup que se muestra en este README.
 
 ## 🤝 Contributing
 

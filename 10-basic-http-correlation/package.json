@@ -11,8 +11,11 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "chalk": "^5.4.1",
     "axios": "^1.10.0",
-    "syntropylog": "0.7.4"
+    "redis": "^4.6.12",
+    "syntropylog": "0.9.16",
+    "@syntropylog/types": "0.1.5"
   },
   "devDependencies": {
     "nock": "^13.5.6",

@@ -3,7 +3,7 @@
 //  RESPONSIBILITY: Define configuration using official framework types
 // =================================================================
 
-import { PrettyConsoleTransport, SyntropyLogConfig } from 'syntropylog';
+import { PrettyConsoleTransport, ConsoleTransport, SyntropyLogConfig } from 'syntropylog';
 import { RabbitMQAdapter } from '@syntropylog/adapters';
 
 // ✅ Using official framework types
@@ -12,7 +12,7 @@ export const syntropyConfig: SyntropyLogConfig = {
     level: 'info',
     serviceName: 'rabbitmq-correlation-example',
     serializerTimeoutMs: 100,
-    transports: [new PrettyConsoleTransport()],
+    transports: [new PrettyConsoleTransport(), new ConsoleTransport()],
   },
   context: {
     correlationIdHeader: 'X-Correlation-ID',

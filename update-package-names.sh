@@ -81,9 +81,9 @@ create_package_json() {
     "vitest": "^1.0.0"
   },
   "dependencies": {
-    "syntropylog": "0.7.0",
+    "syntropylog": "0.9.12",
     "@syntropylog/types": "0.1.5",
-    "@syntropylog/adapters": "0.1.23"
+    "redis": "^4.6.12"
   }
 }
 EOF

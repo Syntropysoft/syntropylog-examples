@@ -1,4 +1,4 @@
-import { syntropyLog, ClassicConsoleTransport } from 'syntropylog';
+import { syntropyLog, ClassicConsoleTransport, ConsoleTransport } from 'syntropylog';
 
 // Initialize SyntropyLog with basic configuration
 const initializeSyntropyLog = async () => {
@@ -7,7 +7,7 @@ const initializeSyntropyLog = async () => {
       serviceName: 'http-configuration-example',
       level: 'info',
       serializerTimeoutMs: 100,
-      transports: [new ClassicConsoleTransport()]
+      transports: [new ClassicConsoleTransport(), new ConsoleTransport()]
     }
   });
 };

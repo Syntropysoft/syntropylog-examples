@@ -28,16 +28,36 @@ log_error() {
     echo -e "${RED}❌ $1${NC}"
 }
 
-# Function to get versions from versions.txt
+# Function to get versions from versions.txt (xargs quita espacios al final)
 get_versions() {
     if [ -f "versions.txt" ]; then
-        SYNTROPYLOG_VERSION=$(grep "^syntropylog=" versions.txt | cut -d'=' -f2)
-        TYPES_VERSION=$(grep "^@syntropylog/types=" versions.txt | cut -d'=' -f2)
-        ADAPTERS_VERSION=$(grep "^@syntropylog/adapters=" versions.txt | cut -d'=' -f2)
+        SYNTROPYLOG_VERSION=$(grep "^syntropylog=" versions.txt | cut -d'=' -f2 | xargs)
+        TYPES_VERSION=$(grep "^@syntropylog/types=" versions.txt | cut -d'=' -f2 | xargs)
+        REDIS_VERSION=$(grep "^redis=" versions.txt | cut -d'=' -f2 | xargs)
+        CHALK_VERSION=$(grep "^chalk=" versions.txt | cut -d'=' -f2 | xargs)
     else
         log_error "versions.txt not found!"
         exit 1
     fi
+}
+
+# Add a dependency to package.json if missing (uses Node for portability)
+add_dep_if_missing() {
+    local package_file=$1
+    local dep=$2
+    local version=$3
+    node -e "
+    const fs = require('fs');
+    const p = process.argv[1];
+    const dep = process.argv[2];
+    const version = process.argv[3];
+    const j = JSON.parse(fs.readFileSync(p, 'utf8'));
+    if (!j.dependencies) j.dependencies = {};
+    if (!j.dependencies[dep]) {
+      j.dependencies[dep] = version;
+      fs.writeFileSync(p, JSON.stringify(j, null, 2) + '\n');
+    }
+    " "$package_file" "$dep" "$version"
 }
 
 # Function to update package.json dependencies
@@ -50,40 +70,24 @@ update_package_dependencies() {
     # Create a backup
     cp "$package_file" "$package_file.backup"
     
-    # Update syntropylog version
+    # Update versions of existing deps
     if [[ "$OSTYPE" == "darwin"* ]]; then
-        # macOS
         sed -i '' "s/\"syntropylog\": \"[^\"]*\"/\"syntropylog\": \"$SYNTROPYLOG_VERSION\"/g" "$package_file"
         sed -i '' "s/\"@syntropylog\/types\": \"[^\"]*\"/\"@syntropylog\/types\": \"$TYPES_VERSION\"/g" "$package_file"
-        sed -i '' "s/\"@syntropylog\/adapters\": \"[^\"]*\"/\"@syntropylog\/adapters\": \"$ADAPTERS_VERSION\"/g" "$package_file"
+        sed -i '' "s/\"redis\": \"[^\"]*\"/\"redis\": \"$REDIS_VERSION\"/g" "$package_file"
+        sed -i '' "s/\"chalk\": \"[^\"]*\"/\"chalk\": \"$CHALK_VERSION\"/g" "$package_file"
     else
-        # Linux
         sed -i "s/\"syntropylog\": \"[^\"]*\"/\"syntropylog\": \"$SYNTROPYLOG_VERSION\"/g" "$package_file"
         sed -i "s/\"@syntropylog\/types\": \"[^\"]*\"/\"@syntropylog\/types\": \"$TYPES_VERSION\"/g" "$package_file"
-        sed -i "s/\"@syntropylog\/adapters\": \"[^\"]*\"/\"@syntropylog\/adapters\": \"$ADAPTERS_VERSION\"/g" "$package_file"
+        sed -i "s/\"redis\": \"[^\"]*\"/\"redis\": \"$REDIS_VERSION\"/g" "$package_file"
+        sed -i "s/\"chalk\": \"[^\"]*\"/\"chalk\": \"$CHALK_VERSION\"/g" "$package_file"
     fi
     
-    # Add missing dependencies using a simpler approach
-    # Check if types dependency exists
-    if ! grep -q '"@syntropylog/types"' "$package_file"; then
-        log_warning "Adding @syntropylog/types to $example_name"
-        # Add it manually by replacing the dependencies section
-        if [[ "$OSTYPE" == "darwin"* ]]; then
-            sed -i '' 's/"dependencies": {/"dependencies": {\n    "@syntropylog\/types": "'$TYPES_VERSION'",/' "$package_file"
-        else
-            sed -i 's/"dependencies": {/"dependencies": {\n    "@syntropylog\/types": "'$TYPES_VERSION'",/' "$package_file"
-        fi
-    fi
-    
-    # Check if adapters dependency exists
-    if ! grep -q '"@syntropylog/adapters"' "$package_file"; then
-        log_warning "Adding @syntropylog/adapters to $example_name"
-        # Add it manually by replacing the dependencies section
-        if [[ "$OSTYPE" == "darwin"* ]]; then
-            sed -i '' 's/"dependencies": {/"dependencies": {\n    "@syntropylog\/adapters": "'$ADAPTERS_VERSION'",/' "$package_file"
-        else
-            sed -i 's/"dependencies": {/"dependencies": {\n    "@syntropylog\/adapters": "'$ADAPTERS_VERSION'",/' "$package_file"
-        fi
+    # Add missing deps (solo en ejemplos que tienen syntropylog)
+    if grep -q '"syntropylog"' "$package_file"; then
+        add_dep_if_missing "$package_file" "@syntropylog/types" "$TYPES_VERSION"
+        add_dep_if_missing "$package_file" "redis" "$REDIS_VERSION"
+        add_dep_if_missing "$package_file" "chalk" "$CHALK_VERSION"
     fi
     
     log_success "Updated $example_name"
@@ -97,7 +101,8 @@ get_versions
 log_info "📦 Using versions:"
 log_info "  syntropylog: $SYNTROPYLOG_VERSION"
 log_info "  @syntropylog/types: $TYPES_VERSION"
-log_info "  @syntropylog/adapters: $ADAPTERS_VERSION"
+log_info "  redis: $REDIS_VERSION"
+log_info "  chalk: $CHALK_VERSION"
 
 # Find all package.json files in example directories
 PACKAGE_FILES=($(find . -maxdepth 2 -name "package.json" | grep -E "./[0-9]+-" | sort))

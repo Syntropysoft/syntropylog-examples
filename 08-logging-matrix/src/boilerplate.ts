@@ -1,12 +1,13 @@
-import { syntropyLog } from 'syntropylog';
+import { syntropyLog, ClassicConsoleTransport, ConsoleTransport } from 'syntropylog';
 
-// Initialize SyntropyLog with basic configuration
+// Initialize SyntropyLog with basic configuration (colored console)
 const initializeSyntropyLog = async () => {
   await syntropyLog.init({
     logger: {
       serviceName: 'logging-matrix-example',
       level: 'info',
-      serializerTimeoutMs: 100
+      serializerTimeoutMs: 100,
+      transports: [new ClassicConsoleTransport(), new ConsoleTransport()],
     }
   });
 };

@@ -3,7 +3,7 @@
 //  RESPONSIBILITY: Define configuration using official framework types
 // =================================================================
 
-import { ClassicConsoleTransport, SyntropyLogConfig } from 'syntropylog';
+import { ClassicConsoleTransport, ConsoleTransport, SyntropyLogConfig } from 'syntropylog';
 
 // ✅ Using official framework types
 export const syntropyConfig: SyntropyLogConfig = {
@@ -13,6 +13,7 @@ export const syntropyConfig: SyntropyLogConfig = {
     serializerTimeoutMs: 100,
     transports: [
       new ClassicConsoleTransport(),
+      new ConsoleTransport(),
     ],
   },
   redis: {

@@ -47,9 +47,9 @@ create_package_json() {
     "test": "vitest"
   },
   "dependencies": {
-    "syntropylog": "0.7.0",
+    "syntropylog": "0.9.12",
     "@syntropylog/types": "0.1.5",
-    "@syntropylog/adapters": "0.1.23"
+    "redis": "^4.6.12"
   },
   "devDependencies": {
     "typescript": "^5.0.0",

@@ -1,5 +1,4 @@
-import { syntropyLog, ClassicConsoleTransport } from 'syntropylog';
-import { ContextHeaders } from '../../../../dist/types/internal-types';
+import { syntropyLog, ClassicConsoleTransport, ConsoleTransport } from 'syntropylog';
 
 // Initialize SyntropyLog with basic configuration
 const initializeSyntropyLog = async () => {
@@ -8,7 +7,7 @@ const initializeSyntropyLog = async () => {
       serviceName: 'error-handling-example',
       level: 'info',
       serializerTimeoutMs: 100,
-      transports: [new ClassicConsoleTransport()],
+      transports: [new ClassicConsoleTransport(), new ConsoleTransport()],
     },
     context: {
       correlationIdHeader: 'x-correlation-id-test-06'

@@ -1,4 +1,4 @@
-import { syntropyLog, SyntropyLogConfig, ClassicConsoleTransport } from 'syntropylog';
+import { syntropyLog, SyntropyLogConfig, ClassicConsoleTransport, ConsoleTransport } from 'syntropylog';
 
 /**
  * Example 03: TypeScript Context and Correlation
@@ -46,12 +46,12 @@ async function initializeSyntropyLog(): Promise<void> {
 
     // Initialize with configuration
     const config: SyntropyLogConfig = {
-  logger: {
-    level: 'info',
+      logger: {
+        level: 'info',
         serviceName: 'example-03-typescript',
-        transports: [new ClassicConsoleTransport()],
-    serializerTimeoutMs: 100,
-  },
+        serializerTimeoutMs: 100,
+        transports: [new ClassicConsoleTransport(), new ConsoleTransport()],
+      },
       context: {
         correlationIdHeader: 'X-Correlation-ID',
       },

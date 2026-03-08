@@ -1,4 +1,4 @@
-import { syntropyLog } from 'syntropylog';
+import { syntropyLog, ClassicConsoleTransport, ConsoleTransport } from 'syntropylog';
 
 // Global variables for graceful shutdown
 let isShuttingDown = false;
@@ -18,7 +18,8 @@ export async function initializeSyntropyLog() {
         serviceName: 'universal-context-demo',
         level: 'info',
         prettyPrint: { enabled: true },
-        serializerTimeoutMs: 100
+        serializerTimeoutMs: 100,
+        transports: [new ClassicConsoleTransport(), new ConsoleTransport()],
       },
       context: {
         correlationIdHeader: 'x-correlation-id'

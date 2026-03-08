@@ -11,7 +11,10 @@
     "test": "echo \"No tests specified\" && exit 0"
   },
   "dependencies": {
-    "syntropylog": "0.7.4"
+    "chalk": "^5.4.1",
+    "redis": "^4.6.12",
+    "syntropylog": "0.9.16",
+    "@syntropylog/types": "0.1.5"
   },
   "devDependencies": {
     "tsx": "^4.7.0",
