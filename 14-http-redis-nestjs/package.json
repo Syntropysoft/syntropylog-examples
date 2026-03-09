@@ -7,6 +7,7 @@
   "license": "UNLICENSED",
   "scripts": {
     "build": "nest build",
+    "dev": "nest start --watch",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
@@ -26,7 +27,7 @@
     "redis": "^4.6.12",
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.1",
-    "syntropylog": "0.9.16",
+    "syntropylog": "file:../../syntropyLog",
     "@syntropylog/types": "0.1.5",
     "chalk": "^5.4.1"
   },

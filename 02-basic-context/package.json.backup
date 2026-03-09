@@ -1,0 +1,33 @@
+{
+  "name": "syntropylog-example-02-basic-context",
+  "version": "1.0.0",
+  "description": "SyntropyLog Example 02: Basic Context and Correlation",
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "dev": "tsx src/index.ts",
+    "build": "tsc",
+    "test": "echo \"No tests specified\" && exit 0"
+  },
+  "dependencies": {
+    "chalk": "^5.4.1",
+    "redis": "^4.6.12",
+    "syntropylog": "0.9.17",
+    "@syntropylog/types": "0.1.5"
+  },
+  "devDependencies": {
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3"
+  },
+  "keywords": [
+    "syntropylog",
+    "logging",
+    "observability",
+    "context",
+    "correlation",
+    "example"
+  ],
+  "author": "Gabriel Alejandro Gomez",
+  "license": "MIT"
+}

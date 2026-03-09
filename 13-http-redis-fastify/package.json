@@ -18,7 +18,7 @@
     "@types/uuid": "^10.0.0",
     "fastify": "^4.24.3",
     "redis": "^4.6.12",
-    "syntropylog": "0.9.16",
+    "syntropylog": "file:../../syntropyLog",
     "uuid": "^11.1.0",
     "chalk": "^5.4.1"
   },

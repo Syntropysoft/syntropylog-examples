@@ -34,7 +34,6 @@ get_versions() {
         SYNTROPYLOG_VERSION=$(grep "^syntropylog=" versions.txt | cut -d'=' -f2 | xargs)
         TYPES_VERSION=$(grep "^@syntropylog/types=" versions.txt | cut -d'=' -f2 | xargs)
         REDIS_VERSION=$(grep "^redis=" versions.txt | cut -d'=' -f2 | xargs)
-        CHALK_VERSION=$(grep "^chalk=" versions.txt | cut -d'=' -f2 | xargs)
     else
         log_error "versions.txt not found!"
         exit 1
@@ -70,24 +69,21 @@ update_package_dependencies() {
     # Create a backup
     cp "$package_file" "$package_file.backup"
     
-    # Update versions of existing deps
+    # Update versions of existing deps (| delimiter; preserve trailing comma if present)
     if [[ "$OSTYPE" == "darwin"* ]]; then
-        sed -i '' "s/\"syntropylog\": \"[^\"]*\"/\"syntropylog\": \"$SYNTROPYLOG_VERSION\"/g" "$package_file"
+        sed -i '' -E "s|\"syntropylog\": \"[^\"]*\"(,)?|\"syntropylog\": \"$SYNTROPYLOG_VERSION\"\1|g" "$package_file"
         sed -i '' "s/\"@syntropylog\/types\": \"[^\"]*\"/\"@syntropylog\/types\": \"$TYPES_VERSION\"/g" "$package_file"
         sed -i '' "s/\"redis\": \"[^\"]*\"/\"redis\": \"$REDIS_VERSION\"/g" "$package_file"
-        sed -i '' "s/\"chalk\": \"[^\"]*\"/\"chalk\": \"$CHALK_VERSION\"/g" "$package_file"
     else
-        sed -i "s/\"syntropylog\": \"[^\"]*\"/\"syntropylog\": \"$SYNTROPYLOG_VERSION\"/g" "$package_file"
+        sed -i -E "s|\"syntropylog\": \"[^\"]*\"(,)?|\"syntropylog\": \"$SYNTROPYLOG_VERSION\"\1|g" "$package_file"
         sed -i "s/\"@syntropylog\/types\": \"[^\"]*\"/\"@syntropylog\/types\": \"$TYPES_VERSION\"/g" "$package_file"
         sed -i "s/\"redis\": \"[^\"]*\"/\"redis\": \"$REDIS_VERSION\"/g" "$package_file"
-        sed -i "s/\"chalk\": \"[^\"]*\"/\"chalk\": \"$CHALK_VERSION\"/g" "$package_file"
     fi
     
     # Add missing deps (solo en ejemplos que tienen syntropylog)
     if grep -q '"syntropylog"' "$package_file"; then
         add_dep_if_missing "$package_file" "@syntropylog/types" "$TYPES_VERSION"
         add_dep_if_missing "$package_file" "redis" "$REDIS_VERSION"
-        add_dep_if_missing "$package_file" "chalk" "$CHALK_VERSION"
     fi
     
     log_success "Updated $example_name"
@@ -102,7 +98,6 @@ log_info "📦 Using versions:"
 log_info "  syntropylog: $SYNTROPYLOG_VERSION"
 log_info "  @syntropylog/types: $TYPES_VERSION"
 log_info "  redis: $REDIS_VERSION"
-log_info "  chalk: $CHALK_VERSION"
 
 # Find all package.json files in example directories
 PACKAGE_FILES=($(find . -maxdepth 2 -name "package.json" | grep -E "./[0-9]+-" | sort))

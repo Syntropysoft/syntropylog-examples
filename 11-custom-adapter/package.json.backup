@@ -1,0 +1,26 @@
+{
+  "name": "11-custom-adapter",
+  "version": "1.0.0",
+  "description": "Example of creating and using custom adapters in SyntropyLog 🛠️",
+  "main": "src/index.ts",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "dev": "tsx src/index.ts"
+  },
+  "author": "",
+  "license": "ISC",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "syntropylog": "0.9.17",
+    "@syntropylog/types": "0.1.5",
+    "redis": "^4.6.12",
+    "chalk": "^5.4.1"
+  },
+  "devDependencies": {
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0",
+    "nock": "^13.5.6"
+  }
+}

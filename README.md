@@ -33,39 +33,54 @@ SyntropyLog unifies logging, HTTP clients, Redis, and message brokers in a singl
 - **08**: Logging matrix ✅
 - **09**: All transports ✅
 
-### **INTEGRATION (10-13)** - HTTP & Redis with Different Frameworks ✅ COMPLETE
-- **10**: HTTP correlation ✅
-- **11**: Custom adapter ✅
-- **12**: HTTP + Redis (Express) ✅ (Reviewed & Fixed)
-- **13**: HTTP + Redis (Fastify) ✅ (Reviewed & Fixed)
+### **INTEGRATION (10-13)** - HTTP & Redis with Different Frameworks 🚧
+- **10**: HTTP correlation 🚧
+- **11**: Custom adapter 🚧
+- **12**: HTTP + Redis (Express) 🚧
+- **13**: HTTP + Redis (Fastify) 🚧
 
-### **ADVANCED FEATURES (14-19)** - Advanced Framework Features 🚧 IN DEVELOPMENT
-- **14**: HTTP + Redis (NestJS) ✅
-- **15**: HTTP + Redis (Koa) ✅
+### **ADVANCED FEATURES (14-19)** - Advanced Framework Features 🚧
+- **14**: HTTP + Redis (NestJS) 🚧
+- **15**: HTTP + Redis (Koa) 🚧
 - **16**: HTTP + Redis (Hapi) 🚧
 - **17**: Custom serializers 🚧
 - **18**: Custom transports 🚧
 - **19**: Doctor CLI 🚧
 
-### **MESSAGING (20-24)** - Message Brokers & Correlation ✅ COMPLETE
-- **20**: Basic Kafka ✅
-- **21**: Basic RabbitMQ ✅
-- **22**: Basic NATS ✅
-- **23**: Kafka full-stack ✅
-- **24**: NATS microservices ✅ (Full-stack distributed tracing)
+### **MESSAGING (20-24)** - Message Brokers & Correlation 🚧
+- **20**: Basic Kafka 🚧
+- **21**: Basic RabbitMQ 🚧
+- **22**: Basic NATS 🚧
+- **23**: Kafka full-stack 🚧
+- **24**: NATS microservices (Full-stack distributed tracing) 🚧
 
-### **ENTERPRISE (25-27)** - Production & Complete Applications 🚧 IN DEVELOPMENT
+### **ENTERPRISE (25-27)** - Production & Complete Applications 🚧
 - **25**: Production configuration 🚧
 - **26**: Advanced context 🚧
 - **27**: Complete enterprise app 🚧
 
+### **TESTING & BENCHMARKS (28-37)**
+- **28**: Testing patterns (Vitest)
+- **29**: Testing patterns (Jest)
+- **30**: Testing Redis context
+- **31**: Testing serializers
+- **32**: Testing transports concepts
+- **33**: Tree-shaking minimal
+- **34**: Tree-shaking full
+- **35**: Benchmark with SyntropyLog
+- **36**: Benchmark without SyntropyLog
+- **37**: Benchmark with Pino
+
 ## 🚀 Quick Start
+
+### Instalación por ejemplo (cada uno su copia)
+Cada carpeta de ejemplo es **independiente**: tiene su propio `package.json` y descarga su propia copia de `syntropylog` al hacer `npm install` dentro de esa carpeta. **No se usa la base** (raíz del repo) para las dependencias de los ejemplos; la raíz es solo para tooling del repo (y así no saturar la máquina con una instalación única de todo).
 
 ### Prerequisites
 - Node.js 18+
 - Docker (for examples with external services)
 
-### Test All Examples (Recommended)
+### Probar todos los ejemplos que corren en el script
 ```bash
 # Usa la versión en versions.txt por defecto
 ./test-all-examples.sh
@@ -73,11 +88,14 @@ SyntropyLog unifies logging, HTTP clients, Redis, and message brokers in a singl
 # Con versión concreta
 ./test-all-examples.sh 0.9.12
 
-# A partir de un ejemplo
+# A partir de un ejemplo (índice)
 ./test-all-examples.sh 0.9.12 5  # Empezar desde ejemplo 05
 ```
+El script ejecuta **00-09** y **28-37**; omite **10-27** (dependen de API getHttp/getBroker/adapters ya no incluida en la librería).
 
 ### Individual Examples
+Entra en la carpeta del ejemplo e instala ahí (cada una descarga su copia de la librería):
+
 ```bash
 # Ejemplo 00: Setup e inicialización (el que figura en este README)
 cd 00-setup-initialization
@@ -108,46 +126,45 @@ La librería **ya no requiere chalk**. `ClassicConsoleTransport` funciona igual 
 
 ## 🐳 Docker Services
 
-Some examples require external services. We provide Docker Compose files:
+Algunos ejemplos (10-27) requieren servicios externos si los ejecutas a mano. Hay `docker-compose` en las carpetas que los usan:
 
-### Redis Examples (12, 13)
+### Redis (ejemplos 12, 13)
 ```bash
+cd 12-http-redis-axios   # o 13-http-redis-fastify
 docker-compose up -d redis
+npm install && npm start
 ```
 
-### Message Brokers (20, 21, 22, 23, 24)
+### Message Brokers (20-24)
 ```bash
+cd 23-kafka-full-stack   # o 20, 21, 22, 24
 docker-compose up -d
+npm install && npm run dev
 ```
 
 ## 📊 Current Status
 
-### ✅ **Complete & Tested (00-15, 20-24)**
-- **00-09**: Core Framework Features ✅
-- **10-15**: HTTP & Redis Integration ✅
-- **20-24**: Message Brokers & Correlation ✅
+### ✅ **Ejecutados por `test-all-examples.sh` (00-09, 28-37)**
+El script de prueba ejecuta solo estos ejemplos (sin APIs de HTTP/brokers/adapters):
+- **00-09**: Fundamentos (setup, context, transports, levels, error handling, etc.)
+- **28-35**: Testing (Vitest, Jest, Redis, serializers, transports) y tree-shaking
+- **36-37**: Benchmarks (sin SyntropyLog, con Pino)
 
-### 🚧 **In Development**
-- **14-19**: Advanced Framework Features
-- **25-27**: Enterprise Patterns
+### ⏭️ **Omitidos en el script (10-27)**
+Los ejemplos **10-27** dependen de la API antigua (`getHttp`, `getBroker`, `@syntropylog/adapters`), que ya no está en la librería. El script los omite. Puedes ejecutarlos a mano si adaptas la integración (p. ej. [interceptores HTTP](docs/HTTP_CLIENT_INTEGRATION.md)).
 
-> **🎯 BETA READY**: Examples 00-15 and 20-24 are **fully functional** and ready for production use. All examples include complete boilerplate, context propagation, structured logging, and automatic termination.
-
-### 🔧 **Recent Improvements & Fixes**
-- **Example 12 (Express)**: Fixed async initialization pattern for better lifecycle management
-- **Example 13 (Fastify)**: Resolved AsyncLocalStorage context propagation issue with proper `contextManager.run()` implementation
-- **Example 14 (NestJS)**: Enhanced TypeScript configuration and added proper package-lock.json
-- **Example 15 (Koa)**: Implemented context middleware with AsyncLocalStorage for proper context propagation throughout request lifecycle
-- **All Examples**: Versiones gestionadas vía `versions.txt` y `./update-all-dependencies.sh`
+### 🔧 **Versiones y mantenimiento**
+- Versiones centralizadas en **`versions.txt`**. Para actualizar todos los `package.json`: `./update-all-dependencies.sh` (syntropylog, @syntropylog/types, redis; chalk ya no se gestiona en el script).
+- Cada carpeta es independiente: `cd <ejemplo> && npm install && npm run dev`.
 
 ## 🎯 What You'll Learn
 
 ### **Core Concepts:**
 - ✅ **Context propagation**: Automatic correlation across services
-- ✅ **HTTP instrumentation**: Request/response logging
+- ✅ **HTTP instrumentation**: Request/response logging; con Axios (y similares) se usan los **interceptores del cliente** (p. ej. `axios.interceptors.request`/`response`) y dentro se inyecta el logger y el contexto de correlación (ver [Integración HTTP](docs/HTTP_CLIENT_INTEGRATION.md))
 - ✅ **Redis integration**: Command logging and caching
 - ✅ **Message brokers**: Kafka, RabbitMQ, NATS correlation
-- ✅ **Custom adapters**: Extend for any HTTP client
+- ✅ **UniversalAdapter**: un solo adapter; los transportes se configuran en `logger.transports` (consola, DB, HTTP, brokers, etc.) y se pueden sacar, agregar o reemplazar
 - ✅ **Multiple instances**: Multiple Redis/broker instances
 
 ### **Real-World Patterns:**
@@ -188,6 +205,46 @@ const logger = syntropyLog.getLogger('main');
 logger.info('User created', { userId: 123 });
 ```
 
+### **Integración HTTP (Axios, etc.)**
+
+Si usamos Axios, hay que crear los **interceptores de Axios** según la [documentación de Axios](https://axios-http.com/docs/interceptors) y **dentro** de esos interceptores inyectar nuestro logger y el contexto de correlación (headers). Así toda llamada que pase por esa instancia queda instrumentada. Detalle: [docs/HTTP_CLIENT_INTEGRATION.md](docs/HTTP_CLIENT_INTEGRATION.md).
+
+### **Adapter y transportes**
+
+En la librería hay **un solo adapter**: **UniversalAdapter**. Los transportes (consola, DB, HTTP, colas, etc.) se configuran en `logger.transports`; después se pueden sacar, agregar o reemplazar.
+
+Ejemplo: consola + envío a DB (Prisma, Mongoose, pg, etc.) con UniversalAdapter. El ejemplo canónico está en el **README de la librería**:
+
+```typescript
+import { syntropyLog, UniversalAdapter, ClassicConsoleTransport } from 'syntropylog';
+import { prisma } from './db';
+
+const dbTransport = new UniversalAdapter({
+  executor: async (logEntry) => {
+    await prisma.systemLog.create({
+      data: {
+        level:         logEntry.level,
+        message:       logEntry.message,
+        service:       logEntry.serviceName,
+        correlationId: logEntry.correlationId,
+        payload:       logEntry.meta,
+        timestamp:     new Date(logEntry.timestamp),
+      },
+    });
+  },
+});
+
+await syntropyLog.init({
+  logger: {
+    serviceName: 'ecommerce-app',
+    transports: [new ClassicConsoleTransport(), dbTransport],
+  },
+  // ...
+});
+```
+
+Ver README de la librería y `docs/UNIVERSAL_ADAPTER_EXAMPLE.md`.
+
 ## 🔗 GraphQL Integration (Conceptual)
 
 SyntropyLog integrates easily with GraphQL for automatic correlation:
@@ -213,8 +270,9 @@ const context = {
 const resolvers = {
   Query: {
     users: async (parent, args, context) => {
-      // Correlation propagates automatically
-      const users = await context.syntropyLog.http.get('/api/users');
+      // Usar tu cliente HTTP (Axios, fetch, etc.) con interceptores
+      // que inyecten context.correlationId y el logger. Ver docs/HTTP_CLIENT_INTEGRATION.md
+      const users = await myHttpClient.get('/api/users');
       return users.data;
     }
   }
@@ -234,10 +292,9 @@ const subscription = {
 }
 ```
 
-## 🚀 Versión
+## 🚀 Versiones
 
-> Las versiones del framework y dependencias se definen en **`versions.txt`**.  
-> El ejemplo **00-setup-initialization** es la referencia de setup que se muestra en este README.
+Las versiones del framework y dependencias se definen en **`versions.txt`**. Para aplicar la misma versión a todos los ejemplos: **`./update-all-dependencies.sh`** (actualiza syntropylog, @syntropylog/types y redis en cada `package.json`). El ejemplo **00-setup-initialization** es la referencia de setup que se muestra en este README.
 
 ## 🤝 Contributing
 

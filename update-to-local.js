@@ -4,7 +4,9 @@ import fs from 'fs';
 import path from 'path';
 
 // Configuration
-const LOCAL_VERSION = "file:../../../";
+// Ruta a la librería local (relativa al package.json de cada ejemplo).
+// Estructura: .../syntropy/syntropylog-examples/  y  .../syntropy/syntropyLog/
+const LOCAL_VERSION = "file:../../syntropyLog";
 const PACKAGE_NAME = "syntropylog";
 
 console.log('🔄 Actualizando ejemplos para usar versión local...');

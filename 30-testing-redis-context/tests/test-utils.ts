@@ -34,8 +34,9 @@ export async function initSyntropyWithRedis(config: RedisTestConfig = {}) {
     redis: {
       instances: [
         {
-          name: 'default',
-          // BeaconRedisMock handles everything in-memory
+          mode: 'single',
+          instanceName: 'default',
+          url: process.env.REDIS_URL ?? 'redis://localhost:6379',
         }
       ]
     },

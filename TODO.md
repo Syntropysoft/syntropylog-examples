@@ -65,7 +65,22 @@ No están en SKIP_EXAMPLES; si el script los incluye al listar carpetas numerada
 - [ ] Decidir si entran en `test-all-examples.sh` o en otro script (p. ej. “solo 00–09” o “00–09 + 28–37”).
 - [ ] Revisar que no dependan de getHttp/getBroker/adapters; si dependen, añadir a SKIP o adaptar.
 
+### Nuevos ejemplos: UniversalAdapter + AdapterTransport
+- [ ] **UniversalAdapter**: para llevar logs (o datos) **a donde se nos antoje** — cualquier destino (HTTP, broker, DB, S3, etc.) vía un único contrato/executor. Ejemplo(s) genérico(s) mostrando cómo configurarlo y enviar “a cualquier lado”.
+  - Referencia de código: `docs/UNIVERSAL_ADAPTER_EXAMPLE.md` (ejemplo Prisma/DB; mismo patrón para axios, brokers).
+- [ ] **AdapterTransport**: ejemplo(s) mostrando cómo usarlo como transport en el logger.
+- [ ] **Casos de uso concretos** (usando UniversalAdapter/AdapterTransport):
+  - **Axios / HTTP**: enviar a un API (reemplazo conceptual de los viejos 10, 11, 12).
+  - **Brokers**: Kafka, RabbitMQ, NATS (reemplazo conceptual de 20–24).
+  - Opcional: otros destinos (archivo, cola, etc.) para mostrar que “cualquier lado” es literal.
+- [ ] Decidir numeración y sección en README (“UniversalAdapter: cualquier destino” + ejemplos axios/brokers).
+- [ ] Documentar en README que UniversalAdapter = un solo adapter para cualquier backend; axios y brokers son ejemplos de destino.
+
 ---
+
+## Comportamiento librería (syntropylog)
+
+- [ ] **Logs después de shutdown**: Tras llamar a `syntropyLog.shutdown()`, el ejemplo imprime "completed" y los timers, pero el framework sigue emitiendo mensajes (LifecycleManager, "Shutdown promises completed", "State changed to SHUTDOWN", etc.). Opciones: (a) que `shutdown()` solo resuelva cuando todos los logs del propio shutdown estén escritos, o (b) no loguear esos pasos en consola durante shutdown, para que no queden mensajes "después de cerrar". Revisar en la librería.
 
 ## Tareas generales
 
@@ -81,4 +96,5 @@ No están en SKIP_EXAMPLES; si el script los incluye al listar carpetas numerada
 1. Unificar **09**: nombre package/carpeta y README.  
 2. Decidir qué hacer con **10–27** (archivar, reescribir o renumerar).  
 3. Incluir **28–37** en README y en la lógica del script de test.  
-4. Opcional: **rearmar toda la lista** (solo ejemplos que corren en “Fundamentals”, el resto en “Advanced / Archive / Testing / Benchmark”) y actualizar README + test-all-examples.sh en consecuencia.
+4. **Nuevos ejemplos**: UniversalAdapter (llevar a **cualquier** destino) + AdapterTransport; ejemplos concretos con axios y brokers.  
+5. Opcional: **rearmar toda la lista** (solo ejemplos que corren en “Fundamentals”, el resto en “Advanced / Archive / Testing / Benchmark”) y actualizar README + test-all-examples.sh en consecuencia.

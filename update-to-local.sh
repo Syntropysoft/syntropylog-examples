@@ -16,7 +16,9 @@ BOLD='\033[1m'
 NC='\033[0m' # No Color
 
 # --- Configuration ---
-LOCAL_VERSION="file:../../../"
+# Ruta a la librería local (relativa al package.json de cada ejemplo).
+# Estructura esperada: .../syntropy/syntropylog-examples/  y  .../syntropy/syntropyLog/
+LOCAL_VERSION="file:../../syntropyLog"
 PACKAGE_NAME="syntropylog"
 
 echo -e "${YELLOW}🔄 Actualizando ejemplos para usar versión local...${NC}"
@@ -57,8 +59,8 @@ for example in "${examples[@]}"; do
         if [ "$current_version" != "$LOCAL_VERSION" ]; then
             echo -e "  ${PACKAGE_NAME}: ${current_version} → ${LOCAL_VERSION}"
             
-            # Update the version in package.json using perl (works on both Linux and macOS)
-            if perl -pi -e "s/\"${PACKAGE_NAME}\":\s*\"[^\"]*\"/\"${PACKAGE_NAME}\": \"${LOCAL_VERSION}\"/g" "$package_path" 2>/dev/null; then
+            # Update the version in package.json (| delimiter; preserve trailing comma if present)
+            if perl -pi -e "s|\"${PACKAGE_NAME}\":\s*\"[^\"]*\"(,)?|\"${PACKAGE_NAME}\": \"${LOCAL_VERSION}\"\1|g" "$package_path" 2>/dev/null; then
                 echo -e "  ${GREEN}✅ ${example}: Actualizado${NC}"
                 updated=$((updated + 1))
             else

@@ -10,7 +10,7 @@
     "test": "vitest"
   },
   "dependencies": {
-    "syntropylog": "0.9.16",
+    "syntropylog": "file:../../syntropyLog",
     "@syntropylog/types": "0.1.5",
     "@syntropylog/adapters": "0.1.24",
     "redis": "^4.6.12",

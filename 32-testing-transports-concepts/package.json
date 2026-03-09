@@ -4,6 +4,7 @@
   "description": "Testing Transports Concepts - Understanding how transports work as spies",
   "main": "src/index.ts",
   "scripts": {
+    "dev": "npm run build && npm run start",
     "test": "vitest",
     "test:watch": "vitest --watch",
     "test:coverage": "vitest --run --coverage",
@@ -12,7 +13,7 @@
   },
   "dependencies": {
     "redis": "^4.6.12",
-    "syntropylog": "0.9.16",
+    "syntropylog": "file:../../syntropyLog",
     "@syntropylog/types": "0.1.5",
     "chalk": "^5.4.1"
   },

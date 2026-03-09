@@ -1,0 +1,29 @@
+{
+  "name": "12-http-redis-axios",
+  "version": "1.0.0",
+  "description": "Example of HTTP and Redis correlation with Axios",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "tsx src/index.ts",
+    "dev": "tsx watch src/index.ts"
+  },
+  "keywords": [],
+  "author": "gabriel70",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@syntropylog/types": "0.1.5",
+    "@syntropylog/adapters": "0.1.24",
+    "axios": "^1.10.0",
+    "express": "^4.18.2",
+    "redis": "^4.6.12",
+    "syntropylog": "0.9.17",
+    "chalk": "^5.4.1"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "tsx": "^4.7.0",
+    "typescript": "^5.2.2"
+  }
+}

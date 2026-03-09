@@ -6,6 +6,7 @@
   "type": "commonjs",
   "scripts": {
     "build": "tsc",
+    "dev": "npm run build && npm run start",
     "prestart": "npm run build",
     "start": "concurrently \"npm:start:api-gateway\" \"npm:start:sales-service\" \"npm:start:dispatch-service\"",
     "start:api-gateway": "node dist/api-gateway/index.js",
@@ -19,7 +20,7 @@
     "express": "^4.18.2",
     "nats": "^2.17.0",
     "redis": "^4.6.12",
-    "syntropylog": "0.9.16",
+    "syntropylog": "file:../../syntropyLog",
     "uuid": "^11.1.0",
     "zod": "^3.22.4",
     "@syntropylog/types": "0.1.5",

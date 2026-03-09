@@ -146,6 +146,9 @@ async function main() {
     const total = performance.now() - t0;
     console.log('---');
     console.log(`⏱️  TIEMPO TOTAL: ${total.toFixed(2)} ms`);
+    // Nota: los mensajes de syntropylog-main que aparecen después son del proceso de shutdown
+    // del framework (LifecycleManager). Idealmente la librería debería resolver shutdown()
+    // cuando ya no queden logs por escribir, para que no sigan apareciendo tras "completed".
   } catch (error) {
     console.error('❌ Error in Hello World example:', error);
     process.exit(1);

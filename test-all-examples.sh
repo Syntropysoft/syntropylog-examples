@@ -85,15 +85,12 @@ update_package_json() {
     if [ -f "$package_file" ]; then
         log_step "Updating package.json in $example_dir"
         
-        # Update syntropylog version
+        # Update syntropylog version (| delimiter for file: paths; preserve trailing comma if present)
         if grep -q '"syntropylog"' "$package_file"; then
-            # Use sed to update version
             if [[ "$OSTYPE" == "darwin"* ]]; then
-                # macOS
-                sed -i '' "s/\"syntropylog\": \"[^\"]*\"/\"syntropylog\": \"$VERSION\"/g" "$package_file"
+                sed -i '' -E "s|\"syntropylog\": \"[^\"]*\"(,)?|\"syntropylog\": \"$VERSION\"\1|g" "$package_file"
             else
-                # Linux
-                sed -i "s/\"syntropylog\": \"[^\"]*\"/\"syntropylog\": \"$VERSION\"/g" "$package_file"
+                sed -i -E "s|\"syntropylog\": \"[^\"]*\"(,)?|\"syntropylog\": \"$VERSION\"\1|g" "$package_file"
             fi
             log_success "Version updated to syntropylog@$VERSION"
         else

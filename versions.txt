@@ -1,10 +1,13 @@
 # Versiones actuales del framework
 # Formato: paquete=version
 ##no borrar
-#syntropylog=file:../../..
+# Para usar versión publicada en npm (cada carpeta descarga su copia con npm install):
+#syntropylog=0.9.17
+# Para usar librería local (syntropyLog como hermano de syntropylog-examples):
+syntropylog=file:../../syntropyLog
 #########
 
-syntropylog=0.9.16
+# syntropylog definido arriba (local o npm)
 @syntropylog/types=0.1.5
 redis=^4.6.12
 chalk=^5.4.1

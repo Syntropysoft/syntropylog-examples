@@ -25,9 +25,9 @@ export async function initializeSyntropyLog(serviceName: string = 'redis-test-ap
     redis: {
       instances: [
         {
-          name: 'default',
-          // SyntropyLog automatically uses BeaconRedisMock for testing
-          // No need to configure host/port - it's all in-memory
+          mode: 'single',
+          instanceName: 'default',
+          url: process.env.REDIS_URL ?? 'redis://localhost:6379',
         }
       ]
     },

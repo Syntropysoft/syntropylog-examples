@@ -12,7 +12,11 @@
     "build:analyze": "rollup -c rollup.config.js --analyze"
   },
   "dependencies": {
-    "pino": "^8.17.2"
+    "pino": "^8.17.2",
+    "syntropylog": "file:../../syntropyLog",
+    "@syntropylog/types": "0.1.5",
+    "redis": "^4.6.12",
+    "chalk": "^5.4.1"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^25.0.7",
@@ -33,4 +37,4 @@
   ],
   "author": "SyntropyLog Team",
   "license": "MIT"
-} 
+}

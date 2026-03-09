@@ -1,38 +1,32 @@
 /**
  * Example 31: Testing Custom Serializers
- * 
- * This example demonstrates how to use custom serializers with SyntropyLog
- * and how to test them effectively.
+ *
+ * Custom serializers were removed from the main library config.
+ * This example shows how to serialize non-JSON values (Date, Error, etc.)
+ * in your code before passing them to the logger (logger only accepts JsonValue).
  */
 
 import { syntropyLog } from 'syntropylog';
 import { userSerializer, orderSerializer, dateSerializer, errorSerializer } from './serializers';
 
 export async function initializeSyntropyLog() {
-  console.log('🚀 Initializing SyntropyLog with custom serializers...');
-  
+  console.log('🚀 Initializing SyntropyLog...');
+
   return new Promise<void>((resolve, reject) => {
     syntropyLog.on('ready', () => {
       console.log('✅ SyntropyLog initialized successfully!');
       resolve();
     });
-    
+
     syntropyLog.on('error', (err) => {
       console.error('❌ SyntropyLog initialization failed:', err);
       reject(err);
     });
 
-    // Initialize with custom serializers
     syntropyLog.init({
       logger: {
         serviceName: 'serializer-example',
         level: 'info',
-        serializers: {
-          user: userSerializer,
-          order: orderSerializer,
-          date: dateSerializer,
-          err: errorSerializer
-        },
         serializerTimeoutMs: 100
       },
       context: {
@@ -61,31 +55,26 @@ async function main() {
     // 2. Get logger instance
     const logger = syntropyLog.getLogger('main');
     
-    // 3. Demonstrate custom serializers
-    console.log('\n📝 Demonstrating custom serializers...');
-    
-    // User serializer
+    // 3. Serialize in code before logging (logger only accepts JsonValue)
+    console.log('\n📝 Demonstrating serialization before logging...');
+
     const user = { id: 123, name: 'John Doe', email: 'john@example.com' };
-    logger.info('User data', { user });
-    
-    // Order serializer
+    logger.info('User data', { user: userSerializer(user) });
+
     const order = { id: 'ORD-456', total: 99.99, items: ['item1', 'item2'] };
-    logger.info('Order data', { order });
-    
-    // Date serializer
+    logger.info('Order data', { order: orderSerializer(order) });
+
     const date = new Date();
-    logger.info('Date data', { date });
-    
-    // Error serializer
+    logger.info('Date data', { date: dateSerializer(date) });
+
     const error = new Error('Something went wrong');
-    logger.error('Error occurred', { err: error });
-    
-    // Multiple serializers together
-    logger.info('Complex data', { 
-      user, 
-      order, 
-      date, 
-      correlationId: 'corr-789' 
+    logger.error('Error occurred', { err: errorSerializer(error) });
+
+    logger.info('Complex data', {
+      user: userSerializer(user),
+      order: orderSerializer(order),
+      date: dateSerializer(date),
+      correlationId: 'corr-789'
     });
     
     console.log('\n✅ All serializers demonstrated successfully!');
