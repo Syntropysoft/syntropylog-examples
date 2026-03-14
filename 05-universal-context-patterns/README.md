@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/Syntropysoft/syntropylog-examples-/main/assets/syntropyLog-logo.png" alt="SyntropyLog Logo" width="170"/>
+  <img src="https://syntropysoft.com/syntropylog-logo.png" alt="SyntropyLog Logo" width="170"/>
 </p>
 
 <h1 align="center">SyntropyLog</h1>
@@ -141,7 +141,7 @@ This example demonstrates SyntropyLog's universal context patterns:
 ## 📝 Notes for Implementation
 
 - **Conceptual Example**: This example demonstrates patterns, not real integrations
-- **Real Integrations**: See examples 20-24 for actual broker integrations
+- **Real Integrations**: See the main repo README for the full list of examples
 - **Pattern Reference**: Use this as a template for your own implementations
 - **Universal Concept**: Same context code works in any Node.js application
 - **Correlation ID**: Automatic detection and propagation in all environments

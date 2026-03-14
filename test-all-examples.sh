@@ -187,49 +187,12 @@ list_examples() {
     echo "${examples[@]}"
 }
 
-# Examples that use HTTP/brokers/adapters API (getHttp, getBroker, @syntropylog/adapters) - no longer in library
-# 09 = all-transports (ya no HTTP), se ejecuta
-SKIP_EXAMPLES=(
-    10-basic-http-correlation
-    11-custom-adapter
-    12-http-redis-axios
-    13-http-redis-fastify
-    14-http-redis-nestjs
-    15-http-redis-koa
-    16-http-redis-hapi
-    17-custom-serializers
-    18-custom-transports
-    19-doctor-cli
-    20-basic-kafka-correlation
-    21-basic-rabbitmq-broker
-    22-basic-nats-broker
-    23-kafka-full-stack
-    24-full-stack-nats
-    25-production-configuration
-    26-advanced-context
-    27-complete-enterprise-app
-)
-
-should_skip_example() {
-    local name=$1
-    for skip in "${SKIP_EXAMPLES[@]}"; do
-        if [[ "$name" == "$skip" ]]; then
-            return 0
-        fi
-    done
-    return 1
-}
-
-# Get list of examples
+# Get list of examples (only 00–17 exist)
 EXAMPLES=($(list_examples))
 
-log_info "📋 Examples found: ${#EXAMPLES[@]} (HTTP/brokers/adapters examples will be skipped)"
+log_info "📋 Examples found: ${#EXAMPLES[@]}"
 for example in "${EXAMPLES[@]}"; do
-    if should_skip_example "$example"; then
-        echo "  - $example ${YELLOW}(skip - HTTP/brokers/adapters API)${NC}"
-    else
-        echo "  - $example"
-    fi
+    echo "  - $example"
 done
 
 echo ""
@@ -255,12 +218,6 @@ for i in "${!EXAMPLES[@]}"; do
     fi
     
     example="${EXAMPLES[$i]}"
-    # Skip examples that use the old adapter API
-    if should_skip_example "$example"; then
-        log_warning "Skipping $example (HTTP/brokers/adapters API removed from library)"
-        continue
-    fi
-    
     CURRENT=$((i + 1))
     example_path="$example"
     
@@ -272,5 +229,5 @@ for i in "${!EXAMPLES[@]}"; do
     fi
 done
 
-log_success "🎉 All runnable examples have been tested successfully!"
-log_info "📊 Summary: ${#SKIP_EXAMPLES[@]} HTTP/brokers/adapters examples skipped, rest tested with syntropylog@$VERSION" 
+log_success "🎉 All examples (00–17) have been tested successfully!"
+log_info "📊 Summary: ${#EXAMPLES[@]} examples tested with syntropylog@$VERSION" 

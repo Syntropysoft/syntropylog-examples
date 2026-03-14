@@ -1,0 +1,21 @@
+{
+  "name": "12-universal-adapter",
+  "version": "1.0.0",
+  "description": "Example 12: UniversalAdapter — send logs to any backend with a single executor",
+  "main": "src/index.ts",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "start": "tsx src/index.ts"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "syntropylog": "file:../../syntropyLog"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "tsx": "^4.0.0"
+  }
+}

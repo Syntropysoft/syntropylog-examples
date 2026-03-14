@@ -1,0 +1,31 @@
+{
+  "name": "17-benchmark",
+  "version": "1.0.0",
+  "description": "Benchmark SyntropyLog vs Pino vs Winston — self-contained example",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "bench": "npx tsx index.bench.ts",
+    "bench:memory": "npx cross-env NODE_OPTIONS=--expose-gc npx tsx index.bench.ts",
+    "dev": "npm run bench"
+  },
+  "dependencies": {
+    "mitata": "^0.1.11",
+    "pino": "^9.0.0",
+    "syntropylog": "file:../../syntropyLog",
+    "winston": "^3.11.0"
+  },
+  "devDependencies": {
+    "cross-env": "^7.0.3",
+    "tsx": "^4.21.0"
+  },
+  "keywords": [
+    "syntropylog",
+    "benchmark",
+    "pino",
+    "winston",
+    "performance"
+  ],
+  "author": "SyntropySoft",
+  "license": "Apache-2.0"
+}

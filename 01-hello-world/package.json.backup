@@ -17,7 +17,7 @@
     "chalk": "^5.4.1",
     "@syntropylog/types": "0.1.5",
     "redis": "^4.6.12",
-    "syntropylog": "0.9.17"
+    "syntropylog": "file:../../syntropyLog"
   },
   "devDependencies": {
     "tsx": "^4.0.0",

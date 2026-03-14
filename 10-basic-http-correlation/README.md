@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/Syntropysoft/syntropylog-examples-/main/assets/syntropyLog-logo.png" alt="SyntropyLog Logo" width="170"/>
+  <img src="https://syntropysoft.com/syntropylog-logo.png" alt="SyntropyLog Logo" width="170"/>
 </p>
 
 <h1 align="center">SyntropyLog</h1>
@@ -247,7 +247,7 @@ await contextManager.run(async () => {
 
 1. **Try Custom Adapters**: See Example 11 for custom HTTP client adapters
 2. **Explore Broker Correlation**: See Examples 20+ for message queue correlation
-3. **Add Data Masking**: See Examples 30+ for sensitive data handling
+3. **Add Data Masking**: See the SyntropyLog library docs for masking
 4. **Implement Retry Logic**: Add resilience to your HTTP clients
 
 ## 📚 Related Examples

@@ -6,7 +6,7 @@
 # Examples:
 # ./boost-downloads.sh 10              # Run all examples 10 times
 # ./boost-downloads.sh 5 0 10          # Run examples 0-10, 5 times each
-# ./boost-downloads.sh 3 28 32         # Run testing examples 28-32, 3 times each
+# ./boost-downloads.sh 3 13 16         # Run testing examples 13-16, 3 times each
 #
 # 🍎 Apple/macOS Optimized Script
 
@@ -41,16 +41,16 @@ log_boost() {
     echo -e "${PURPLE}🚀 $1${NC}"
 }
 
-# Check arguments
+# Check arguments (default: main examples 00-17)
 if [ $# -eq 0 ]; then
     ITERATIONS=5
     START_EXAMPLE=0
-    END_EXAMPLE=32
+    END_EXAMPLE=17
     log_warning "No arguments provided, using defaults: $ITERATIONS iterations, examples $START_EXAMPLE-$END_EXAMPLE"
 elif [ $# -eq 1 ]; then
     ITERATIONS=$1
     START_EXAMPLE=0
-    END_EXAMPLE=32
+    END_EXAMPLE=17
     log_info "Running $ITERATIONS iterations for all examples"
 elif [ $# -eq 3 ]; then
     ITERATIONS=$1
@@ -60,7 +60,7 @@ elif [ $# -eq 3 ]; then
 else
     log_error "Usage: $0 [iterations] [start_example] [end_example]"
     log_error "Example: $0 10        # Run all examples 10 times"
-    log_error "Example: $0 5 0 10    # Run examples 0-10, 5 times each"
+    log_error "Example: $0 5 0 17    # Run examples 0-17, 5 times each"
     exit 1
 fi
 
@@ -83,10 +83,9 @@ test_single_example() {
     # Install dependencies (this triggers npm downloads)
     npm install >/dev/null 2>&1
     
-    # Check if this is a testing example (28 and above)
-    local example_number=$(echo "$example_name" | grep -o '^[0-9]*')
-    if [ "$example_number" -ge 28 ]; then
-        # Run test quickly (no watch mode) - use vitest run explicitly
+    # Run test for testing examples (13-16), dev/bench for the rest
+    local example_number=$(echo "$example_name" | grep -o '^[0-9]*' || echo "0")
+    if [ "$example_number" -ge 13 ] && [ "$example_number" -le 16 ]; then
         npx vitest run >/dev/null 2>&1 || true
     else
         # Run dev for a few seconds

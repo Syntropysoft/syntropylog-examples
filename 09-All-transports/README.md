@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/Syntropysoft/syntropylog-examples-/main/assets/syntropyLog-logo.png" alt="SyntropyLog Logo" width="170"/>
+  <img src="https://syntropysoft.com/syntropylog-logo.png" alt="SyntropyLog Logo" width="170"/>
 </p>
 
 <h1 align="center">SyntropyLog</h1>
@@ -10,7 +10,7 @@
   Ship resilient, secure, and cost-effective Node.js applications with confidence.
 </p>
 
-# Example 09: HTTP Configuration 🌐
+# Example 09: All Transports 🌐
 
 > **Core Framework Feature** - Understanding how to configure SyntropyLog's HTTP client instrumentation with multiple instances, adapters, and context propagation.
 
