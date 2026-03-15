@@ -1,5 +1,5 @@
 {
-  "name": "31-testing-serializers",
+  "name": "15-testing-serializers",
   "version": "1.0.0",
   "description": "Testing patterns for custom serializers with SyntropyLog",
   "main": "src/index.ts",
@@ -12,10 +12,7 @@
     "build": "tsc"
   },
   "dependencies": {
-    "redis": "^4.6.12",
-    "syntropylog": "file:../../syntropyLog",
-    "@syntropylog/types": "0.1.5",
-    "chalk": "^5.4.1"
+    "syntropylog": "file:../../syntropyLog"
   },
   "devDependencies": {
     "typescript": "^5.8.3",

@@ -134,22 +134,28 @@ test_example() {
         sleep 3
     fi
     
-    # Run the example
-    log_step "Running example..."
-    log_warning "The example will run. Check the logs and press ENTER when ready to continue."
-    log_warning "Press Ctrl+C to stop the example when you're done reviewing it."
-    
-    # Run in background so we can interrupt
-    npm run dev &
-    DEV_PID=$!
-    
-    # Wait for user input
-    read -p "Press ENTER when you've reviewed the example and want to continue..."
-    
-    # Terminate process
-    if kill -0 $DEV_PID 2>/dev/null; then
-        kill $DEV_PID
-        log_info "Example process terminated"
+    # Run the example (or tests with coverage for test examples)
+    if grep -q '"test:coverage"' package.json 2>/dev/null; then
+        log_step "Running tests with coverage..."
+        npm run test:coverage
+        log_success "Tests and coverage completed"
+    else
+        log_step "Running example..."
+        log_warning "The example will run. Check the logs and press ENTER when ready to continue."
+        log_warning "Press Ctrl+C to stop the example when you're done reviewing it."
+        
+        # Run in background so we can interrupt
+        npm run dev &
+        DEV_PID=$!
+        
+        # Wait for user input
+        read -p "Press ENTER when you've reviewed the example and want to continue..."
+        
+        # Terminate process
+        if kill -0 $DEV_PID 2>/dev/null; then
+            kill $DEV_PID
+            log_info "Example process terminated"
+        fi
     fi
     
     # Stop Docker Compose if it exists

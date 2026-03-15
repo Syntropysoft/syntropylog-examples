@@ -17,8 +17,6 @@
   },
   "dependencies": {
     "chalk": "^5.4.1",
-    "@syntropylog/types": "0.1.5",
-    "redis": "^4.6.12",
-    "syntropylog": "10"
+    "syntropylog": "0.12.1"
   }
 }

@@ -1,5 +1,5 @@
 {
-  "name": "32-testing-transports-concepts",
+  "name": "16-testing-transports-concepts",
   "version": "1.0.0",
   "description": "Testing Transports Concepts - Understanding how transports work as spies",
   "main": "src/index.ts",
@@ -12,10 +12,7 @@
     "start": "node dist/index.js"
   },
   "dependencies": {
-    "redis": "^4.6.12",
-    "syntropylog": "file:../../syntropyLog",
-    "@syntropylog/types": "0.1.5",
-    "chalk": "^5.4.1"
+    "syntropylog": "file:../../syntropyLog"
   },
   "devDependencies": {
     "vitest": "^1.6.1",

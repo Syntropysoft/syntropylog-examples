@@ -7,7 +7,7 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { userSerializer, orderSerializer, dateSerializer, errorSerializer } from '../src/serializers';
-import { initializeSyntropyLog, gracefulShutdown } from '../src/index';
+import { initializeSyntropyLog, gracefulShutdown, runDemo } from '../src/index';
 
 describe('Example Coverage Tests', () => {
   beforeEach(() => {
@@ -137,10 +137,13 @@ describe('Example Coverage Tests', () => {
 // Boilerplate Testing
 describe('Framework Boilerplate Testing', () => {
   it('should handle initialization and shutdown boilerplate', async () => {
-    // Test boilerplate functions coverage
-    // These should not throw and should complete successfully
-    
     await expect(initializeSyntropyLog()).resolves.not.toThrow();
     await expect(gracefulShutdown()).resolves.not.toThrow();
+  });
+
+  it('should run full demo flow (init → runDemo → shutdown)', async () => {
+    await initializeSyntropyLog();
+    await runDemo();
+    await gracefulShutdown();
   });
 }); 

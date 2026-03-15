@@ -12,9 +12,7 @@
     "test:simple": "vitest --config vitest.config.simple.ts"
   },
   "dependencies": {
-    "redis": "^4.6.12",
     "syntropylog": "file:../../syntropyLog",
-    "@syntropylog/types": "0.1.5",
     "chalk": "^5.4.1"
   },
   "devDependencies": {

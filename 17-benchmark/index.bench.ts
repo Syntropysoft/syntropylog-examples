@@ -9,6 +9,15 @@ import pino from 'pino';
 import winston from 'winston';
 import fs from 'fs';
 
+function flushStdout() {
+  if (typeof process !== 'undefined' && process.stdout?.write) {
+    process.stdout.write('', () => {});
+  }
+}
+
+console.log('\n=== SyntropyLog Benchmark (SyntropyLog vs Pino vs Winston) ===\n');
+flushStdout();
+
 // 1. Setup - We use a dev/null stream to measure logic overhead without I/O bottlenecks
 const devNull = fs.createWriteStream(
   process.platform === 'win32' ? '\\\\.\\nul' : '/dev/null'
@@ -140,6 +149,9 @@ group('Fluent API (withRetention + complex JSON)', () => {
 
 // Mitata stores times in nanoseconds; its default reporter may show ns or µs by magnitude (mixed units).
 // We run() then print a single table and summary all in microseconds (µs) for consistent comparison.
+console.log('Running benchmarks...\n');
+flushStdout();
+
 const report = await run({
   avg: true,
   json: false,
@@ -147,6 +159,8 @@ const report = await run({
   min_max: true,
   percentiles: true,
 });
+
+flushStdout();
 
 interface BenchStats {
   avg: number;
@@ -222,6 +236,16 @@ if (benchList.length > 0) {
       );
     }
   }
+  flushStdout();
+} else {
+  console.log('\n--- Benchmark results ---');
+  console.log('No benchmark stats (errors or empty report). Raw benchmarks count:', report.benchmarks?.length ?? 0);
+  if (report.benchmarks?.length) {
+    report.benchmarks.forEach((b: BenchEntry, i: number) => {
+      console.log(`  ${i + 1}. ${b.name}: ${b.error ? `error: ${(b.error as Error)?.message}` : 'stats=' + JSON.stringify(b.stats)}`);
+    });
+  }
+  flushStdout();
 }
 
 // --- Consumo de memoria (heap delta por N iteraciones) ---
@@ -263,6 +287,7 @@ const memoryTasks: MemoryTask[] = [
 ];
 
 console.log('\n--- Memory consumption ---');
+flushStdout();
 if (!gc) {
   console.log(
     'Tip: run with node --expose-gc for stable results (negative deltas = GC noise).\n'

@@ -35,41 +35,41 @@ export async function gracefulShutdown() {
   }
 }
 
+/**
+ * Runs the serializer demo: get logger and log with all custom serializers.
+ * Exported for testing so index.ts coverage is improved.
+ */
+export async function runDemo() {
+  const logger = syntropyLog.getLogger('main');
+  console.log('\n📝 Demonstrating serialization before logging...');
+
+  const user = { id: 123, name: 'John Doe', email: 'john@example.com' };
+  logger.info('User data', { user: userSerializer(user) });
+
+  const order = { id: 'ORD-456', total: 99.99, items: ['item1', 'item2'] };
+  logger.info('Order data', { order: orderSerializer(order) });
+
+  const date = new Date();
+  logger.info('Date data', { date: dateSerializer(date) });
+
+  const error = new Error('Something went wrong');
+  logger.error('Error occurred', { err: errorSerializer(error) });
+
+  logger.info('Complex data', {
+    user: userSerializer(user),
+    order: orderSerializer(order),
+    date: dateSerializer(date),
+    correlationId: 'corr-789'
+  });
+
+  console.log('\n✅ All serializers demonstrated successfully!');
+}
+
 async function main() {
   try {
-    // 1. Initialize SyntropyLog
     await initializeSyntropyLog();
-    
-    // 2. Get logger instance
-    const logger = syntropyLog.getLogger('main');
-    
-    // 3. Serialize in code before logging (logger only accepts JsonValue)
-    console.log('\n📝 Demonstrating serialization before logging...');
-
-    const user = { id: 123, name: 'John Doe', email: 'john@example.com' };
-    logger.info('User data', { user: userSerializer(user) });
-
-    const order = { id: 'ORD-456', total: 99.99, items: ['item1', 'item2'] };
-    logger.info('Order data', { order: orderSerializer(order) });
-
-    const date = new Date();
-    logger.info('Date data', { date: dateSerializer(date) });
-
-    const error = new Error('Something went wrong');
-    logger.error('Error occurred', { err: errorSerializer(error) });
-
-    logger.info('Complex data', {
-      user: userSerializer(user),
-      order: orderSerializer(order),
-      date: dateSerializer(date),
-      correlationId: 'corr-789'
-    });
-    
-    console.log('\n✅ All serializers demonstrated successfully!');
-    
-    // 4. Graceful shutdown
+    await runDemo();
     await gracefulShutdown();
-    
   } catch (err) {
     console.error('❌ Application failed:', err);
     process.exit(1);

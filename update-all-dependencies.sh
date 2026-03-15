@@ -32,8 +32,6 @@ log_error() {
 get_versions() {
     if [ -f "versions.txt" ]; then
         SYNTROPYLOG_VERSION=$(grep "^syntropylog=" versions.txt | cut -d'=' -f2 | xargs)
-        TYPES_VERSION=$(grep "^@syntropylog/types=" versions.txt | cut -d'=' -f2 | xargs)
-        REDIS_VERSION=$(grep "^redis=" versions.txt | cut -d'=' -f2 | xargs)
     else
         log_error "versions.txt not found!"
         exit 1
@@ -63,6 +61,8 @@ add_dep_if_missing() {
 update_package_dependencies() {
     local package_file=$1
     local example_name=$2
+    local example_dir
+    example_dir=$(dirname "$package_file")
     
     log_info "Updating dependencies in $example_name"
     
@@ -72,19 +72,13 @@ update_package_dependencies() {
     # Update versions of existing deps (| delimiter; preserve trailing comma if present)
     if [[ "$OSTYPE" == "darwin"* ]]; then
         sed -i '' -E "s|\"syntropylog\": \"[^\"]*\"(,)?|\"syntropylog\": \"$SYNTROPYLOG_VERSION\"\1|g" "$package_file"
-        sed -i '' "s/\"@syntropylog\/types\": \"[^\"]*\"/\"@syntropylog\/types\": \"$TYPES_VERSION\"/g" "$package_file"
-        sed -i '' "s/\"redis\": \"[^\"]*\"/\"redis\": \"$REDIS_VERSION\"/g" "$package_file"
     else
         sed -i -E "s|\"syntropylog\": \"[^\"]*\"(,)?|\"syntropylog\": \"$SYNTROPYLOG_VERSION\"\1|g" "$package_file"
-        sed -i "s/\"@syntropylog\/types\": \"[^\"]*\"/\"@syntropylog\/types\": \"$TYPES_VERSION\"/g" "$package_file"
-        sed -i "s/\"redis\": \"[^\"]*\"/\"redis\": \"$REDIS_VERSION\"/g" "$package_file"
     fi
     
-    # Add missing deps (solo en ejemplos que tienen syntropylog)
-    if grep -q '"syntropylog"' "$package_file"; then
-        add_dep_if_missing "$package_file" "@syntropylog/types" "$TYPES_VERSION"
-        add_dep_if_missing "$package_file" "redis" "$REDIS_VERSION"
-    fi
+    # Remove lockfile and node_modules so next install is clean
+    rm -rf "$example_dir/node_modules" "$example_dir/package-lock.json"
+    log_info "Removed node_modules and package-lock.json in $example_name"
     
     log_success "Updated $example_name"
 }
@@ -96,8 +90,6 @@ get_versions
 
 log_info "📦 Using versions:"
 log_info "  syntropylog: $SYNTROPYLOG_VERSION"
-log_info "  @syntropylog/types: $TYPES_VERSION"
-log_info "  redis: $REDIS_VERSION"
 
 # Find all package.json files in example directories
 PACKAGE_FILES=($(find . -maxdepth 2 -name "package.json" | grep -E "./[0-9]+-" | sort))
