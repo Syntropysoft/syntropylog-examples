@@ -12,7 +12,7 @@
     "start": "node dist/index.js"
   },
   "dependencies": {
-    "syntropylog": "file:../../syntropyLog",
+    "syntropylog": "0.12.0",
     "@syntropylog/types": "0.1.5"
   },
   "devDependencies": {
