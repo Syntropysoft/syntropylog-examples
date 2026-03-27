@@ -1,5 +1,5 @@
 {
-  "name": "29-testing-patterns-jest",
+  "name": "14-testing-patterns-jest",
   "version": "1.0.0",
   "description": "Testing patterns for SyntropyLog with Jest - showing declarative testing",
   "main": "src/UserService.ts",
@@ -11,7 +11,7 @@
     "test:coverage": "jest --coverage"
   },
   "dependencies": {
-    "syntropylog": "0.12.1",
+    "syntropylog": "1.0.0-rc.1",
     "chalk": "^5.4.1"
   },
   "devDependencies": {

@@ -2,7 +2,7 @@
 # Formato: paquete=version
 ##no borrar
 # Para usar versión publicada en npm (cada carpeta descarga su copia con npm install):
-syntropylog=0.12.1
+syntropylog=1.0.0-rc.1
 # Para usar librería local (syntropyLog como hermano de syntropylog-examples):
 #syntropylog=file:../../syntropyLog
 #########

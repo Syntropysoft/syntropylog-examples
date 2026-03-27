@@ -12,230 +12,165 @@
 
 # Example 09: All Transports 🌐
 
-> **Core Framework Feature** - Understanding how to configure SyntropyLog's HTTP client instrumentation with multiple instances, adapters, and context propagation.
+> **Transport Pool** — Configure multiple named transports and control which ones receive each log call using the fluent API: `override`, `add`, `remove`.
 
 ## 🎯 What You'll Learn
 
-This example demonstrates SyntropyLog's HTTP configuration:
-
-- **Multiple instances**: Configuring different HTTP clients for different APIs
-- **Adapters**: Using different HTTP client libraries (Axios, Fetch, etc.)
-- **Context propagation**: Automatically propagating correlation context
-- **Logging configuration**: Controlling what gets logged for HTTP requests
-
-## 🏗️ Architecture Overview
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    HTTP Configuration                          │
-│                                                                 │
-│ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ │
-│ │ Instances   │ │ Adapters    │ │ Context     │ │ Logging     │ │
-│ │             │ │             │ │ Propagation │ │ Config      │ │
-│ │             │ │             │ │             │ │             │ │
-│ │ • userApi   │ │ • Axios     │ │ • Headers   │ │ • Success   │ │
-│ │ • paymentApi│ │ • Fetch     │ │ • Correlation│ │ • Error     │ │
-│ │ • externalApi│ • Custom    │ │ • Business  │ │ • Request   │ │
-│ │ • default   │ │ • Multiple  │ │ • Custom    │ │ • Response  │ │
-│ │ • named     │ │ • Conditional│ │ • Automatic │ │ • Headers   │ │
-│ │ • aliased   │ │ • Environment│ │ • Manual    │ │ • Body      │ │
-│ │ • grouped   │ │ • Specific  │ │ • Selective │ │ • Timing    │ │
-│ └─────────────┘ └─────────────┘ └─────────────┘ └─────────────┘ │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-## 🎯 Learning Objectives
-
-### **Multiple Instances:**
-- **Instance naming**: Giving meaningful names to HTTP clients
-- **Default instance**: Setting up a default HTTP client
-- **Named instances**: Creating specific clients for different APIs
-- **Instance management**: Organizing multiple HTTP clients
-
-### **Adapters:**
-- **Axios adapter**: Using Axios with SyntropyLog
-- **Fetch adapter**: Using native Fetch with SyntropyLog
-- **Custom adapters**: Creating your own HTTP client adapters
-- **Adapter selection**: Choosing the right adapter for your needs
-
-### **Context Propagation:**
-- **Automatic propagation**: Correlation context propagated automatically
-- **Custom headers**: Adding custom context to HTTP headers
-- **Business context**: Propagating business-specific context
-- **Selective propagation**: Choosing what context to propagate
-
-### **Logging Configuration:**
-- **Success logging**: Controlling what gets logged for successful requests
-- **Error logging**: Configuring error logging for failed requests
-- **Request logging**: Logging request details (headers, body)
-- **Response logging**: Logging response details
-- **Timing information**: Including request duration in logs
-
-## 🚀 Implementation Plan
-
-### **Phase 1: Basic HTTP Configuration**
-- [ ] Single HTTP instance setup
-- [ ] Basic adapter configuration
-- [ ] Default instance configuration
-- [ ] Simple context propagation
-
-### **Phase 2: Multiple Instances**
-- [ ] Multiple HTTP instances
-- [ ] Named instance configuration
-- [ ] Instance-specific settings
-- [ ] Default instance selection
-
-### **Phase 3: Advanced Configuration**
-- [ ] Custom adapters
-- [ ] Advanced context propagation
-- [ ] Conditional logging
-- [ ] Performance optimization
-
-### **Phase 4: Real-World Patterns**
-- [ ] API gateway patterns
-- [ ] Microservice patterns
-- [ ] External API patterns
-- [ ] Production patterns
-
-## 📊 Expected Outcomes
-
-### **Technical Demonstrations:**
-- ✅ **Multiple HTTP instances** configured correctly
-- ✅ **Different adapters** working together
-- ✅ **Context propagation** working automatically
-- ✅ **Logging configuration** properly set up
-
-### **Learning Outcomes:**
-- ✅ **How to configure HTTP** for different APIs
-- ✅ **Adapter selection** strategies
-- ✅ **Context propagation** patterns
-- ✅ **HTTP logging** best practices
-
-## 🎯 Example Output
-
-When you run this example, you'll see the progressive HTTP configuration demonstration:
-
-```bash
-🎯 Example 09: HTTP Configuration
-
-2025-07-22 15:52:33 INFO  [syntropylog-main] [message="SyntropyLog framework initialized successfully."]
-🔗 Correlation ID: 0b4a04ed-9e7b-4091-8765-e4296af82640
-📊 Demonstrating different HTTP configurations:
-
-🔧 Phase 1: Basic HTTP Configuration
-✅ Basic HTTP configuration structure ready
-   - Single instance setup
-   - Default instance naming
-   - Basic adapter configuration
-
-🌐 Phase 2: Multiple HTTP Instances
-✅ Multiple HTTP instances structure ready
-   - User API instance
-   - Payment API instance
-   - External API instance
-   - Named instance management
-
-🔗 Phase 3: HTTP with Context Propagation
-✅ Context propagation configuration ready
-   - Correlation ID header configuration
-   - Automatic context propagation
-   - Business context integration
-
-📋 Summary of HTTP Configuration Patterns:
-   ✅ Single instance setup
-   ✅ Multiple instance management
-   ✅ Context propagation
-   ✅ Named instance configuration
-   ✅ Adapter selection strategies
-
-✅ Example 09 completed successfully
-```
-
-### **🔍 Key Insights from the Output:**
-
-1. **Correlation ID Generation**: `0b4a04ed-9e7b-4091-8765-e4296af82640` - Automatically generated and propagated
-2. **Structured Logging**: All logs include correlation ID, operation, and user context
-3. **Progressive Learning**: Three clear phases from basic to advanced configuration
-4. **Framework Integration**: Seamless integration with SyntropyLog's lifecycle management
-
-### **📝 Log Analysis:**
-
-The logs show:
-- **Context Propagation**: `x-correlation-id`, `operation`, `userId` in all logs
-- **Named Logger**: `[http-config]` for specific example logging
-- **Structured Data**: All context fields properly serialized
-- **Graceful Shutdown**: Clean termination with proper cleanup
-
-## 🔧 Prerequisites
-
-- Node.js 18+
-- Understanding of HTTP client concepts
-- Familiarity with examples 00-08 (basic setup through logging matrix)
-
-## 📝 Notes for Implementation
-
-- **Start simple**: Single HTTP instance first
-- **Add complexity gradually**: One instance at a time
-- **Focus on practical use**: Show real API scenarios
-- **Document patterns**: Explain when to use what
-- **Real-world examples**: Show practical use cases
-
-## ⚠️ **IMPORTANT: Context Management in Examples**
-
-### **🔍 Why Context is Manual in Examples**
-
-In SyntropyLog, **context management is asynchronous** and uses Node.js `AsyncLocalStorage`. This means:
-
-1. **Context is NOT global by default** - it only exists within `contextManager.run()` blocks
-2. **Examples are quick demonstrations** - they don't have HTTP requests or message queues that automatically create context
-3. **Manual context creation** - we must wrap our logging operations in `contextManager.run()` to get correlation IDs
-
-### **🎯 The Solution: Global Context Wrapper**
-
-```typescript
-// ❌ WITHOUT context (no correlationId)
-httpClient.get('/api/users'); // No correlationId
-
-// ✅ WITH context (has correlationId)
-await contextManager.run(async () => {
-  httpClient.get('/api/users'); // Has correlationId automatically
-});
-```
-
-### **🔮 The Magic Middleware (2 Lines of Code)**
-
-In production applications, you'll use this simple middleware:
-
-```typescript
-app.use(async (req, res, next) => {
-  await contextManager.run(async () => {
-    // 🎯 MAGIC: Just 2 lines!
-    const correlationId = contextManager.getCorrelationId(); // Detects or generates
-    contextManager.set(contextManager.getCorrelationIdHeaderName(), correlationId); // Sets in context
-    
-    next();
-  });
-});
-```
-
-**Why this is marvelous:**
-- **Intelligent Detection**: `getCorrelationId()` uses existing ID or generates new one
-- **Automatic Configuration**: `getCorrelationIdHeaderName()` reads your config
-- **Automatic Propagation**: Once set, it propagates to all logs and operations
-
-### **🚀 In Real Applications**
-
-In production applications, context is automatically created by:
-- **HTTP middleware** (Express, Fastify, etc.)
-- **Message queue handlers** (Kafka, RabbitMQ, etc.)
-- **Background job processors**
-- **API gateways**
-
-### **📚 Key Takeaway**
-
-**For examples and quick tests**: Wrap all logging in `contextManager.run()`  
-**For production apps**: Use SyntropyLog's HTTP/broker adapters for automatic context
+- **Transport pool**: Define multiple transports by name in `transportList`
+- **Env routing**: Automatically activate different transport sets per environment
+- **`override(...names)`**: Send the next log call *only* to these transports
+- **`add(...names)`**: Send the next log call to the default set *plus* these
+- **`remove(...names)`**: Send the next log call to the default set *minus* these
 
 ---
 
-**Status**: ✅ **Complete** - This example demonstrates SyntropyLog's HTTP configuration with progressive learning from basic to advanced patterns. 
+## 🏗️ The Setup
+
+Four named transports are registered in `transportList`. In `development`, only `json` is active by default:
+
+```typescript
+await syntropyLog.init({
+  logger: {
+    serviceName: 'all-transports-example',
+    transportList: {
+      json:    new ConsoleTransport(),           // plain JSON
+      classic: new ClassicConsoleTransport(),    // single-line, colored
+      pretty:  new PrettyConsoleTransport(),     // multi-line, colored
+      compact: new CompactConsoleTransport(),    // compact one-liner, colored
+    },
+    env: { development: ['json'] },
+    envKey: 'NODE_ENV',
+  },
+});
+```
+
+---
+
+## 🔍 Six Patterns Demonstrated
+
+### 1. `override('json')` — only JSON transport
+
+```typescript
+log.override('json').info('Test message');
+// → only ConsoleTransport receives this call, regardless of env default
+```
+
+### 2. `override('classic')` — only ClassicConsoleTransport
+
+```typescript
+log.override('classic').info('Test message');
+// → colored single-line output only
+```
+
+### 3. `override('pretty')` — only PrettyConsoleTransport
+
+```typescript
+log.override('pretty').info('Test message', { userId: 'u-1', action: 'login' });
+// → multi-line colored output only
+```
+
+### 4. `override('compact')` — only CompactConsoleTransport
+
+```typescript
+log.override('compact').warn('Test message');
+// → compact one-liner output only
+```
+
+### 5. `add('classic', 'json')` — default + extra transports
+
+```typescript
+log.add('classic', 'json').info('This log goes to default + classic + json');
+// → env default (json) + classic + json (no duplicates)
+```
+
+### 6. `remove('compact')` — default minus one transport
+
+```typescript
+log.remove('compact').info('This log goes to default without compact');
+// → env default minus the compact transport
+```
+
+> `override`, `add`, and `remove` affect **only the next log call**. The following call goes back to the env default.
+
+---
+
+## 📊 Transport Formats Side by Side
+
+The same `logger.info('Con metadata', { userId: 'u-1', action: 'login' })` call renders differently per transport:
+
+| Transport | Output style |
+|-----------|-------------|
+| `ConsoleTransport` | `{"level":"info","message":"Con metadata","userId":"u-1","action":"login",...}` |
+| `ClassicConsoleTransport` | `2025-01-01 12:00:00 INFO  [all-transports] Con metadata { userId: 'u-1', action: 'login' }` |
+| `PrettyConsoleTransport` | Multi-line colored block with indented fields |
+| `CompactConsoleTransport` | Single colored line, minimal whitespace |
+
+---
+
+## 🚀 How to Run
+
+```bash
+cd 09-all-transports
+npm install
+npm run dev
+```
+
+### Expected output
+
+```
+============================================================
+  1. override("json")
+============================================================
+{"level":"info","message":"Mensaje de prueba info",...}
+{"level":"warn","message":"Mensaje de prueba warn",...}
+{"level":"info","message":"Con metadata","userId":"u-1","action":"login",...}
+
+============================================================
+  2. override("classic")
+============================================================
+2025-01-01 12:00:00 INFO  [all-transports] Mensaje de prueba info
+2025-01-01 12:00:00 WARN  [all-transports] Mensaje de prueba warn
+2025-01-01 12:00:00 INFO  [all-transports] Con metadata { userId: 'u-1', action: 'login' }
+
+============================================================
+  3. override("pretty")
+============================================================
+... (multi-line colored block)
+
+============================================================
+  4. override("compact")
+============================================================
+... (compact one-liners)
+
+============================================================
+  5. add("classic", "json") — próximo log = default + classic + json
+============================================================
+... (appears in both json and classic format)
+
+============================================================
+  6. remove("compact") — próximo log = default sin compact
+============================================================
+... (appears in default transports only, without compact)
+
+============================================================
+  All transports listo (override, add, remove)
+============================================================
+```
+
+---
+
+## 📚 Key Takeaways
+
+- **`transportList` + `env`** is the recommended way to manage multiple transports — define once, activate by environment.
+- **`override`** is useful for audit logs or critical alerts that must go to a specific destination regardless of the current env.
+- **`add`** lets you temporarily include an extra destination (e.g. a debug transport) for a single call.
+- **`remove`** lets you exclude a transport for a single call without creating a new logger instance.
+- All three fluent methods reset automatically — the next call uses the env default again.
+
+---
+
+## 🔗 Related Examples
+
+- [Example 04](../04-logging-levels-transports) — transport basics and log levels
+- [Example 07](../07-logger-configuration) — pretty vs JSON output configuration
+- [Example 12](../12-universal-adapter) — UniversalAdapter for custom backends

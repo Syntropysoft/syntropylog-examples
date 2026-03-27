@@ -30,35 +30,19 @@ interface OrderData {
 
 // Complete boilerplate for SyntropyLog initialization and shutdown
 async function initializeSyntropyLog(): Promise<void> {
-  console.log('🚀 Initializing SyntropyLog...');
-  
-  return new Promise<void>((resolve, reject) => {
-    // Set up event listeners before initialization
-    syntropyLog.on('ready', () => {
-      console.log('✅ SyntropyLog initialized successfully!');
-      resolve();
-    });
-    
-    syntropyLog.on('error', (err) => {
-      console.error('❌ SyntropyLog initialization failed:', err);
-      reject(err);
-    });
+  const config: SyntropyLogConfig = {
+    logger: {
+      level: 'info',
+      serviceName: 'example-03-typescript',
+      serializerTimeoutMs: 100,
+      transports: [new ClassicConsoleTransport(), new ConsoleTransport()],
+    },
+    context: {
+      correlationIdHeader: 'X-Correlation-ID',
+    },
+  };
 
-    // Initialize with configuration
-    const config: SyntropyLogConfig = {
-      logger: {
-        level: 'info',
-        serviceName: 'example-03-typescript',
-        serializerTimeoutMs: 100,
-        transports: [new ClassicConsoleTransport(), new ConsoleTransport()],
-      },
-      context: {
-        correlationIdHeader: 'X-Correlation-ID',
-      },
-    };
-
-    syntropyLog.init(config);
-  });
+  await syntropyLog.init(config);
 }
 
 async function gracefulShutdown(): Promise<void> {
@@ -73,55 +57,34 @@ async function gracefulShutdown(): Promise<void> {
 }
 
 // TypeScript function with typed context
+// .child() binds orderId + userId once — no need to repeat them on every log call
 function processOrder(orderData: OrderData, context: UserContext): void {
-  const logger = syntropyLog.getLogger('order-service');
-  
-  logger.info('Processing order with TypeScript context', {
-    orderId: orderData.orderId,
-    userId: context.userId,
-    correlationId: context.correlationId,
-    sessionId: context.sessionId
-  });
-  
-  // Simulate order processing
+  const logger = syntropyLog.getLogger('order-service')
+    .child({ orderId: orderData.orderId, userId: context.userId });
+
+  logger.info('Processing order');
+
   const totalPrice = orderData.quantity * orderData.price;
-  
-  logger.info('Order processed successfully', {
-    orderId: orderData.orderId,
-    totalPrice,
-    userId: context.userId,
-    correlationId: context.correlationId
-  });
+
+  logger.info('Order processed successfully', { totalPrice });
 }
 
 // Another TypeScript function with context
+// Each service has its own named logger; .child() carries the relevant bindings
 function validateOrder(orderData: OrderData, context: UserContext): boolean {
-  const logger = syntropyLog.getLogger('validation-service');
-  
-  logger.info('Validating order with TypeScript context', {
-    orderId: orderData.orderId,
-    userId: context.userId,
-    correlationId: context.correlationId
-  });
-  
-  // Simulate validation logic
+  const logger = syntropyLog.getLogger('validation-service')
+    .child({ orderId: orderData.orderId, userId: context.userId });
+
+  logger.info('Validating order');
+
   const isValid = orderData.quantity > 0 && orderData.price > 0;
-  
+
   if (isValid) {
-    logger.info('Order validation passed', {
-      orderId: orderData.orderId,
-      userId: context.userId,
-      correlationId: context.correlationId
-    });
+    logger.info('Order validation passed');
   } else {
-    logger.warn('Order validation failed', {
-      orderId: orderData.orderId,
-      userId: context.userId,
-      correlationId: context.correlationId,
-      reason: 'Invalid quantity or price'
-    });
+    logger.warn('Order validation failed', { reason: 'Invalid quantity or price' });
   }
-  
+
   return isValid;
 }
 
@@ -130,8 +93,16 @@ async function main(): Promise<void> {
   try {
     // Initialize SyntropyLog
     await initializeSyntropyLog();
-    
-const logger = syntropyLog.getLogger('main');
+
+    if (syntropyLog.isNativeAddonInUse()) {
+      console.log('⚡ Native Rust addon active');
+    } else {
+      console.log('ℹ️  Native addon not active — JS pipeline in use');
+      console.log('   → Requires Node ≥ 20, supported platform (Linux/macOS/Windows x64/arm64)');
+      console.log('   → To force JS mode intentionally: set SYNTROPYLOG_NATIVE_DISABLE=1');
+    }
+
+    const logger = syntropyLog.getLogger('main');
     const contextManager = syntropyLog.getContextManager();
     
     logger.info('Starting TypeScript context propagation example...');

@@ -1,5 +1,5 @@
 {
-  "name": "11-custom-adapter",
+  "name": "11-axios-interceptors",
   "version": "1.0.0",
   "description": "Example of creating and using custom adapters in SyntropyLog 🛠️",
   "main": "src/index.ts",
@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "axios": "^1.10.0",
-    "syntropylog": "0.12.1"
+    "syntropylog": "1.0.0-rc.1"
   },
   "devDependencies": {
     "tsx": "^4.0.0",

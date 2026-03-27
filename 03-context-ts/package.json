@@ -1,5 +1,5 @@
 {
-  "name": "20-context-ts",
+  "name": "03-context-ts",
   "version": "1.0.0",
   "description": "An example of using SyntropyLog with TypeScript.",
   "main": "src/index.ts",
@@ -17,7 +17,7 @@
   "license": "MIT",
   "dependencies": {
     "chalk": "^5.4.1",
-    "syntropylog": "0.12.1"
+    "syntropylog": "1.0.0-rc.1"
   },
   "devDependencies": {
     "ts-node": "^10.9.2",

@@ -15,21 +15,6 @@ const initializeSyntropyLog = async () => {
   });
 };
 
-// Wait for SyntropyLog to be ready
-const waitForReady = async (maxWaitMs: number = 5000): Promise<void> => {
-  const startTime = Date.now();
-  
-  while (Date.now() - startTime < maxWaitMs) {
-    const state = syntropyLog.getState();
-    if (state === 'READY') {
-      return;
-    }
-    await new Promise(resolve => setTimeout(resolve, 50));
-  }
-  
-  throw new Error(`SyntropyLog did not reach READY state within ${maxWaitMs}ms`);
-};
-
 // Graceful shutdown
 const gracefulShutdown = async (signal: string) => {
   console.log(`\n🛑 Received ${signal}. Starting graceful shutdown...`);
@@ -49,4 +34,4 @@ const gracefulShutdown = async (signal: string) => {
 process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 
-export { syntropyLog, initializeSyntropyLog, gracefulShutdown, waitForReady }; 
+export { syntropyLog, initializeSyntropyLog, gracefulShutdown };

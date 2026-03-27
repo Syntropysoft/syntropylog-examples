@@ -9,8 +9,6 @@
   <br />
   Ship resilient, secure, and cost-effective Node.js applications with confidence.
 </p>
-## 📖 Table of Contents
-
 # Example 02: Basic Context and Correlation
 
 Welcome to the next step in your SyntropyLog journey! This example demonstrates one of the most powerful features of the framework: **automatic context propagation** in a realistic e-commerce scenario.
@@ -107,24 +105,20 @@ INFO (main): Order and payment completed successfully {"correlationId":"550e8400
 
 ## 🏗️ Architecture
 
-```
-┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│   Order Service │    │ Inventory Service│    │ Payment Service │
-│                 │    │                  │    │                 │
-│ - Process Order │───▶│ - Check Stock    │    │ - Process Payment│
-│ - Validate      │    │ - Reserve Stock  │    │ - Handle Errors │
-│ - Handle Errors │    │ - Handle Errors  │    │                 │
-└─────────────────┘    └──────────────────┘    └─────────────────┘
-         │                       │                       │
-         └───────────────────────┼───────────────────────┘
-                                 │
-                    ┌─────────────────┐
-                    │   Context       │
-                    │                 │
-                    │ - correlationId │
-                    │ - customerId    │
-                    │ - sessionId     │
-                    └─────────────────┘
+```mermaid
+flowchart LR
+    subgraph services[" "]
+        OS["**Order Service**\nProcess Order\nValidate\nHandle Errors"]
+        IS["**Inventory Service**\nCheck Stock\nReserve Stock\nHandle Errors"]
+        PS["**Payment Service**\nProcess Payment\nHandle Errors"]
+    end
+
+    CTX["**Context**\n─────────────────\ncorrelationId\ncustomerId\nsessionId"]
+
+    OS -->|calls| IS
+    OS -. reads .-> CTX
+    IS -. reads .-> CTX
+    PS -. reads .-> CTX
 ```
 
 ## 💡 Benefits

@@ -25,26 +25,15 @@ This example demonstrates SyntropyLog's logging matrix:
 
 ## 🏗️ Simple Concept
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                Smart Log Information Control            │
-│                                                         │
-│ ┌─────────────────┐    ┌─────────────────┐             │
-│ │   SUCCESS       │    │     ERROR       │             │
-│ │   (Cheap)       │    │   (Complete)    │             │
-│ │                 │    │                 │             │
-│ │ correlationId   │    │ correlationId   │             │
-│ │ serviceName     │    │ userId          │             │
-│ │                 │    │ email           │             │
-│ │ Cost: $0.01     │    │ address         │             │
-│ │                 │    │ phone           │             │
-│ │                 │    │ errorDetails    │             │
-│ │                 │    │                 │             │
-│ │                 │    │ Cost: $0.05     │             │
-│ └─────────────────┘    └─────────────────┘             │
-│                                                         │
-│ 🎯 Same log call, different information based on level │
-└─────────────────────────────────────────────────────────┘
+```mermaid
+flowchart LR
+    LC["Same log call"]
+
+    SC["**INFO / SUCCESS**\n─────────────────\ncorrelationId ✓\nserviceName ✓\n\n💰 Cost: low"]
+    EC["**ERROR**\n─────────────────\ncorrelationId ✓\nuserId ✓\nemail ✓\naddress ✓\nerrorDetails ✓\n\n💰 Cost: higher"]
+
+    LC -->|"level: info"| SC
+    LC -->|"level: error"| EC
 ```
 
 ## 🎯 Learning Objectives

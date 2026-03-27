@@ -1,4 +1,4 @@
-import { syntropyLog, initializeSyntropyLog, gracefulShutdown, waitForReady } from './boilerplate';
+import { syntropyLog, initializeSyntropyLog, gracefulShutdown } from './boilerplate';
 
 // Simulate different types of errors
 class ValidationError extends Error {
@@ -52,8 +52,13 @@ async function demonstrateErrorHandling() {
   // Initialize SyntropyLog first
   await initializeSyntropyLog();
 
-  // Wait for SyntropyLog to be ready before proceeding
-  await waitForReady();
+  if (syntropyLog.isNativeAddonInUse()) {
+    console.log('⚡ Native Rust addon active');
+  } else {
+    console.log('ℹ️  Native addon not active — JS pipeline in use');
+    console.log('   → Requires Node ≥ 20, supported platform (Linux/macOS/Windows x64/arm64)');
+    console.log('   → To force JS mode intentionally: set SYNTROPYLOG_NATIVE_DISABLE=1');
+  }
 
   const logger = syntropyLog.getLogger();
   const contextManager = syntropyLog.getContextManager();

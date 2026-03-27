@@ -1,4 +1,4 @@
-import { syntropyLog, initializeSyntropyLog, gracefulShutdown, waitForReady, getContextManager } from './boilerplate';
+import { syntropyLog, initializeSyntropyLog, gracefulShutdown, getContextManager } from './boilerplate';
 
 // Universal context pattern - same code works everywhere
 async function universalContextPattern(operationType: string, operationData: any) {
@@ -172,8 +172,13 @@ async function demonstrateUniversalContextPatterns() {
   // Initialize SyntropyLog first
   await initializeSyntropyLog();
 
-  // Wait for SyntropyLog to be ready before proceeding
-  await waitForReady();
+  if (syntropyLog.isNativeAddonInUse()) {
+    console.log('⚡ Native Rust addon active');
+  } else {
+    console.log('ℹ️  Native addon not active — JS pipeline in use');
+    console.log('   → Requires Node ≥ 20, supported platform (Linux/macOS/Windows x64/arm64)');
+    console.log('   → To force JS mode intentionally: set SYNTROPYLOG_NATIVE_DISABLE=1');
+  }
 
   console.log('✅ SyntropyLog ready! Starting universal context demonstrations...\n');
 

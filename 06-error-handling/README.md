@@ -12,174 +12,218 @@
 
 # Example 06: Error Handling 🛡️
 
-> **Core Framework Feature** - Understanding how SyntropyLog handles errors gracefully and provides rich error context.
+> **Core Pattern** — Log errors with full context so you can trace exactly what went wrong and where.
 
 ## 🎯 What You'll Learn
 
-This example demonstrates SyntropyLog's error handling capabilities:
-
-- **Error correlation**: How errors are automatically correlated
-- **Error context**: Rich error information with correlation
-- **Simple error handling**: Basic error handling patterns
-- **Error logging**: How to log errors effectively
-
-## 🏗️ Architecture Overview
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    Error Handling Strategy                      │
-│                                                                 │
-│ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ │
-│ │ Error       │ │ Error       │ │ Graceful    │ │ Error       │ │
-│ │ Propagation │ │ Context     │ │ Degradation │ │ Recovery    │ │
-│ │             │ │             │ │             │ │             │ │
-│ │ • HTTP      │ │ • Stack     │ │ • Fallbacks │ │ • Retry     │ │
-│ │ • Redis     │ │ • Correlation│ │ • Defaults  │ │ • Circuit   │ │
-│ │ • Brokers   │ │ • Metadata  │ │ • Logging   │ │ • Breaker   │ │
-│ │ • Serializers│ │ • Timestamp │ │ • Monitoring│ │ • Timeout   │ │
-│ │ • Transports│ │ • User      │ │ • Alerts    │ │ • Backoff   │ │
-│ │ • Adapters  │ │ • System    │ │ • Metrics   │ │ • Health    │ │
-│ │ • Framework │ │ • Business  │ │ • Status    │ │ • Checks    │ │
-│ └─────────────┘ └─────────────┘ └─────────────┘ └─────────────┘ │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-## 🎯 Learning Objectives
-
-### **Error Propagation:**
-- **HTTP errors**: Network failures, timeouts, 4xx/5xx responses
-- **Redis errors**: Connection failures, command errors, memory issues
-- **Broker errors**: Connection failures, publish/subscribe errors
-- **Framework errors**: Configuration errors, initialization failures
-
-### **Error Context:**
-- **Correlation ID**: Linking errors to specific requests
-- **Stack traces**: Detailed error location information
-- **Metadata**: User context, system state, business data
-- **Timestamps**: When errors occurred and duration
-
-### **Graceful Degradation:**
-- **Fallback mechanisms**: Alternative paths when primary fails
-- **Default values**: Safe defaults for failed operations
-- **Partial functionality**: Continue with available features
-- **User experience**: Maintain service despite errors
-
-### **Simple Error Handling:**
-- **Try-catch patterns**: Basic error handling
-- **Error logging**: How to log errors with context
-- **Error correlation**: How errors maintain correlation
-- **Graceful handling**: Simple error recovery
-
-## 🚀 Implementation Plan
-
-### **Phase 1: Error Scenarios**
-- [ ] HTTP client errors (timeout, 404, 500)
-- [ ] Redis connection errors
-- [ ] Message broker errors
-- [ ] Framework initialization errors
-
-### **Phase 2: Error Context**
-- [ ] Rich error logging with correlation
-- [ ] Error metadata collection
-- [ ] Stack trace enhancement
-- [ ] Error categorization
-
-### **Phase 3: Graceful Degradation**
-- [ ] Fallback mechanisms implementation
-- [ ] Default value handling
-- [ ] Partial functionality preservation
-- [ ] User experience maintenance
-
-### **Phase 4: Simple Error Patterns**
-- [ ] Try-catch patterns
-- [ ] Error logging with context
-- [ ] Error correlation demonstration
-- [ ] Simple error recovery
-
-## 📊 Expected Outcomes
-
-### **Technical Demonstrations:**
-- ✅ **Error scenarios** handled gracefully
-- ✅ **Rich error context** with correlation
-- ✅ **Simple error handling** patterns
-- ✅ **Error logging** strategies
-
-### **Learning Outcomes:**
-- ✅ **How to handle errors** in different scenarios
-- ✅ **Error context importance** for debugging
-- ✅ **Simple error handling** patterns
-- ✅ **Error logging** best practices
-
-## 🔧 Prerequisites
-
-- Node.js 18+
-- Understanding of error handling concepts
-- Familiarity with examples 00-05 (basic setup, logging, configuration)
-
-## 📝 Notes for Implementation
-
-- **Start with simple errors**: Basic HTTP/Redis errors first
-- **Add complexity gradually**: More sophisticated error scenarios
-- **Include real-world examples**: Common error scenarios
-- **Document simple patterns**: Best practices for error handling
-- **Test error scenarios**: Ensure graceful handling
-
-## ⚠️ **IMPORTANT: Context Management in Examples**
-
-### **🔍 Why Context is Manual in Examples**
-
-In SyntropyLog, **context management is asynchronous** and uses Node.js `AsyncLocalStorage`. This means:
-
-1. **Context is NOT global by default** - it only exists within `contextManager.run()` blocks
-2. **Examples are quick demonstrations** - they don't have HTTP requests or message queues that automatically create context
-3. **Manual context creation** - we must wrap our logging operations in `contextManager.run()` to get correlation IDs
-
-### **🎯 The Solution: Global Context Wrapper**
-
-```typescript
-// ❌ WITHOUT context (no correlationId)
-logger.error('Database connection failed'); // No correlationId
-
-// ✅ WITH context (has correlationId)
-await contextManager.run(async () => {
-  logger.error('Database connection failed'); // Has correlationId automatically
-});
-```
-
-### **🔮 The Magic Middleware (2 Lines of Code)**
-
-In production applications, you'll use this simple middleware:
-
-```typescript
-app.use(async (req, res, next) => {
-  await contextManager.run(async () => {
-    // 🎯 MAGIC: Just 2 lines!
-    const correlationId = contextManager.getCorrelationId(); // Detects or generates
-    contextManager.set(contextManager.getCorrelationIdHeaderName(), correlationId); // Sets in context
-    
-    next();
-  });
-});
-```
-
-**Why this is marvelous:**
-- **Intelligent Detection**: `getCorrelationId()` uses existing ID or generates new one
-- **Automatic Configuration**: `getCorrelationIdHeaderName()` reads your config
-- **Automatic Propagation**: Once set, it propagates to all logs and operations
-
-### **🚀 In Real Applications**
-
-In production applications, context is automatically created by:
-- **HTTP middleware** (Express, Fastify, etc.)
-- **Message queue handlers** (Kafka, RabbitMQ, etc.)
-- **Background job processors**
-- **API gateways**
-
-### **📚 Key Takeaway**
-
-**For examples and quick tests**: Wrap all logging in `contextManager.run()`  
-**For production apps**: Use SyntropyLog's HTTP/broker adapters for automatic context
+- **Custom error types**: `ValidationError`, `DatabaseError`, `ExternalServiceError` — typed errors carry structured context
+- **Error correlation**: every error log automatically includes the `correlationId` of the current operation
+- **Context preservation**: errors logged mid-flow keep all the context set at the start
+- **Graceful degradation**: when an external call fails, the app continues with a fallback instead of crashing
 
 ---
 
-**Status**: 🆕 **In Development** - This example will demonstrate SyntropyLog's error handling capabilities with simple, practical error scenarios. 
+## 🏗️ The Problem This Solves
+
+Without correlation, a production error log looks like this:
+
+```
+ERROR: Connection timeout
+```
+
+With SyntropyLog, the same error looks like this:
+
+```json
+{
+  "level": "error",
+  "message": "User registration failed",
+  "correlationId": "a3f2-...",
+  "operation": "user-registration",
+  "userId": "new-user-123",
+  "error": "Connection timeout",
+  "errorType": "DatabaseError"
+}
+```
+
+You know *who* was affected, *what* operation failed, and *which request* to trace — without changing a single line of business logic.
+
+---
+
+## 🔍 Four Patterns Demonstrated
+
+### Pattern 1 — Simple error handling
+
+Basic `try/catch` with structured error logging:
+
+```typescript
+try {
+  await validateUser({ email: 'test@example.com' }); // name missing → throws
+  logger.info('User validation successful');
+} catch (error) {
+  logger.error('User validation failed', {
+    error: error instanceof Error ? error.message : String(error),
+    errorType: error instanceof Error ? error.constructor.name : 'Unknown',
+  });
+}
+```
+
+---
+
+### Pattern 2 — Context preservation on error
+
+The `correlationId` set at the start of the operation is still present when the error is logged:
+
+```typescript
+await contextManager.run(async () => {
+  contextManager.set('operation', 'user-registration');
+  contextManager.set('userId', 'new-user-123');
+
+  try {
+    await validateUser({}); // fails: email and name missing
+  } catch (error) {
+    // correlationId is automatic — no need to pass it manually
+    logger.error('User validation failed with context', {
+      error: error instanceof Error ? error.message : String(error),
+      errorType: error instanceof Error ? error.constructor.name : 'Unknown',
+    });
+  }
+});
+```
+
+---
+
+### Pattern 3 — Error in a multi-step async flow
+
+A registration flow with three sequential steps. If any step fails, the error log identifies exactly which step and preserves the full operation context:
+
+```typescript
+// Step 1: Validation
+await validateUser(userData);
+
+// Step 2: Database (may throw DatabaseError randomly)
+await saveUserToDatabase(userData);
+
+// Step 3: External service (may throw ExternalServiceError randomly)
+await callExternalService(userData);
+```
+
+If `saveUserToDatabase` throws, the caught error carries `errorType: "DatabaseError"` and `operation: "user-registration"` — no manual wiring needed.
+
+---
+
+### Pattern 4 — Graceful degradation on HTTP failure
+
+When an external HTTP call fails, the app returns cached data instead of propagating the error. The failure is logged with full context, but the operation completes:
+
+```typescript
+try {
+  // Simulate HTTP call that may fail
+  throw new Error('HTTP 500: External service unavailable');
+} catch (error) {
+  logger.error('HTTP request failed, using fallback', {
+    error: error instanceof Error ? error.message : String(error),
+    fallback: 'cached-data',
+  });
+  return { data: 'cached-data' }; // app continues
+}
+```
+
+---
+
+## 📊 Custom Error Types
+
+The example defines three typed errors that carry structured fields:
+
+```typescript
+class ValidationError extends Error {
+  constructor(message: string, public field: string) { ... }
+}
+
+class DatabaseError extends Error {
+  constructor(message: string, public operation: string) { ... }
+}
+
+class ExternalServiceError extends Error {
+  constructor(message: string, public service: string) { ... }
+}
+```
+
+These let you log `errorType` and distinguish errors programmatically without parsing message strings.
+
+---
+
+## 🚀 How to Run
+
+```bash
+cd 06-error-handling
+npm install
+npm run dev
+```
+
+### Expected output
+
+```
+🎯 Example 06: Error Handling with Correlation
+
+🔗 Correlation ID: <generated-uuid>
+📊 Demonstrating error handling patterns:
+
+🛡️ Pattern 1: Simple Error Handling
+[INFO]  User validation successful
+[ERROR] User validation failed { error: 'Name is required', errorType: 'ValidationError' }
+
+🔍 Pattern 2: Error Handling with Context Preservation
+[ERROR] User validation failed with context { error: 'Email is required', errorType: 'ValidationError', correlationId: '...' }
+
+⚡ Pattern 3: Error Handling in Async Operations
+[INFO]  Validating user data
+[INFO]  User validation successful
+[INFO]  Saving user to database
+[INFO]  User saved to database        ← or →  [ERROR] User registration failed { errorType: 'DatabaseError' }
+...
+
+🌐 Pattern 4: HTTP Error Handling with Graceful Degradation
+[ERROR] HTTP request failed, using fallback { fallback: 'cached-data' }
+[INFO]  Operation completed with data { dataSource: 'cached-data' }
+
+✅ Error handling demonstration completed!
+```
+
+> Patterns 3 and 4 include random failures — output varies per run.
+
+---
+
+## ⚙️ Configuration
+
+```typescript
+await syntropyLog.init({
+  logger: {
+    serviceName: 'error-handling-example',
+    level: 'info',
+    serializerTimeoutMs: 100,
+    transports: [new ClassicConsoleTransport(), new ConsoleTransport()],
+  },
+  context: {
+    correlationIdHeader: 'x-correlation-id-test-06',
+  },
+});
+```
+
+Two transports are active simultaneously — `ClassicConsoleTransport` (colored, single-line) and `ConsoleTransport` (plain JSON) — so you can see both formats side by side.
+
+---
+
+## 📚 Key Takeaways
+
+- **Wrap operations in `contextManager.run()`** — every log inside it automatically carries the correlation ID.
+- **Log `error.constructor.name`** as `errorType` — makes errors filterable in any log aggregator.
+- **Graceful degradation is explicit** — catch, log, return fallback. The caller never knows it failed.
+- **In production**, context is created automatically by HTTP middleware or message queue handlers. The patterns here are the same.
+
+---
+
+## 🔗 Related Examples
+
+- [Example 00](../00-setup-initialization) — initialization and graceful shutdown
+- [Example 02](../02-basic-context) — context propagation basics
+- [Example 10](../10-basic-http-correlation) — HTTP correlation with Axios

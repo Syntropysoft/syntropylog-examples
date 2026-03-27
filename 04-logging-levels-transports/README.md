@@ -25,22 +25,34 @@ This example demonstrates SyntropyLog's logging system fundamentals:
 
 ## 🏗️ Architecture Overview
 
+```mermaid
+mindmap
+  root((Logging\nConfig))
+    Log Levels
+      fatal
+      error
+      warn
+      info
+      debug
+      trace
+      silent
+    Transports
+      Console
+      JSON
+      Custom
+      File
+      Remote
+    Environment
+      Development
+      Production
+      Test / Staging
+      CI/CD / K8s
+    Performance
+      Throughput
+      Memory
+      Latency
+      CPU / I/O
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                    Logging Configuration                        │
-│                                                                 │
-│ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ │
-│ │ Log Levels  │ │ Transports  │ │ Environment │ │ Performance │ │
-│ │             │ │             │ │             │ │             │ │
-│ │ • fatal     │ │ • Console   │ │ • Dev       │ │ • Overhead  │ │
-│ │ • error     │ │ • JSON      │ │ • Prod      │ │ • Throughput│ │
-│ │ • warn      │ │ • Custom    │ │ • Test      │ │ • Memory    │ │
-│ │ • info      │ │ • File      │ │ • Staging   │ │ • Latency   │ │
-│ │ • debug     │ │ • Remote    │ │ • CI/CD     │ │ • CPU       │ │
-│ │ • trace     │ │ • Multiple  │ │ • Docker    │ │ • I/O       │ │
-│ │ • silent    │ │ • Conditional│ │ • K8s       │ │ • Network   │ │
-│ └─────────────┘ └─────────────┘ └─────────────┘ └─────────────┘ │
-└─────────────────────────────────────────────────────────────────┘
 ```
 
 ## 🎯 Learning Objectives

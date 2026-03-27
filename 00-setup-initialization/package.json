@@ -17,6 +17,6 @@
   },
   "dependencies": {
     "chalk": "^5.4.1",
-    "syntropylog": "0.12.1"
+    "syntropylog": "1.0.0-rc.1"
   }
 }

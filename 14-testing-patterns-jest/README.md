@@ -1,3 +1,15 @@
+<p align="center">
+  <img src="https://syntropysoft.com/syntropylog-logo.png" alt="SyntropyLog Logo" width="170"/>
+</p>
+
+<h1 align="center">SyntropyLog</h1>
+
+<p align="center">
+  <strong>The Observability Framework for High-Performance Teams.</strong>
+  <br />
+  Ship resilient, secure, and cost-effective Node.js applications with confidence.
+</p>
+
 # Example 14: Testing Patterns with Jest
 
 This example demonstrates how to write **declarative, behavior-focused tests** for SyntropyLog applications using Jest. The key insight is to avoid testing the framework itself and instead focus on testing your business logic.

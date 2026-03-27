@@ -17,25 +17,11 @@ import {
   CompactConsoleTransport,
 } from 'syntropylog';
 
-async function waitReady(maxMs = 5000): Promise<void> {
-  const start = Date.now();
-  while (Date.now() - start < maxMs) {
-    if (syntropyLog.getState() === 'READY') return;
-    await new Promise((r) => setTimeout(r, 50));
-  }
-  throw new Error('SyntropyLog did not reach READY');
-}
-
 async function main() {
-  syntropyLog.on('ready', () => {});
-  syntropyLog.on('error', (err) => {
-    throw err;
-  });
-
   type InitConfig = Parameters<typeof syntropyLog.init>[0] & {
     logger?: { transportList?: Record<string, unknown>; env?: Record<string, string[]>; envKey?: string };
   };
-  syntropyLog.init({
+  await syntropyLog.init({
     logger: {
       serviceName: 'all-transports-example',
       level: 'info',
@@ -51,7 +37,14 @@ async function main() {
     },
   } as InitConfig);
 
-  await waitReady();
+  if (syntropyLog.isNativeAddonInUse()) {
+    console.log('⚡ Native Rust addon active');
+  } else {
+    console.log('ℹ️  Native addon not active — JS pipeline in use');
+    console.log('   → Requires Node ≥ 20, supported platform (Linux/macOS/Windows x64/arm64)');
+    console.log('   → To force JS mode intentionally: set SYNTROPYLOG_NATIVE_DISABLE=1');
+  }
+
   const log = syntropyLog.getLogger('all-transports');
 
   // ILogger: override, add, remove retornan ILogger para encadenar .info(), .warn(), etc.

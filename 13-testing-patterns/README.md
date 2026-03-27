@@ -1,3 +1,15 @@
+<p align="center">
+  <img src="https://syntropysoft.com/syntropylog-logo.png" alt="SyntropyLog Logo" width="170"/>
+</p>
+
+<h1 align="center">SyntropyLog</h1>
+
+<p align="center">
+  <strong>The Observability Framework for High-Performance Teams.</strong>
+  <br />
+  Ship resilient, secure, and cost-effective Node.js applications with confidence.
+</p>
+
 # Example 13: Testing Patterns with Vitest
 
 This example shows how to test SyntropyLog applications using Vitest. The key: Test your business logic, not the framework.

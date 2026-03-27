@@ -20,7 +20,7 @@ SyntropyLog provides structured logging with context propagation, masking, and p
 
 ---
 
-## Main examples (01–17)
+## Main examples (01–18)
 
 Each example lives in its own folder. Run it with `npm install` and `npm run dev` (or the script shown in the example’s README).
 
@@ -36,19 +36,20 @@ Each example lives in its own folder. Run it with `npm install` and `npm run dev
 | 07 | `06-error-handling` | Error handling |
 | 08 | `07-logger-configuration` | Logger configuration |
 | 09 | `08-logging-matrix` | Logging matrix by level |
-| 10 | `09-All-transports` | All transports (pool, override, add/remove) |
+| 10 | `09-all-transports` | All transports (pool, override, add/remove) |
 | **B — Integration** |
-| 11 | `10-basic-http-correlation`, `11-axios-interceptors` | HTTP correlation with Axios (interceptors) |
-| 12 | `12-UniversalAdapter` | Custom adapter / UniversalAdapter |
+| 11 | `10-basic-http-correlation` | HTTP correlation — automatic correlation ID propagation with Axios |
+| 12 | `11-axios-interceptors` | HTTP correlation with Axios interceptors (custom adapter) |
+| 13 | `12-universal-adapter` | Custom adapter / UniversalAdapter |
 | **C — Testing** |
-| 13 | `13-testing-patterns` | Testing with Vitest |
-| 14 | `14-testing-patterns-jest` | Testing with Jest |
-| 15 | `15-testing-serializers` | Testing serializers |
-| 16 | `16-testing-transports-concepts` | Testing transport concepts |
+| 14 | `13-testing-patterns` | Testing with Vitest |
+| 15 | `14-testing-patterns-jest` | Testing with Jest |
+| 16 | `15-testing-serializers` | Testing serializers |
+| 17 | `16-testing-transports-concepts` | Testing transport concepts |
 | **D — Benchmark** |
-| 17 | `17-benchmark` | Benchmark: SyntropyLog vs Pino vs Winston (self-contained) |
+| 18 | `17-benchmark` | Benchmark: SyntropyLog vs Pino vs Winston (self-contained) |
 
-*Learning path 01–17; folder names 00–17.*
+*Learning path 01–18; folder names 00–17.*
 
 ---
 
@@ -125,7 +126,7 @@ Use **Axios interceptors** to inject correlation ID and logger on each request/r
 
 ### UniversalAdapter and transports
 
-The library exposes a **UniversalAdapter** and configurable transports (console, DB, HTTP, etc.) in `logger.transports`. See the library README and `12-UniversalAdapter`.
+The library exposes a **UniversalAdapter** and configurable transports (console, DB, HTTP, etc.) in `logger.transports`. See the library README and `12-universal-adapter`.
 
 ---
 

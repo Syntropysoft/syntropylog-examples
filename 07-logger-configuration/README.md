@@ -25,22 +25,15 @@ This example demonstrates how to configure SyntropyLog's logger output:
 
 ## 🏗️ Simple Concept
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                Same Function, Multiple Outputs          │
-│                                                         │
-│ ┌─────────────────┐    ┌─────────────────┐             │
-│ │   Pretty Logs   │    │   JSON Logs     │             │
-│ │   (Development) │    │  (Production)   │             │
-│ │                 │    │                 │             │
-│ │ [INFO] User     │    │ {"level":"info" │             │
-│ │     processed   │    │  "message":"..."│             │
-│ │ [DEBUG] Details │    │  "timestamp":   │             │
-│ │     user=123    │    │  "service":"..."│             │
-│ └─────────────────┘    └─────────────────┘             │
-│                                                         │
-│ 🎯 Both outputs from the SAME log call!                │
-└─────────────────────────────────────────────────────────┘
+```mermaid
+flowchart LR
+    LC["log.info('User processed',\n{ userId: 123 })"]
+
+    PT["**PrettyConsoleTransport**\n─────────────────────\nINFO  User processed\n  userId=123"]
+    CT["**ConsoleTransport**\n─────────────────────\n{\"level\":\"info\",\n\"message\":\"User processed\",\n\"userId\":123}"]
+
+    LC -->|Development| PT
+    LC -->|Production| CT
 ```
 
 ## 🎯 Learning Objectives

@@ -1,5 +1,5 @@
 {
-  "name": "09-http-configuration",
+  "name": "09-all-transports",
   "version": "1.0.0",
   "description": "SyntropyLog - HTTP Configuration Example",
   "main": "dist/index.js",
@@ -12,7 +12,7 @@
   "dependencies": {
     "chalk": "^5.4.1",
     "axios": "^1.6.0",
-    "syntropylog": "0.12.1"
+    "syntropylog": "1.0.0-rc.1"
   },
   "devDependencies": {
     "@types/node": "^18.0.0",

@@ -12,7 +12,7 @@
     "node": ">=18.0.0"
   },
   "dependencies": {
-    "syntropylog": "0.12.1"
+    "syntropylog": "1.0.0-rc.1"
   },
   "devDependencies": {
     "typescript": "^5.0.0",

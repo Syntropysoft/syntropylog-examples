@@ -1,5 +1,5 @@
 {
-  "name": "28-testing-patterns",
+  "name": "13-testing-patterns",
   "version": "1.0.0",
   "description": "Testing patterns for SyntropyLog - showing how to test declaratively",
   "main": "src/index.ts",
@@ -12,7 +12,7 @@
     "test:simple": "vitest --config vitest.config.simple.ts"
   },
   "dependencies": {
-    "syntropylog": "0.12.1",
+    "syntropylog": "1.0.0-rc.1",
     "chalk": "^5.4.1"
   },
   "devDependencies": {

@@ -2,41 +2,21 @@ import { syntropyLog, ClassicConsoleTransport, ConsoleTransport } from 'syntropy
 
 // Global variables for graceful shutdown
 let isShuttingDown = false;
-let readyPromise: Promise<void>;
-let readyResolve: () => void;
-
-// Initialize ready promise
-readyPromise = new Promise<void>((resolve) => {
-  readyResolve = resolve;
-});
 
 // Initialize SyntropyLog with universal context configuration
 export async function initializeSyntropyLog() {
-  try {
-    await syntropyLog.init({
-      logger: {
-        serviceName: 'universal-context-demo',
-        level: 'info',
-        prettyPrint: { enabled: true },
-        serializerTimeoutMs: 100,
-        transports: [new ClassicConsoleTransport(), new ConsoleTransport()],
-      },
-      context: {
-        correlationIdHeader: 'x-correlation-id'
-      }
-    });
-    
-    console.log('✅ SyntropyLog initialized successfully');
-    readyResolve();
-  } catch (error) {
-    console.error('❌ Failed to initialize SyntropyLog:', error);
-    throw error;
-  }
-}
-
-// Wait for SyntropyLog to be ready
-export async function waitForReady(): Promise<void> {
-  return readyPromise;
+  await syntropyLog.init({
+    logger: {
+      serviceName: 'universal-context-demo',
+      level: 'info',
+      prettyPrint: { enabled: true },
+      serializerTimeoutMs: 100,
+      transports: [new ClassicConsoleTransport(), new ConsoleTransport()],
+    },
+    context: {
+      correlationIdHeader: 'x-correlation-id'
+    }
+  });
 }
 
 // Graceful shutdown function

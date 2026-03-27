@@ -19,44 +19,31 @@ import {
 const persistedEntries: unknown[] = [];
 
 async function initializeSyntropyLog() {
-  console.log('🚀 Initializing SyntropyLog...');
-
-  return new Promise<void>((resolve, reject) => {
-    syntropyLog.on('ready', () => {
-      console.log('✅ SyntropyLog initialized successfully!');
-      resolve();
-    });
-    syntropyLog.on('error', (err) => {
-      console.error('❌ SyntropyLog initialization failed:', err);
-      reject(err);
-    });
-
-    syntropyLog.init({
-      logger: {
-        serviceName: 'universal-adapter-example',
-        level: 'info',
-        serializerTimeoutMs: 100,
-        transports: [
-          new ColorfulConsoleTransport(),
-          new AdapterTransport({
-            name: 'custom-backend',
-            adapter: new UniversalAdapter({
-              executor: (logEntry: unknown) => {
-                persistedEntries.push(logEntry);
-                // In production: await prisma.systemLog.create({ data: { ... } });
-                // or await fetch('https://your-log-api/ingest', { method: 'POST', body: JSON.stringify(logEntry) });
-              },
-              onError: (err) => {
-                console.error('[UniversalAdapter] executor failed:', err);
-              },
-            }),
+  await syntropyLog.init({
+    logger: {
+      serviceName: 'universal-adapter-example',
+      level: 'info',
+      serializerTimeoutMs: 100,
+      transports: [
+        new ColorfulConsoleTransport(),
+        new AdapterTransport({
+          name: 'custom-backend',
+          adapter: new UniversalAdapter({
+            executor: (logEntry: unknown) => {
+              persistedEntries.push(logEntry);
+              // In production: await prisma.systemLog.create({ data: { ... } });
+              // or await fetch('https://your-log-api/ingest', { method: 'POST', body: JSON.stringify(logEntry) });
+            },
+            onError: (err) => {
+              console.error('[UniversalAdapter] executor failed:', err);
+            },
           }),
-        ],
-      },
-      context: {
-        correlationIdHeader: 'X-Correlation-ID',
-      },
-    });
+        }),
+      ],
+    },
+    context: {
+      correlationIdHeader: 'X-Correlation-ID',
+    },
   });
 }
 
@@ -89,6 +76,14 @@ function withContext(
 async function main() {
   try {
     await initializeSyntropyLog();
+
+    if (syntropyLog.isNativeAddonInUse()) {
+      console.log('⚡ Native Rust addon active');
+    } else {
+      console.log('ℹ️  Native addon not active — JS pipeline in use');
+      console.log('   → Requires Node ≥ 20, supported platform (Linux/macOS/Windows x64/arm64)');
+      console.log('   → To force JS mode intentionally: set SYNTROPYLOG_NATIVE_DISABLE=1');
+    }
 
     const logger = syntropyLog.getLogger('app');
     const contextManager = syntropyLog.getContextManager();

@@ -49,6 +49,14 @@ async function main(): Promise<void> {
     // Initialize SyntropyLog
     await initializeSyntropyLog();
 
+    if (syntropyLog.isNativeAddonInUse()) {
+      console.log('⚡ Native Rust addon active');
+    } else {
+      console.log('ℹ️  Native addon not active — JS pipeline in use');
+      console.log('   → Requires Node ≥ 20, supported platform (Linux/macOS/Windows x64/arm64)');
+      console.log('   → To force JS mode intentionally: set SYNTROPYLOG_NATIVE_DISABLE=1');
+    }
+
     const logger = syntropyLog.getLogger('main');
     const contextManager = syntropyLog.getContextManager();
 

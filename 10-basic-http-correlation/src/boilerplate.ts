@@ -6,23 +6,7 @@ import { syntropyLog } from 'syntropylog';
  */
 
 export async function initializeSyntropyLog(config: any) {
-  console.log('🚀 Initializing SyntropyLog...');
-  
-  return new Promise<void>((resolve, reject) => {
-    // Set up event listeners before initialization
-    syntropyLog.on('ready', () => {
-      console.log('✅ SyntropyLog initialized successfully!');
-      resolve();
-    });
-    
-    syntropyLog.on('error', (err) => {
-      console.error('❌ SyntropyLog initialization failed:', err);
-      reject(err);
-    });
-
-    // Initialize with configuration
-    syntropyLog.init(config);
-  });
+  await syntropyLog.init(config);
 }
 
 export async function gracefulShutdown() {

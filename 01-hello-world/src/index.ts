@@ -135,6 +135,14 @@ async function main() {
     await initializeSyntropyLog('hello-world-app');
     lap('init (syntropyLog.init)', t);
 
+    if (syntropyLog.isNativeAddonInUse()) {
+      console.log('⚡ Native Rust addon active');
+    } else {
+      console.log('ℹ️  Native addon not active — JS pipeline in use');
+      console.log('   → Requires Node ≥ 20, supported platform (Linux/macOS/Windows x64/arm64)');
+      console.log('   → To force JS mode intentionally: set SYNTROPYLOG_NATIVE_DISABLE=1');
+    }
+
     // 2. Demonstrate logging (the actual example logic)
     await demonstrateLogging();
 

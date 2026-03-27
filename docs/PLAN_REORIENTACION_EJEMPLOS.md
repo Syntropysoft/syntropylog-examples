@@ -46,7 +46,7 @@ Criterios de la tabla:
 | 07 | Manejo de errores | 06-error-handling | mantener | Error handling. |
 | 08 | Configuración del logger | 07-logger-configuration | mantener | Config avanzada. |
 | 09 | Logging matrix | 08-logging-matrix | mantener | Matrix por nivel. |
-| 10 | Todos los transportes (pool, override, add/remove) | 09-All-transports | mantener | Pool, override, add, remove. |
+| 10 | Todos los transportes (pool, override, add/remove) | 09-all-transports | mantener | Pool, override, add, remove. |
 | **BLOQUE B — Integración (HTTP, adapters)** |
 | 11 | Correlación HTTP con Axios (interceptores) | 10-basic-http-correlation | refocus | Quitar `http: { instances, adapter }`. Usar interceptores Axios + inyección de correlation ID y logger. Documentar en el ejemplo. |
 | 12 | Adapter custom / UniversalAdapter | 11-custom-adapter | adaptar | Si usa `@syntropylog/adapters`, reescribir a UniversalAdapter + AdapterTransport como en la librería. Si no, renombrar y ajustar título. |

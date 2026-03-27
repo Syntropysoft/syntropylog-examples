@@ -26,23 +26,27 @@ This example demonstrates SyntropyLog's universal context patterns:
 
 ## 🏗️ Architecture Overview
 
+```mermaid
+mindmap
+  root((contextManager\n.run))
+    Serverless Functions
+      AWS Lambda
+      GCP Functions
+      Azure Functions
+      Vercel / Netlify
+    Background Workers
+      Bull / Agenda
+      Cron Jobs
+      Scheduled Tasks
+    Message Queues
+      Kafka
+      RabbitMQ
+      NATS / SQS
+    HTTP Servers
+      Express / Fastify
+      Koa / Hapi
+      NestJS
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                    Universal Context Patterns                   │
-│                                                                 │
-│ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ │
-│ │ Serverless  │ │ Background  │ │ Message     │ │ HTTP        │ │
-│ │ Functions   │ │ Workers     │ │ Queues      │ │ Servers     │ │
-│ │             │ │             │ │             │ │             │ │
-│ │ • AWS Lambda│ │ • Bull      │ │ • Kafka     │ │ • Express   │ │
-│ │ • GCP Func  │ │ • Agenda    │ │ • RabbitMQ  │ │ • Fastify   │ │
-│ │ • Azure Func│ │ • Cron Jobs │ │ • NATS      │ │ • Koa       │ │
-│ │ • Vercel    │ │ • Scheduled │ │ • SQS       │ │ • Hapi      │ │
-│ │ • Netlify   │ │ • Workers   │ │ • Pub/Sub   │ │ • NestJS    │ │
-│ │ • Edge Func │ │ • Queues    │ │ • Events    │ │ • Adapters  │ │
-│ │ • Functions │ │ • Tasks     │ │ • Streams   │ │ • Middleware│ │
-│ └─────────────┘ └─────────────┘ └─────────────┘ └─────────────┘ │
-└─────────────────────────────────────────────────────────────────┘
 ```
 
 ## 🎯 Learning Objectives

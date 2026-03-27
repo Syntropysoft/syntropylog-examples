@@ -9,42 +9,69 @@
   <br />
   Ship resilient, secure, and cost-effective Node.js applications with confidence.
 </p>
-## 📖 Table of Contents
 
 # Example 00: Setup & Initialization
 
-This example demonstrates the **foundation of SyntropyLog**: proper initialization with event handling and graceful shutdown. This is the **essential boilerplate** that every SyntropyLog application needs.
+This example demonstrates the **foundation of SyntropyLog**: proper initialization and graceful shutdown. This is the **essential boilerplate** that every SyntropyLog application needs.
 
 ## Why This Example Matters
 
 **Initialization is the most critical part** of using SyntropyLog. Without proper initialization:
 
-- ❌ **Logs won't work** - The framework isn't ready to handle logging
-- ❌ **Context won't propagate** - Correlation IDs and context data won't travel between services
-- ❌ **Shutdown will be messy** - Pending logs might be lost
-- ❌ **Errors won't be handled** - Your app might start in an inconsistent state
+- ❌ **Logs won't work** — the framework isn't ready to handle logging
+- ❌ **Context won't propagate** — correlation IDs won't travel between services
+- ❌ **Shutdown will be messy** — pending logs might be lost
+- ❌ **Errors won't be handled** — your app might start in an inconsistent state
 
 ## Purpose
 
 The goal of this example is to show:
 
-1. **Proper Initialization**: How to initialize SyntropyLog with event handling
-2. **Configuration**: Basic configuration options for the logger
-3. **Graceful Shutdown**: How to properly shut down the framework
-4. **Error Handling**: Handling initialization and shutdown errors
-5. **Process Signals**: Responding to SIGINT and SIGTERM signals
-6. **Boilerplate Foundation**: The reusable code that other examples will build upon
+1. **Proper Initialization**: `await syntropyLog.init(config)` — one line, no wrappers
+2. **Native Addon Check**: confirm whether the Rust pipeline is active
+3. **Graceful Shutdown**: flush all pending logs before the process exits
+4. **Error Handling**: handle initialization and shutdown errors
+5. **Process Signals**: respond to SIGINT and SIGTERM signals
 
 ## Key Concepts
 
-### Event-Driven Initialization
-SyntropyLog uses events to signal when it's ready or if initialization fails. This ensures your application doesn't start logging before the framework is fully initialized.
+### Direct `await` Initialization
+
+`syntropyLog.init()` returns a `Promise<void>`. Just await it:
+
+```typescript
+await syntropyLog.init(config);
+```
+
+That's it. No event listeners, no polling, no wrapper functions needed. The framework is fully ready the moment the promise resolves.
+
+You can call it with almost nothing and it just works:
+
+```typescript
+await syntropyLog.init({ logger: { serviceName: 'my-app' } });
+```
+
+If no transport is configured, SyntropyLog defaults to `ConsoleTransport` (JSON output). You only need to specify transports when you want a different format or destination.
+
+### Native Rust Addon Check
+
+After `init()` resolves, you can check whether the native Rust pipeline is active:
+
+```typescript
+if (syntropyLog.isNativeAddonInUse()) {
+  console.log('⚡ Native Rust addon active');
+} else {
+  console.log('ℹ️  Native addon not active — JS pipeline in use');
+  console.log('   → Requires Node ≥ 20, supported platform (Linux/macOS/Windows x64/arm64)');
+  console.log('   → To force JS mode intentionally: set SYNTROPYLOG_NATIVE_DISABLE=1');
+}
+```
+
+The Rust addon performs serialize + mask + sanitize in a single native pass. On supported platforms it activates automatically. If it's absent, the JS pipeline handles everything transparently — no behavior change, only throughput difference.
 
 ### Graceful Shutdown
-Proper shutdown ensures that all pending log messages are flushed before the process exits, preventing data loss.
 
-### Error Handling
-Robust error handling during initialization and shutdown prevents your application from starting in an inconsistent state.
+Proper shutdown ensures that all pending log messages are flushed before the process exits.
 
 ## What is Boilerplate?
 
@@ -53,14 +80,13 @@ Robust error handling during initialization and shutdown prevents your applicati
 ### Core Boilerplate Functions
 
 ```typescript
-// 1. Initialization with event handling
-async function initializeSyntropyLog() {
-  return new Promise<void>((resolve, reject) => {
-    syntropyLog.on('ready', () => resolve());
-    syntropyLog.on('error', (err) => reject(err));
-    syntropyLog.init(config);
-  });
-}
+// 1. Initialization — direct await, no wrappers
+await syntropyLog.init({
+  logger: {
+    serviceName: 'my-app',
+    level: 'info',
+  },
+});
 
 // 2. Graceful shutdown
 async function gracefulShutdown() {
@@ -77,7 +103,7 @@ process.on('SIGINT', async () => {
 ### Why Boilerplate is Essential
 
 - **Consistency**: Every app initializes and shuts down the same way
-- **Reliability**: Event-driven initialization prevents race conditions
+- **Simplicity**: `await init()` is one line — no Promise wrappers, no event juggling
 - **Maintainability**: Centralized error handling and shutdown logic
 - **Reusability**: The same code works for any SyntropyLog application
 - **Production Safety**: Ensures logs are flushed before process termination
@@ -132,6 +158,91 @@ process.on('SIGINT', async () => {   // Ctrl+C in development
 
 **In later examples**, you'll see this boilerplate extracted into separate files (`boilerplate.ts`) to keep the main application code clean and focused on business logic.
 
+## Configuration Patterns
+
+SyntropyLog does not read config from files or environment variables automatically — all configuration is passed to `init()`. This is intentional: no hidden side effects, no file system access, no surprises in production.
+
+This means **you control how config arrives**. Two common patterns:
+
+### Load from a JSON file
+
+Read the file yourself and pass the result to `init()`:
+
+```typescript
+import { readFileSync } from 'fs';
+import { syntropyLog } from 'syntropylog';
+import type { SyntropyLogConfig } from 'syntropylog';
+
+const config: SyntropyLogConfig = JSON.parse(
+  readFileSync('./syntropylog.config.json', 'utf-8')
+);
+
+await syntropyLog.init(config);
+```
+
+Your `syntropylog.config.json` can contain any valid `SyntropyLogConfig` fields:
+
+```json
+{
+  "logger": {
+    "serviceName": "my-app",
+    "level": "info"
+  }
+}
+```
+
+> Transports cannot be JSON-serialized (they are class instances). Define them in code and merge with the loaded config before calling `init()`.
+
+### Drive config from environment variables
+
+Map `process.env` values to the config object before calling `init()`:
+
+```typescript
+import { syntropyLog, ConsoleTransport, ClassicConsoleTransport } from 'syntropylog';
+
+await syntropyLog.init({
+  logger: {
+    serviceName: process.env.SERVICE_NAME ?? 'my-app',
+    level: (process.env.LOG_LEVEL ?? 'info') as 'info' | 'debug' | 'error',
+    environment: process.env.NODE_ENV ?? 'development',
+    transportList: {
+      json:     new ConsoleTransport(),
+      classic:  new ClassicConsoleTransport(),
+    },
+    env: {
+      development: ['classic'],   // colored output in dev
+      production:  ['json'],      // plain JSON in prod
+      test:        ['json'],
+    },
+  },
+});
+```
+
+The `environment` field activates the matching entry in `env`, which selects which transports are used. Change `NODE_ENV` and the transport set changes automatically — no code modification needed.
+
+### Combine both
+
+You can load the base config from a file and override specific fields from env vars:
+
+```typescript
+const fileConfig: SyntropyLogConfig = JSON.parse(
+  readFileSync('./syntropylog.config.json', 'utf-8')
+);
+
+await syntropyLog.init({
+  ...fileConfig,
+  logger: {
+    ...fileConfig.logger,
+    level: (process.env.LOG_LEVEL ?? fileConfig.logger?.level ?? 'info') as 'info',
+    environment: process.env.NODE_ENV ?? 'development',
+    transportList: { json: new ConsoleTransport() },
+    env: { development: ['json'], production: ['json'] },
+  },
+});
+```
+
+---
+
 ## How to Run
 
 1. **Install Dependencies**:
@@ -152,52 +263,43 @@ process.on('SIGINT', async () => {   // Ctrl+C in development
 
 ## Expected Output
 
-You should see output similar to this:
-
 ```
-🚀 Initializing SyntropyLog...
-{"level":"info","timestamp":"2025-07-16T23:16:58.879Z","service":"syntropylog-main","message":"SyntropyLog framework initialized successfully."}
-✅ SyntropyLog initialized successfully!
+ℹ️  Native addon not active — JS pipeline in use
+   → Requires Node ≥ 20, supported platform (Linux/macOS/Windows x64/arm64)
+   → To force JS mode intentionally: set SYNTROPYLOG_NATIVE_DISABLE=1
 {"level":"info","timestamp":"2025-07-16T23:16:58.879Z","service":"main","message":"Application startup complete { serviceName: 'my-app', version: '1.0.0', environment: 'development' }"}
 {"level":"info","timestamp":"2025-07-16T23:16:58.880Z","service":"main","message":"Application is ready to handle requests"}
 🔄 Shutting down SyntropyLog gracefully...
-{"level":"info","timestamp":"2025-07-16T23:16:58.880Z","service":"syntropylog-main","message":"🔄 LifecycleManager.shutdown() called. Current state: READY"}
-{"level":"info","timestamp":"2025-07-16T23:16:58.880Z","service":"syntropylog-main","message":"🔄 State changed to SHUTTING_DOWN"}
-{"level":"info","timestamp":"2025-07-16T23:16:58.880Z","service":"syntropylog-main","message":"Shutting down SyntropyLog framework..."}
-{"level":"info","timestamp":"2025-07-16T23:16:58.880Z","service":"syntropylog-main","message":"📋 Executing 1 shutdown promises..."}
-{"level":"info","timestamp":"2025-07-16T23:16:58.880Z","service":"syntropylog-main","message":"✅ Shutdown promises completed"}
-{"level":"info","timestamp":"2025-07-16T23:16:58.880Z","service":"syntropylog-main","message":"🔍 Starting external process termination..."}
-{"level":"info","timestamp":"2025-07-16T23:16:58.880Z","service":"syntropylog-main","message":"Found 3 regex-test processes to terminate"}
-{"level":"info","timestamp":"2025-07-16T23:16:58.880Z","service":"syntropylog-main","message":"Terminating 3 external processes..."}
 ✅ SyntropyLog shutdown completed
-{"level":"info","timestamp":"2025-07-16T23:16:59.082Z","service":"syntropylog-main","message":"✅ All regex-test processes terminated successfully"}
-{"level":"info","timestamp":"2025-07-16T23:16:59.082Z","service":"syntropylog-main","message":"All managers have been shut down."}
-{"level":"info","timestamp":"2025-07-16T23:16:59.082Z","service":"syntropylog-main","message":"✅ State changed to SHUTDOWN"}
+✅ Example completed successfully
+```
+
+On Node ≥ 20 with a supported platform the first line becomes:
+
+```
+⚡ Native Rust addon active
 ```
 
 ### What You're Seeing
 
-This output demonstrates several key features:
-
-1. **Structured JSON Logging**: All logs are in JSON format with timestamps, levels, and service names
-2. **Lifecycle Management**: Clear state transitions (READY → SHUTTING_DOWN → SHUTDOWN)
-3. **Graceful Shutdown**: Proper cleanup of external processes and promises
-4. **Framework Logging**: SyntropyLog logs its own internal operations for transparency
-5. **Process Management**: Automatic termination of external processes (regex-test in this case)
+1. **Native addon status**: printed immediately after `init()` — tells you which pipeline is active
+2. **Structured JSON logs**: timestamps, levels, and service names in every line
+3. **Graceful shutdown**: `shutdown()` flushes all pending logs before the process exits
+4. **Signal safety**: SIGINT/SIGTERM handlers call `gracefulShutdown()` to prevent log loss
 
 ## Code Structure
 
-- **`initializeSyntropyLog()`**: Handles initialization with event listeners
-- **`gracefulShutdown()`**: Manages proper shutdown
-- **`main()`**: Orchestrates the application lifecycle
-- **Signal Handlers**: Respond to process termination signals
+- **`initializeSyntropyLog()`**: Calls `await syntropyLog.init(config)` — one line, no wrappers
+- **`gracefulShutdown()`**: Calls `syntropyLog.shutdown()` to flush pending logs
+- **`main()`**: Orchestrates init → native check → log → shutdown
+- **Signal Handlers**: SIGINT/SIGTERM → `gracefulShutdown()` → `process.exit(0)`
 
 ## Next Steps
 
 After understanding this essential boilerplate, you can proceed to:
 
-- **[Example 01: Hello World](./01-hello-world/README.md)** - Learn basic logging with the initialized framework
-- **[Example 02: Basic Context](./02-basic-context/README.md)** - See how context propagation works after proper initialization
-- **[Example 20: Kafka Correlation](./20-basic-kafka-correlation/README.md)** - See the boilerplate in action with message brokers
+- **[Example 01: Hello World](../01-hello-world/README.md)** — Basic logging with the initialized framework
+- **[Example 02: Basic Context](../02-basic-context/README.md)** — Context propagation after proper initialization
+- **[Example 09: All Transports](../09-all-transports/README.md)** — `transportList`, `env`, `override`/`add`/`remove`
 
 **Remember**: Every SyntropyLog application starts with this initialization pattern. Once you understand this, you can build any observability solution with confidence. 
