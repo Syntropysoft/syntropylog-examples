@@ -1,3 +1,17 @@
+// ============================================================================
+// 17-benchmark — SyntropyLog vs Pino vs Winston
+// ----------------------------------------------------------------------------
+// Mide overhead de la pipeline de logging (sin I/O) en throughput y memoria.
+// Todos los loggers escriben a /dev/null para aislar el costo de la lógica
+// (serialización, masking, contexto, fluent API) del costo del sink.
+//
+// Comparación justa requiere que los tres loggers usen el MISMO modelo de I/O:
+// SyntropyLog escribe síncrono al stream desde BenchTransport, Winston usa
+// Stream sync, y Pino se fuerza a `sync: true` (sin SonicBoom buffering) —
+// sin esto, el buffer async de Pino contamina las mediciones de memoria al
+// acumular chunks bajo alta carga.
+// ============================================================================
+
 import { run, bench, baseline, group } from 'mitata';
 import {
   syntropyLog as sl,
@@ -18,15 +32,20 @@ function flushStdout() {
 console.log('\n=== SyntropyLog Benchmark (SyntropyLog vs Pino vs Winston) ===\n');
 flushStdout();
 
-// 1. Setup - We use a dev/null stream to measure logic overhead without I/O bottlenecks
+// ----------------------------------------------------------------------------
+// SETUP — sinks y configuración por lib
+// ----------------------------------------------------------------------------
+// Stream compartido a /dev/null (lo usan SyntropyLog vía BenchTransport y
+// Winston). Pino tiene su propio destination configurado más abajo.
+// ----------------------------------------------------------------------------
 const devNull = fs.createWriteStream(
   process.platform === 'win32' ? '\\\\.\\nul' : '/dev/null'
 );
 
-// SyntropyLog Setup - Singleton is already managed, we just configure it
-// To be fair, we need to bypass the default ConsoleTransport which uses stdout
-// We'll create a simple Transport that writes to devNull.
-// Must handle both: object (JS pipeline) and pre-serialized string (ruta nativa), else double stringify.
+// SyntropyLog: el singleton ya existe; configuramos el logger con un transport
+// que escribe al devNull en vez de stdout. BenchTransport debe manejar AMBOS
+// formatos: object (path JS) y string pre-serializado (path nativo del addon
+// Rust). Sin el typeof check habría double-stringify cuando el addon está activo.
 class BenchTransport extends ConsoleTransport {
   public override log(entry: unknown): void {
     const logString =
@@ -64,10 +83,20 @@ if (!nativeAddonInUse) {
   );
 }
 
-// Pino Setup
-const pinoLogger = pino({ level: 'info' }, devNull);
+// Pino: forzamos `sync: true` para eliminar el buffering de SonicBoom.
+// Sin esto, Pino acumula logs en un buffer interno cuando el throughput es
+// alto (caso "Hello Bench"), inflando artificialmente la memoria medida y
+// haciendo la comparación contra SyntropyLog injusta (SL escribe síncrono).
+// Con sync:true, ambos loggers entregan cada log al sink en el mismo tick.
+const pinoLogger = pino(
+  { level: 'info' },
+  pino.destination({
+    dest: process.platform === 'win32' ? '\\\\.\\nul' : '/dev/null',
+    sync: true,
+  })
+);
 
-// Winston Setup
+// Winston: el Stream transport ya escribe síncrono al stream provisto.
 const winstonLogger = winston.createLogger({
   level: 'info',
   transports: [new winston.transports.Stream({ stream: devNull })],
@@ -75,7 +104,9 @@ const winstonLogger = winston.createLogger({
 
 const ITERATIONS = 5_000;
 
-// Objeto complejo reutilizado en throughput (masking) y en medición de memoria
+// Objeto complejo con campos sensibles (email, token) que activan masking
+// en SyntropyLog. Se reutiliza la misma referencia en todos los tests para
+// que no haya overhead extra de allocation del payload entre libs.
 const complexObj = {
   user: {
     id: 123,
@@ -86,6 +117,15 @@ const complexObj = {
   meta: { reqId: 'abc-123', ua: 'Mozilla/5.0...' },
 };
 
+// ----------------------------------------------------------------------------
+// BLOQUE 1 — Logging Throughput simple (string message, sin payload)
+// ----------------------------------------------------------------------------
+// Mide el costo base de emitir un log con sólo un message string. Es el caso
+// peor para SyntropyLog vs Pino: no hay masking ni serialización pesada, y
+// SyntropyLog igual hace todo su pipeline (matrix, hooks, context lookup),
+// mientras que Pino sólo wrappea el string en JSON. Refleja el costo del
+// "framework completo" vs el "JSON-only logger".
+// ----------------------------------------------------------------------------
 group(`Logging Throughput (${ITERATIONS.toLocaleString()} iterations)`, () => {
   bench('console.log (baseline)', () => {
     devNull.write('Hello Bench\n');
@@ -104,19 +144,34 @@ group(`Logging Throughput (${ITERATIONS.toLocaleString()} iterations)`, () => {
   });
 });
 
-// Fase 3.1: baseline for masking hot path (p99/p999); rules already use _compiledPattern
+// ----------------------------------------------------------------------------
+// BLOQUE 2 — MaskingEngine en aislamiento (p99/p999 hot path)
+// ----------------------------------------------------------------------------
+// Mide SOLO el costo del MaskingEngine procesando complexObj, sin pasar por
+// el logger ni el transport. Sirve de baseline para entender qué fracción
+// del costo de "SyntropyLog (with masking)" corresponde al masking en sí
+// vs al resto de la pipeline. Se clona el objeto en cada iteración porque
+// process() muta in-place (defensa pre-establecida del engine).
+// ----------------------------------------------------------------------------
 const maskingEngine = new MaskingEngine({ enableDefaultRules: true });
 group('MaskingEngine only (complex object, p99/p999 baseline)', () => {
   bench('MaskingEngine.process(complexObj)', () => {
-    // Clone so each run has fresh data (process mutates in place)
     maskingEngine.process(
       JSON.parse(JSON.stringify(complexObj)) as Record<string, unknown>
     );
   });
 });
 
+// ----------------------------------------------------------------------------
+// BLOQUE 3 — Complex object (comparación justa con payload real)
+// ----------------------------------------------------------------------------
+// Mide el caso de uso realista: log con payload nested + campos sensibles.
+// Acá SyntropyLog hace masking automático (email, token) además de la
+// serialización; Pino y Winston solo serializan. Por eso es el comparativo
+// más honesto: muestra el costo de "tener compliance built-in" vs no.
+// SyntropyLog se declara baseline para que el summary lo ponga primero.
+// ----------------------------------------------------------------------------
 group('Complex Object (same payload, fair comparison)', () => {
-  // SyntropyLog como baseline para que salga primero en el summary (referencia de comparación)
   baseline('SyntropyLog (with masking)', () => {
     slLogger.info('User action', complexObj);
   });
@@ -128,7 +183,15 @@ group('Complex Object (same payload, fair comparison)', () => {
   });
 });
 
-// Fluent API: withRetention acepta JSON complejo (anidado); se serializa igual que el resto del entry
+// ----------------------------------------------------------------------------
+// BLOQUE 4 — Fluent API (withRetention + JSON complejo anidado)
+// ----------------------------------------------------------------------------
+// Mide el costo del feature distintivo de SyntropyLog: attach de metadata de
+// compliance/retención por log. Cada iteración crea un child logger via
+// .withRetention(...) Y emite el log — peor caso de la fluent API. Sin
+// comparativos directos en Pino/Winston porque no tienen equivalente
+// out-of-the-box; sirve para trackear regresiones internas entre versiones.
+// ----------------------------------------------------------------------------
 const complexRetention = {
   ttl: 86400,
   maxSize: 100_000,
@@ -140,15 +203,20 @@ const complexRetention = {
   tags: ['pii', 'audit'],
 } as Parameters<typeof slLogger.withRetention>[0];
 
-// Measures: one child logger creation (withRetention) + one log per iteration
 group('Fluent API (withRetention + complex JSON)', () => {
   bench('SyntropyLog (withRetention complex)', () => {
     slLogger.withRetention(complexRetention).info('Audit event');
   });
 });
 
-// Mitata stores times in nanoseconds; its default reporter may show ns or µs by magnitude (mixed units).
-// We run() then print a single table and summary all in microseconds (µs) for consistent comparison.
+// ----------------------------------------------------------------------------
+// EJECUCIÓN + REPORTE (throughput)
+// ----------------------------------------------------------------------------
+// Mitata guarda los tiempos en ns y su reporter default mezcla unidades
+// (ns/µs según magnitud). Acá corremos run() y después imprimimos una tabla
+// y summary unificados, todo en µs, para que la comparación visual sea
+// directa sin que el lector tenga que reconvertir unidades.
+// ----------------------------------------------------------------------------
 console.log('Running benchmarks...\n');
 flushStdout();
 
@@ -248,7 +316,21 @@ if (benchList.length > 0) {
   flushStdout();
 }
 
-// --- Consumo de memoria (heap delta por N iteraciones) ---
+// ============================================================================
+// BLOQUE 5 — Consumo de memoria (heap delta sobre N iteraciones)
+// ----------------------------------------------------------------------------
+// Mide la presión real sobre el heap V8 por cada iteración de log. Para que
+// los números sean confiables hay que correr con `--expose-gc` (use
+// `pnpm run bench:memory`, que ya pasa NODE_OPTIONS=--expose-gc): sin GC
+// controlado entre tasks, el "before" de cada test incluye el heap residual
+// del anterior, y los low-allocators pueden mostrar delta negativo (que se
+// clampea a 0 = "noise").
+//
+// Caveat importante de comparación: requiere que todos los loggers usen el
+// MISMO modelo I/O (sync) — de lo contrario buffers internos async (ej.
+// SonicBoom en Pino default) inflan el delta artificialmente. El setup de
+// arriba fuerza `sync: true` en Pino para evitar este sesgo.
+// ============================================================================
 const MEMORY_ITERATIONS = 100_000;
 const gc = typeof globalThis.gc === 'function' ? globalThis.gc : null;
 
