@@ -12,7 +12,7 @@
     "test:simple": "vitest --config vitest.config.simple.ts"
   },
   "dependencies": {
-    "syntropylog": "1.0.0-rc.1",
+    "syntropylog": "1.0.0-rc.3",
     "chalk": "^5.4.1"
   },
   "devDependencies": {
