@@ -1,3 +1,5 @@
+> 🇬🇧 English | [🇪🇸 Español](README-es.md)
+
 # Example 19: Retention policy registry
 
 Attach compliance/retention rules to audit logs **by name**, declared once,

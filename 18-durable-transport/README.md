@@ -1,3 +1,5 @@
+> 🇬🇧 English | [🇪🇸 Español](README-es.md)
+
 # Example 18: DurableAdapterTransport (guaranteed delivery)
 
 `DurableAdapterTransport` turns audit-flagged log entries into **delivery-guaranteed**

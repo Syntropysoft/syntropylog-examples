@@ -1,3 +1,5 @@
+> 🇬🇧 English | [🇪🇸 Español](README-es.md)
+
 # Example 20: `getStats()` — self-observability
 
 `syntropyLog.getStats()` returns an aggregated snapshot of the instance, so you
