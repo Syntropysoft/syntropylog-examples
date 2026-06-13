@@ -1,0 +1,112 @@
+
+> 17-benchmark@1.0.0 bench:memory
+> npx cross-env NODE_OPTIONS=--expose-gc npx tsx index.bench.ts
+
+
+=== SyntropyLog Benchmark (SyntropyLog vs Pino vs Winston) ===
+
+SyntropyLog native addon (Rust): yes
+Running benchmarks...
+
+[90mcpu: Apple M2[39m
+[90mruntime: node v20.20.1 (arm64-darwin)[39m
+
+benchmark                                                 time (avg)             (min … max)       p75       p99      p999
+-------------------------------------------------------------------------------------------- -----------------------------
+• Logging Throughput (5,000 iterations)
+[90m-------------------------------------------------------------------------------------------- -----------------------------[39m
+console.log (baseline)                                   [33m144 ns[39m/iter   ([36m75.36 ns[39m … [35m9'070 ns[39m)    [90m100 ns[39m  [90m1'896 ns[39m  [90m3'275 ns[39m
+SyntropyLog (JSON)                                       [33m930 ns[39m/iter     ([36m722 ns[39m … [35m4'713 ns[39m)    [90m811 ns[39m  [90m3'256 ns[39m  [90m4'713 ns[39m
+Pino                                                   [33m1'188 ns[39m/iter   ([36m1'000 ns[39m … [35m1'335 µs[39m)  [90m1'125 ns[39m  [90m1'750 ns[39m  [90m4'375 ns[39m
+Winston                                                [33m1'136 ns[39m/iter     ([36m417 ns[39m … [35m5'254 µs[39m)    [90m583 ns[39m  [90m2'125 ns[39m  [90m7'667 ns[39m
+
+[1msummary[22m[90m for Logging Throughput (5,000 iterations)[39m
+  [1m[36mconsole.log (baseline)[39m[22m
+   [32m6.46[39mx faster than [1m[36mSyntropyLog (JSON)[39m[22m
+   [32m7.89[39mx faster than [1m[36mWinston[39m[22m
+   [32m8.26[39mx faster than [1m[36mPino[39m[22m
+
+• MaskingEngine only (complex object, p99/p999 baseline)
+[90m-------------------------------------------------------------------------------------------- -----------------------------[39m
+MaskingEngine.process(complexObj)                      [33m2'162 ns[39m/iter   ([36m1'833 ns[39m … [35m1'295 µs[39m)  [90m2'042 ns[39m  [90m2'875 ns[39m  [90m9'709 ns[39m
+
+[1msummary[22m[90m for MaskingEngine only (complex object, p99/p999 baseline)[39m
+  [1m[36mMaskingEngine.process(complexObj)[39m[22m
+
+• Complex Object — full pipeline cost (Pino/Winston = no-masking reference)
+[90m-------------------------------------------------------------------------------------------- -----------------------------[39m
+SyntropyLog (with masking)                             [33m5'593 ns[39m/iter  ([36m2'916 ns[39m … [35m13'440 µs[39m)  [90m3'500 ns[39m [90m40'959 ns[39m    [90m343 µs[39m
+Pino (complex object)                                  [33m2'387 ns[39m/iter  ([36m1'855 ns[39m … [35m13'108 ns[39m)  [90m2'395 ns[39m  [90m8'683 ns[39m [90m13'108 ns[39m
+Winston (complex object)                               [33m3'983 ns[39m/iter   ([36m1'583 ns[39m … [35m9'710 µs[39m)  [90m1'792 ns[39m  [90m4'166 ns[39m [90m19'417 ns[39m
+
+[1msummary[22m[90m for Complex Object — full pipeline cost (Pino/Winston = no-masking reference)[39m
+  [1m[36mSyntropyLog (with masking)[39m[22m
+   [31m2.34[39mx slower than [1m[36mPino (complex object)[39m[22m
+   [31m1.4[39mx slower than [1m[36mWinston (complex object)[39m[22m
+
+• Rust engine in isolation (pipeline decomposition)
+[90m-------------------------------------------------------------------------------------------- -----------------------------[39m
+Rust only (pre-stringified metadata)                   [33m4'689 ns[39m/iter   ([36m4'460 ns[39m … [35m6'735 ns[39m)  [90m4'678 ns[39m  [90m6'735 ns[39m  [90m6'735 ns[39m
+JS stringify + Rust (logger fast path)                 [33m5'314 ns[39m/iter   ([36m5'075 ns[39m … [35m6'228 ns[39m)  [90m5'305 ns[39m  [90m6'228 ns[39m  [90m6'228 ns[39m
+Rust object path (fastSerialize, JsUnknown crossing)   [33m7'025 ns[39m/iter   ([36m6'647 ns[39m … [35m8'097 ns[39m)  [90m7'426 ns[39m  [90m8'097 ns[39m  [90m8'097 ns[39m
+
+[1msummary[22m[90m for Rust engine in isolation (pipeline decomposition)[39m
+  [1m[36mRust only (pre-stringified metadata)[39m[22m
+   [32m1.13[39mx faster than [1m[36mJS stringify + Rust (logger fast path)[39m[22m
+   [32m1.5[39mx faster than [1m[36mRust object path (fastSerialize, JsUnknown crossing)[39m[22m
+
+• Fluent API (withRetention + complex JSON)
+[90m-------------------------------------------------------------------------------------------- -----------------------------[39m
+SyntropyLog (withRetention complex)                    [33m7'478 ns[39m/iter  ([36m6'099 ns[39m … [35m16'886 ns[39m)  [90m7'436 ns[39m [90m16'886 ns[39m [90m16'886 ns[39m
+
+[1msummary[22m[90m for Fluent API (withRetention + complex JSON)[39m
+  [1m[36mSyntropyLog (withRetention complex)[39m[22m
+
+--- All times in µs (same unit for correct comparison) ---
+benchmark                                             avg (µs)   (min … max) (µs)     p75      p99     p999
+----------------------------------------------------------------------------------------------------------------
+console.log (baseline)                                     0.14   (0.08 … 9.07)      0.10     1.90     3.28
+SyntropyLog (JSON)                                         0.93   (0.72 … 4.71)      0.81     3.26     4.71
+Pino                                                       1.19   (1.00 … 1,335)      1.13     1.75     4.38
+Winston                                                    1.14   (0.42 … 5,254)      0.58     2.13     7.67
+MaskingEngine.process(complexObj)                          2.16   (1.83 … 1,295)      2.04     2.88     9.71
+SyntropyLog (with masking)                                 5.59   (2.92 … 13,440)      3.50    40.96   343.04
+Pino (complex object)                                      2.39   (1.86 … 13.11)      2.39     8.68    13.11
+Winston (complex object)                                   3.98   (1.58 … 9,710)      1.79     4.17    19.42
+Rust only (pre-stringified metadata)                       4.69   (4.46 … 6.73)      4.68     6.73     6.73
+JS stringify + Rust (logger fast path)                     5.31   (5.08 … 6.23)      5.30     6.23     6.23
+Rust object path (fastSerialize, JsUnknown crossing)       7.03   (6.65 … 8.10)      7.43     8.10     8.10
+SyntropyLog (withRetention complex)                        7.48   (6.10 … 16.89)      7.44    16.89    16.89
+
+--- Summary for "Logging Throughput (5,000 iterations)" (all avg in µs, ratio = other/baseline) ---
+  console.log (baseline): avg = 0.14 µs (baseline)
+  SyntropyLog (JSON): avg = 0.93 µs → 6.46x slower than baseline
+  Winston: avg = 1.14 µs → 7.89x slower than baseline
+  Pino: avg = 1.19 µs → 8.26x slower than baseline
+
+--- Summary for "Complex Object — full pipeline cost (Pino/Winston = no-masking reference)" (all avg in µs, ratio = other/baseline) ---
+  Pino (complex object): avg = 2.39 µs (baseline)
+  Winston (complex object): avg = 3.98 µs → 1.67x slower than baseline
+  SyntropyLog (with masking): avg = 5.59 µs → 2.34x slower than baseline
+
+--- Summary for "Rust engine in isolation (pipeline decomposition)" (all avg in µs, ratio = other/baseline) ---
+  Rust only (pre-stringified metadata): avg = 4.69 µs (baseline)
+  JS stringify + Rust (logger fast path): avg = 5.31 µs → 1.13x slower than baseline
+  Rust object path (fastSerialize, JsUnknown crossing): avg = 7.03 µs → 1.50x slower than baseline
+
+--- Memory consumption ---
+benchmark                            heap delta (100,000 iter)  bytes/op
+-------------------------------------------------------------------------------------
+console.log (baseline)                     13.83 MB  145.03
+SyntropyLog (JSON)                         17.26 MB  180.94
+Pino                                       14.49 MB  151.95
+Winston                                    90.15 MB  945.29
+SyntropyLog (with masking)                 21.84 MB  228.96
+Pino (complex object)                      11.72 MB  122.84
+Winston (complex object)                  218.38 MB  2289.90
+SyntropyLog (withRetention complex)        24.33 MB  255.16
+Rust only (pre-stringified)                11.04 MB  115.78
+JS stringify + Rust (fast path)            13.61 MB  142.67
+Rust object path (fastSerialize)            3.54 MB  37.09
+
+(Memory: run `npm run bench:memory` for reliable deltas; otherwise values can be noisy.)

@@ -22,6 +22,7 @@ import type { SyntropyLogConfig } from 'syntropylog';
 import pino from 'pino';
 import winston from 'winston';
 import fs from 'fs';
+import { createRequire } from 'node:module';
 
 function flushStdout() {
   if (typeof process !== 'undefined' && process.stdout?.write) {
@@ -81,6 +82,58 @@ if (!nativeAddonInUse) {
   console.log(
     'Tip: build addon (cd syntropylog-native && pnpm run build). To force JS-only (e.g. for comparison): SYNTROPYLOG_NATIVE_DISABLE=1'
   );
+}
+
+// ----------------------------------------------------------------------------
+// Handle directo al addon nativo (para medirlo en AISLAMIENTO, fuera del logger).
+// Lo resolvemos por el mismo path físico que usa SyntropyLog (createRequire sobre
+// el módulo syntropylog), así obtenemos la MISMA instancia .node — la config de
+// masking ya quedó seteada por sl.init() (configureNative es un OnceCell global).
+// ----------------------------------------------------------------------------
+type NativeAddon = {
+  fastSerialize: (
+    level: string,
+    message: string,
+    timestamp: number,
+    service: string,
+    metadata: unknown
+  ) => string;
+  fastSerializeFromJson?: (
+    level: string,
+    message: string,
+    timestamp: number,
+    service: string,
+    metadataJson: string
+  ) => string;
+};
+
+const requireFromHere = createRequire(import.meta.url);
+let nativeAddon: NativeAddon | null = null;
+if (nativeAddonInUse) {
+  try {
+    const slRequire = createRequire(requireFromHere.resolve('syntropylog'));
+    nativeAddon = slRequire('syntropylog-native') as NativeAddon;
+  } catch {
+    nativeAddon = null;
+  }
+}
+
+// Sanity: confirmamos que el masking realmente corre en el addon (la config la
+// dejó sl.init()). Si no aparece [REDACTED], el bloque aislado mediría sin masking
+// y los números no serían comparables contra el path completo — avisamos.
+if (nativeAddon?.fastSerializeFromJson) {
+  const sample = nativeAddon.fastSerializeFromJson(
+    'info',
+    'sanity',
+    Date.now(),
+    'bench',
+    JSON.stringify({ token: 'very-secret-token' })
+  );
+  if (!sample.includes('[REDACTED]')) {
+    console.log(
+      'WARN: native addon resolved but masking config not applied — isolated Rust numbers run WITHOUT masking (not comparable to the full path).'
+    );
+  }
 }
 
 // Pino: forzamos `sync: true` para eliminar el buffering de SonicBoom.
@@ -163,15 +216,16 @@ group('MaskingEngine only (complex object, p99/p999 baseline)', () => {
 });
 
 // ----------------------------------------------------------------------------
-// BLOQUE 3 — Complex object (comparación justa con payload real)
+// BLOQUE 3 — Objeto complejo: costo del pipeline completo (NO es comparación)
 // ----------------------------------------------------------------------------
-// Mide el caso de uso realista: log con payload nested + campos sensibles.
-// Acá SyntropyLog hace masking automático (email, token) además de la
-// serialización; Pino y Winston solo serializan. Por eso es el comparativo
-// más honesto: muestra el costo de "tener compliance built-in" vs no.
-// SyntropyLog se declara baseline para que el summary lo ponga primero.
+// Caso de uso realista: log con payload nested + campos sensibles. SyntropyLog
+// enmascara (email, token), filtra por matriz, sanitiza y propaga contexto;
+// Pino y Winston SOLO serializan. NO es un head-to-head: sus números van como
+// REFERENCIA (sin masking) para dimensionar qué cuesta el pipeline completo.
+// La única comparación directa legítima es el Bloque 1 (log mínimo). SyntropyLog
+// es baseline para que el summary lo ponga primero.
 // ----------------------------------------------------------------------------
-group('Complex Object (same payload, fair comparison)', () => {
+group('Complex Object — full pipeline cost (Pino/Winston = no-masking reference)', () => {
   baseline('SyntropyLog (with masking)', () => {
     slLogger.info('User action', complexObj);
   });
@@ -182,6 +236,55 @@ group('Complex Object (same payload, fair comparison)', () => {
     winstonLogger.info('User action', complexObj);
   });
 });
+
+// ----------------------------------------------------------------------------
+// BLOQUE 3.5 — Motor de Rust en AISLAMIENTO (descomposición del pipeline)
+// ----------------------------------------------------------------------------
+// Aísla el costo del addon nativo (serialize + mask + sanitize en Rust) del
+// resto del pipeline JS (matrix, contexto, merge, transport write). Permite
+// reportar HONESTAMENTE qué fracción del "Complex Object" es Rust vs JS:
+//   full info()        = matrix + contexto + merge + stringify + Rust + write  (Bloque 3)
+//   stringify + Rust   = JSON.stringify(meta) en JS + addon  (= camino real del logger)
+//   Rust puro          = addon con metadata YA stringificada  (sólo Rust)
+// Deltas:
+//   (full − [stringify+Rust])     = overhead JS del logger (matrix/contexto/merge/write)
+//   ([stringify+Rust] − Rust puro) = costo del JSON.stringify en JS
+// Timestamp fijo (ts) para sacar el ruido del syscall Date.now() de la medición.
+// Sólo corre si el addon nativo está activo; si no, se omite con nota.
+// ----------------------------------------------------------------------------
+const complexJson = JSON.stringify(complexObj); // pre-stringificado para "Rust puro"
+const ts = Date.now();
+if (nativeAddon) {
+  group('Rust engine in isolation (pipeline decomposition)', () => {
+    if (nativeAddon!.fastSerializeFromJson) {
+      bench('Rust only (pre-stringified metadata)', () => {
+        nativeAddon!.fastSerializeFromJson!(
+          'info',
+          'User action',
+          ts,
+          'bench',
+          complexJson
+        );
+      });
+      bench('JS stringify + Rust (logger fast path)', () => {
+        nativeAddon!.fastSerializeFromJson!(
+          'info',
+          'User action',
+          ts,
+          'bench',
+          JSON.stringify(complexObj)
+        );
+      });
+    }
+    bench('Rust object path (fastSerialize, JsUnknown crossing)', () => {
+      nativeAddon!.fastSerialize('info', 'User action', ts, 'bench', complexObj);
+    });
+  });
+} else {
+  console.log(
+    '\n(Skipping "Rust engine in isolation" — native addon not active. Build it or unset SYNTROPYLOG_NATIVE_DISABLE.)'
+  );
+}
 
 // ----------------------------------------------------------------------------
 // BLOQUE 4 — Fluent API (withRetention + JSON complejo anidado)
@@ -368,59 +471,93 @@ const memoryTasks: MemoryTask[] = [
   },
 ];
 
-console.log('\n--- Memory consumption ---');
-flushStdout();
-if (!gc) {
-  console.log(
-    'Tip: run with node --expose-gc for stable results (negative deltas = GC noise).\n'
-  );
-}
-
-// Without --expose-gc we never call gc() between tasks, so "before" is the heap left by
-// the *previous* task. Low-allocators (e.g. Pino) can then show heapDelta < 0 (GC freed
-// more than this task allocated), which we clamp to 0 — so "0 B" is often measurement
-// noise, not real zero allocation. Use pnpm run bench:memory for reliable numbers.
-const results: {
-  name: string;
-  heapDelta: number;
-  bytesPerOp: number;
-  wasClamped: boolean;
-}[] = [];
-for (const task of memoryTasks) {
-  if (gc) gc();
-  const before = process.memoryUsage().heapUsed;
-  for (let i = 0; i < MEMORY_ITERATIONS; i++) task.fn();
-  const after = process.memoryUsage().heapUsed;
-  const rawDelta = after - before;
-  const wasClamped = rawDelta < 0;
-  const heapDelta = wasClamped ? 0 : rawDelta;
-  results.push({
-    name: task.name,
-    heapDelta,
-    bytesPerOp: heapDelta / MEMORY_ITERATIONS,
-    wasClamped,
+// Tareas de memoria del motor aislado (sólo si el addon está activo): permiten
+// ver cuánta de la asignación por op del path completo es Rust vs JS.
+if (nativeAddon) {
+  if (nativeAddon.fastSerializeFromJson) {
+    memoryTasks.push({
+      name: 'Rust only (pre-stringified)',
+      fn: () =>
+        nativeAddon!.fastSerializeFromJson!(
+          'info',
+          'User action',
+          ts,
+          'bench',
+          complexJson
+        ),
+    });
+    memoryTasks.push({
+      name: 'JS stringify + Rust (fast path)',
+      fn: () =>
+        nativeAddon!.fastSerializeFromJson!(
+          'info',
+          'User action',
+          ts,
+          'bench',
+          JSON.stringify(complexObj)
+        ),
+    });
+  }
+  memoryTasks.push({
+    name: 'Rust object path (fastSerialize)',
+    fn: () =>
+      nativeAddon!.fastSerialize('info', 'User action', ts, 'bench', complexObj),
   });
 }
 
-const maxNameLen = Math.max(...results.map((r) => r.name.length));
-console.log(
-  `${'benchmark'.padEnd(maxNameLen)}  heap delta (${MEMORY_ITERATIONS.toLocaleString()} iter)  bytes/op`
-);
-console.log('-'.repeat(maxNameLen + 50));
-for (const r of results) {
-  const deltaStr = r.wasClamped
-    ? `${formatBytes(r.heapDelta)} (noise)`
-    : formatBytes(r.heapDelta);
+console.log('\n--- Memory consumption ---');
+flushStdout();
+// Memory needs a controlled GC between tasks. Without --expose-gc the heap
+// deltas include the previous task's residual and go negative/noisy — numbers
+// misleading enough that we SKIP the table entirely rather than print figures
+// that look authoritative but aren't. Throughput above is still valid.
+if (!gc) {
   console.log(
-    `${r.name.padEnd(maxNameLen)}  ${deltaStr.padStart(14)}  ${r.bytesPerOp.toFixed(2)}`
+    'Skipped — memory measurement needs a controlled GC.\n' +
+      'Run `npm run bench:memory` instead (it passes NODE_OPTIONS=--expose-gc).\n' +
+      '(Throughput results above are valid without it.)'
   );
-}
-if (results.some((r) => r.wasClamped)) {
-  console.log(
-    '\n(Some "0 (noise)" = negative delta clamped; run `npm run bench:memory` for stable memory results.)'
-  );
+  flushStdout();
 } else {
+  const results: {
+    name: string;
+    heapDelta: number;
+    bytesPerOp: number;
+    wasClamped: boolean;
+  }[] = [];
+  for (const task of memoryTasks) {
+    gc();
+    const before = process.memoryUsage().heapUsed;
+    for (let i = 0; i < MEMORY_ITERATIONS; i++) task.fn();
+    const after = process.memoryUsage().heapUsed;
+    const rawDelta = after - before;
+    const wasClamped = rawDelta < 0;
+    const heapDelta = wasClamped ? 0 : rawDelta;
+    results.push({
+      name: task.name,
+      heapDelta,
+      bytesPerOp: heapDelta / MEMORY_ITERATIONS,
+      wasClamped,
+    });
+  }
+
+  const maxNameLen = Math.max(...results.map((r) => r.name.length));
   console.log(
-    '\n(Memory: run `npm run bench:memory` for reliable deltas; otherwise values can be noisy.)'
+    `${'benchmark'.padEnd(maxNameLen)}  heap delta (${MEMORY_ITERATIONS.toLocaleString()} iter)  bytes/op`
   );
+  console.log('-'.repeat(maxNameLen + 50));
+  for (const r of results) {
+    const deltaStr = r.wasClamped
+      ? `${formatBytes(r.heapDelta)} (noise)`
+      : formatBytes(r.heapDelta);
+    console.log(
+      `${r.name.padEnd(maxNameLen)}  ${deltaStr.padStart(14)}  ${r.bytesPerOp.toFixed(2)}`
+    );
+  }
+  if (results.some((r) => r.wasClamped)) {
+    console.log(
+      '\n(A "0 (noise)" here means a low-allocator that GC happened to collect mid-loop — re-run for a clean number.)'
+    );
+  }
+  flushStdout();
 }
