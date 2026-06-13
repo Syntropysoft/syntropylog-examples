@@ -193,7 +193,7 @@ list_examples() {
     echo "${examples[@]}"
 }
 
-# Get list of examples (only 00–17 exist)
+# Auto-discovers every numbered example folder (00–21 and any added later)
 EXAMPLES=($(list_examples))
 
 log_info "📋 Examples found: ${#EXAMPLES[@]}"
@@ -235,5 +235,5 @@ for i in "${!EXAMPLES[@]}"; do
     fi
 done
 
-log_success "🎉 All examples (00–17) have been tested successfully!"
+log_success "🎉 All examples (00–21) have been tested successfully!"
 log_info "📊 Summary: ${#EXAMPLES[@]} examples tested with syntropylog@$VERSION" 
