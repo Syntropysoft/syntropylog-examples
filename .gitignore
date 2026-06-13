@@ -64,4 +64,12 @@ coverage/
 
 # Temporary files
 tmp/
-temp/ 
+temp/
+
+# Backups created by the version-switch scripts (update-to-local.js, etc.)
+package.json.backup
+*.backup
+
+# Stray root pnpm lockfile (examples use per-folder package-lock.json; 17-benchmark
+# keeps its own pnpm-lock.yaml)
+/pnpm-lock.yaml 

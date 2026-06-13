@@ -18,6 +18,6 @@
   },
   "dependencies": {
     "express": "^4.19.2",
-    "syntropylog": "1.0.0-rc.3"
+    "syntropylog": "1.0.0"
   }
 }

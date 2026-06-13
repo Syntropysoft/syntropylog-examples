@@ -16,6 +16,6 @@
     "tsx": "^4.0.0"
   },
   "dependencies": {
-    "syntropylog": "1.0.0-rc.3"
+    "syntropylog": "1.0.0"
   }
 }
