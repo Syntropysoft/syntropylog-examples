@@ -20,7 +20,7 @@ SyntropyLog provides structured logging with context propagation, masking, and p
 
 ---
 
-## Main examples (01–18)
+## Main examples (01–22)
 
 Each example lives in its own folder. Run it with `npm install` and `npm run dev` (or the script shown in the example’s README).
 
@@ -48,8 +48,13 @@ Each example lives in its own folder. Run it with `npm install` and `npm run dev
 | 17 | `16-testing-transports-concepts` | Testing transport concepts |
 | **D — Benchmark** |
 | 18 | `17-benchmark` | Benchmark: SyntropyLog vs Pino vs Winston (self-contained) |
+| **E — Compliance & observability (rc.3 features)** |
+| 19 | `18-durable-transport` | Guaranteed-delivery audit logs (buffer + retry + DLQ) |
+| 20 | `19-retention-policies` | Retention registry: `defineRetentionPolicies` + `withRetention('NAME')` |
+| 21 | `20-getstats-observability` | `syntropyLog.getStats()` — self-observability counters |
+| 22 | `21-correlation-middleware` | Correlation middleware for Express / Fastify |
 
-*Learning path 01–18; folder names 00–17.*
+*Learning path 01–22; folder names 00–21.*
 
 ---
 
