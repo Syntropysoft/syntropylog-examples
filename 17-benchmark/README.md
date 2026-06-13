@@ -78,43 +78,43 @@ Captured the same day. Source: `npm run bench:memory`.
 
 | Logger | M2 | AMD | GH |
 |--------|----|-----|----|
-| console.log (baseline) | 0.14 | 0.25 | 0.29 |
-| **SyntropyLog (JSON)** | **0.93** 🥇 | **1.41** 🥇 | 1.73 |
-| Pino | 1.22 | 1.60 | **1.40** |
-| Winston | 1.17 | 2.01 | 2.55 |
+| console.log (baseline) | 0.14 | 0.25 | 0.26 |
+| **SyntropyLog (JSON)** | **0.93** 🥇 | **1.41** 🥇 | 1.61 |
+| Pino | 1.22 | 1.60 | **1.06** |
+| Winston | 1.17 | 2.01 | 3.55 |
 
-SyntropyLog is the **fastest of the three** on M2 and WSL2 — while running its full pipeline (matrix filtering, masking, sanitization, context read). On the x64 CI box Pino edges ahead by ~15–20% (a bare logger formatting a plain string on a server CPU). SyntropyLog is **faster than Winston everywhere**.
+**This isn't a like-for-like race.** Pino and Winston only format and write; every SyntropyLog number here *also* runs masking, matrix filtering, sanitization, and the context pipeline. SyntropyLog is the **fastest of the three** on M2 and WSL2; on x64 server CPUs a bare Pino is consistently faster on plain strings (gap varies on the noisy CI runner). SyntropyLog is **faster than Winston everywhere** — while doing strictly more on every call.
 
-### Complex Object (same payload) — avg µs
+### Complex Object — full pipeline cost (Pino/Winston: no-masking reference) — avg µs
 
 | Logger | M2 | AMD | GH | Masking active |
 |--------|----|-----|----|----------------|
-| Pino (complex object) | 2.14 | 2.69 | 7.64 | ❌ |
-| Winston (complex object) | 3.58 | 8.67 | 9.47 | ❌ |
-| **SyntropyLog (with masking)** | **5.00** | **5.96** | **7.72** | **✅** |
+| Pino (complex object) | 2.14 | 2.69 | 4.00 | ❌ |
+| Winston (complex object) | 3.58 | 8.67 | 9.96 | ❌ |
+| **SyntropyLog (with masking)** | **5.00** | **5.96** | **7.77** | **✅** |
 
-SyntropyLog is the only one applying masking here, so on quiet hardware (M2, WSL2) it is ~2.2× slower than Pino (which redacts nothing) — that gap *is* the redaction work. vs Winston the result is mixed (faster on AMD/GH, slower on M2).
+This is **not** a head-to-head: SyntropyLog masks, filters by matrix, sanitizes and reads context; Pino and Winston only serialize, so their numbers are a **no-masking reference**. On quiet hardware (M2, WSL2) the full pipeline runs at ~2.2× a bare Pino — that delta *is* the work they don't do. It even lands close to Winston (faster on AMD/GH, slower on M2).
 
-> **⚠️ CI noise — don't over-read the GH complex column.** Two back-to-back runs on the *same* GitHub EPYC box, no code change, gave wildly different complex numbers: SyntropyLog **11.69 → 7.72 µs** and Pino **3.06 → 7.64 µs** (a 2.5× swing). The shared CI runner is too noisy for the complex/tail group. The reliable signal is the bare-metal-ish M2/WSL2 figures above; the GH column is from the second, more representative run and is indicative only.
+> **⚠️ CI noise — don't over-read the GH complex column.** Three runs on the *same* GitHub EPYC box, no code change, gave wildly different complex numbers: SyntropyLog **11.69 → 7.72 → 7.77 µs** and Pino **3.06 → 7.64 → 4.00 µs**. The shared CI runner is too noisy for the complex/tail group. The reliable signal is the bare-metal-ish M2/WSL2 figures above; the GH column is from the latest run and is indicative only.
 
 ### Memory (100,000 iterations) — bytes/op
 
 | Logger | M2 | AMD | GH |
 |--------|----|-----|----|
 | console.log (baseline) | 148 | 149 | 148 |
-| SyntropyLog (JSON) | **182** | **182** | **181** |
-| Pino | 153 | 152 | 181 |
-| Winston | 932 | 947 | 936 |
-| SyntropyLog (with masking) | 230 | 220 | 227 |
-| Pino (complex object) | 121 | 124 | 181 |
-| Winston (complex object) | 2'289 | 2'249 | 2'288 |
-| SyntropyLog (withRetention complex) | 254 | 251 | 254 |
+| SyntropyLog (JSON) | **182** | **182** | **182** |
+| Pino | 153 | 152 | 183 |
+| Winston | 932 | 947 | 934 |
+| SyntropyLog (with masking) | 230 | 220 | 225 |
+| Pino (complex object) | 121 | 124 | ~181 |
+| Winston (complex object) | 2'289 | 2'249 | 2'284 |
+| SyntropyLog (withRetention complex) | 254 | 251 | 253 |
 
 ### Fluent API (withRetention + complex JSON) — avg µs
 
 | Benchmark | M2 | AMD | GH |
 |-----------|----|-----|----|
-| SyntropyLog (withRetention complex) | 6.58 | 7.30 | 10.33 |
+| SyntropyLog (withRetention complex) | 6.58 | 7.30 | 10.04 |
 
 > Full per-percentile tables (p75/p99/p999) live in the library's [benchmark report](https://github.com/Syntropysoft/SyntropyLog/blob/main/docs/benchmark-report.md).
 
@@ -124,11 +124,11 @@ SyntropyLog is the only one applying masking here, so on quiet hardware (M2, WSL
 
 ### Throughput — competitive with Pino, doing far more
 
-SyntropyLog is the **fastest of the three** on M2 and WSL2 (0.93 / 1.41 µs), and ~15–20% behind Pino only on the x64 CI box (1.73 vs 1.40 µs) — where Pino does nothing but format a string. It does all of this while running matrix filtering, masking, sanitization, and the context pipeline. It beats Winston in every environment.
+Remember this is **not** a like-for-like race — Pino and Winston only format a string; SyntropyLog runs the whole safety pipeline on the same call. It is the **fastest of the three** on M2 and WSL2 (0.93 / 1.41 µs); on x64 server CPUs a bare Pino is consistently faster on plain strings (the margin varies run-to-run on the noisy CI runner). It beats Winston in every environment, while doing strictly more.
 
-### Complex object — the honest comparison
+### Complex object — not a comparison, a reference
 
-The complex object group is **not** like-for-like: SyntropyLog has masking on, Pino and Winston do not. On quiet hardware (M2, WSL2) SyntropyLog is ~2.2× slower than Pino — that gap *is* the redaction work, and SyntropyLog is the only logger of the three actually masking sensitive fields. (The CI numbers for this group are noisy — see the disclaimer above.)
+This group is **not** a head-to-head: SyntropyLog masks, Pino and Winston don't. Their numbers are shown only as a no-masking reference to size the pipeline cost. On quiet hardware (M2, WSL2) the full pipeline runs at ~2.2× a bare Pino — that delta *is* the redaction + matrix + sanitization + context work the others skip. (The CI numbers for this group are noisy — see the disclaimer above.)
 
 ### Memory — the real differentiator
 

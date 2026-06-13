@@ -1,0 +1,90 @@
+
+> 17-benchmark@1.0.0 bench:memory /Users/gabrielalejandrogomez/source/_syntrosoft/syntropylog-examples/17-benchmark
+> npx cross-env NODE_OPTIONS=--expose-gc npx tsx index.bench.ts
+
+
+=== SyntropyLog Benchmark (SyntropyLog vs Pino vs Winston) ===
+
+SyntropyLog native addon (Rust): yes
+Running benchmarks...
+
+[90mcpu: Apple M2[39m
+[90mruntime: node v20.20.1 (arm64-darwin)[39m
+
+benchmark                                time (avg)             (min … max)       p75       p99      p999
+--------------------------------------------------------------------------- -----------------------------
+• Logging Throughput (5000 iterations)
+[90m--------------------------------------------------------------------------- -----------------------------[39m
+console.log (baseline)                  [33m143 ns[39m/iter    ([36m76.7 ns[39m … [35m6'073 ns[39m)  [90m96.05 ns[39m  [90m1'632 ns[39m  [90m4'153 ns[39m
+SyntropyLog (JSON)                      [33m932 ns[39m/iter     ([36m730 ns[39m … [35m4'668 ns[39m)    [90m808 ns[39m  [90m3'457 ns[39m  [90m4'668 ns[39m
+Pino                                  [33m1'220 ns[39m/iter   ([36m1'000 ns[39m … [35m1'241 µs[39m)  [90m1'167 ns[39m  [90m1'791 ns[39m  [90m2'750 ns[39m
+Winston                               [33m1'166 ns[39m/iter     ([36m416 ns[39m … [35m9'981 µs[39m)    [90m584 ns[39m  [90m2'042 ns[39m  [90m8'583 ns[39m
+
+[1msummary[22m[90m for Logging Throughput (5000 iterations)[39m
+  [1m[36mconsole.log (baseline)[39m[22m
+   [32m6.51[39mx faster than [1m[36mSyntropyLog (JSON)[39m[22m
+   [32m8.14[39mx faster than [1m[36mWinston[39m[22m
+   [32m8.52[39mx faster than [1m[36mPino[39m[22m
+
+• MaskingEngine only (complex object, p99/p999 baseline)
+[90m--------------------------------------------------------------------------- -----------------------------[39m
+MaskingEngine.process(complexObj)     [33m2'303 ns[39m/iter   ([36m1'833 ns[39m … [35m2'021 µs[39m)  [90m2'125 ns[39m  [90m4'334 ns[39m [90m22'083 ns[39m
+
+[1msummary[22m[90m for MaskingEngine only (complex object, p99/p999 baseline)[39m
+  [1m[36mMaskingEngine.process(complexObj)[39m[22m
+
+• Complex Object (same payload, fair comparison)
+[90m--------------------------------------------------------------------------- -----------------------------[39m
+SyntropyLog (with masking)            [33m4'996 ns[39m/iter  ([36m2'916 ns[39m … [35m12'730 µs[39m)  [90m3'375 ns[39m [90m33'583 ns[39m    [90m121 µs[39m
+Pino (complex object)                 [33m2'142 ns[39m/iter   ([36m1'867 ns[39m … [35m5'376 ns[39m)  [90m2'256 ns[39m  [90m5'225 ns[39m  [90m5'376 ns[39m
+Winston (complex object)              [33m3'583 ns[39m/iter   ([36m1'583 ns[39m … [35m7'924 µs[39m)  [90m1'792 ns[39m  [90m3'667 ns[39m  [90m6'584 ns[39m
+
+[1msummary[22m[90m for Complex Object (same payload, fair comparison)[39m
+  [1m[36mSyntropyLog (with masking)[39m[22m
+   [31m2.33[39mx slower than [1m[36mPino (complex object)[39m[22m
+   [31m1.39[39mx slower than [1m[36mWinston (complex object)[39m[22m
+
+• Fluent API (withRetention + complex JSON)
+[90m--------------------------------------------------------------------------- -----------------------------[39m
+SyntropyLog (withRetention complex)   [33m6'576 ns[39m/iter   ([36m5'791 ns[39m … [35m2'926 µs[39m)  [90m6'292 ns[39m  [90m8'792 ns[39m [90m56'834 ns[39m
+
+[1msummary[22m[90m for Fluent API (withRetention + complex JSON)[39m
+  [1m[36mSyntropyLog (withRetention complex)[39m[22m
+
+--- All times in µs (same unit for correct comparison) ---
+benchmark                            avg (µs)   (min … max) (µs)     p75      p99     p999
+-----------------------------------------------------------------------------------------------
+console.log (baseline)                    0.14   (0.08 … 6.07)      0.10     1.63     4.15
+SyntropyLog (JSON)                        0.93   (0.73 … 4.67)      0.81     3.46     4.67
+Pino                                      1.22   (1.00 … 1,241)      1.17     1.79     2.75
+Winston                                   1.17   (0.42 … 9,981)      0.58     2.04     8.58
+MaskingEngine.process(complexObj)         2.30   (1.83 … 2,021)      2.13     4.33    22.08
+SyntropyLog (with masking)                5.00   (2.92 … 12,730)      3.38    33.58   121.04
+Pino (complex object)                     2.14   (1.87 … 5.38)      2.26     5.23     5.38
+Winston (complex object)                  3.58   (1.58 … 7,924)      1.79     3.67     6.58
+SyntropyLog (withRetention complex)       6.58   (5.79 … 2,926)      6.29     8.79    56.83
+
+--- Summary for "Logging Throughput (5000 iterations)" (all avg in µs, ratio = other/baseline) ---
+  console.log (baseline): avg = 0.14 µs (baseline)
+  SyntropyLog (JSON): avg = 0.93 µs → 6.51x slower than baseline
+  Winston: avg = 1.17 µs → 8.14x slower than baseline
+  Pino: avg = 1.22 µs → 8.52x slower than baseline
+
+--- Summary for "Complex Object (same payload, fair comparison)" (all avg in µs, ratio = other/baseline) ---
+  Pino (complex object): avg = 2.14 µs (baseline)
+  Winston (complex object): avg = 3.58 µs → 1.67x slower than baseline
+  SyntropyLog (with masking): avg = 5.00 µs → 2.33x slower than baseline
+
+--- Memory consumption ---
+benchmark                            heap delta (100.000 iter)  bytes/op
+-------------------------------------------------------------------------------------
+console.log (baseline)                     14.14 MB  148.24
+SyntropyLog (JSON)                         17.36 MB  182.01
+Pino                                       14.58 MB  152.92
+Winston                                    88.93 MB  932.45
+SyntropyLog (with masking)                 21.96 MB  230.28
+Pino (complex object)                      11.52 MB  120.78
+Winston (complex object)                  218.27 MB  2288.77
+SyntropyLog (withRetention complex)        24.21 MB  253.82
+
+(Memory: run `npm run bench:memory` for reliable deltas; otherwise values can be noisy.)

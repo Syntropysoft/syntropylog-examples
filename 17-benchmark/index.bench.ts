@@ -163,15 +163,16 @@ group('MaskingEngine only (complex object, p99/p999 baseline)', () => {
 });
 
 // ----------------------------------------------------------------------------
-// BLOQUE 3 — Complex object (comparación justa con payload real)
+// BLOQUE 3 — Objeto complejo: costo del pipeline completo (NO es comparación)
 // ----------------------------------------------------------------------------
-// Mide el caso de uso realista: log con payload nested + campos sensibles.
-// Acá SyntropyLog hace masking automático (email, token) además de la
-// serialización; Pino y Winston solo serializan. Por eso es el comparativo
-// más honesto: muestra el costo de "tener compliance built-in" vs no.
-// SyntropyLog se declara baseline para que el summary lo ponga primero.
+// Caso de uso realista: log con payload nested + campos sensibles. SyntropyLog
+// enmascara (email, token), filtra por matriz, sanitiza y propaga contexto;
+// Pino y Winston SOLO serializan. NO es un head-to-head: sus números van como
+// REFERENCIA (sin masking) para dimensionar qué cuesta el pipeline completo.
+// La única comparación directa legítima es el Bloque 1 (log mínimo). SyntropyLog
+// es baseline para que el summary lo ponga primero.
 // ----------------------------------------------------------------------------
-group('Complex Object (same payload, fair comparison)', () => {
+group('Complex Object — full pipeline cost (Pino/Winston = no-masking reference)', () => {
   baseline('SyntropyLog (with masking)', () => {
     slLogger.info('User action', complexObj);
   });
