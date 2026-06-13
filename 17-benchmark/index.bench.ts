@@ -507,57 +507,57 @@ if (nativeAddon) {
 
 console.log('\n--- Memory consumption ---');
 flushStdout();
+// Memory needs a controlled GC between tasks. Without --expose-gc the heap
+// deltas include the previous task's residual and go negative/noisy — numbers
+// misleading enough that we SKIP the table entirely rather than print figures
+// that look authoritative but aren't. Throughput above is still valid.
 if (!gc) {
   console.log(
-    'Tip: run with node --expose-gc for stable results (negative deltas = GC noise).\n'
+    'Skipped — memory measurement needs a controlled GC.\n' +
+      'Run `npm run bench:memory` instead (it passes NODE_OPTIONS=--expose-gc).\n' +
+      '(Throughput results above are valid without it.)'
   );
-}
-
-// Without --expose-gc we never call gc() between tasks, so "before" is the heap left by
-// the *previous* task. Low-allocators (e.g. Pino) can then show heapDelta < 0 (GC freed
-// more than this task allocated), which we clamp to 0 — so "0 B" is often measurement
-// noise, not real zero allocation. Use pnpm run bench:memory for reliable numbers.
-const results: {
-  name: string;
-  heapDelta: number;
-  bytesPerOp: number;
-  wasClamped: boolean;
-}[] = [];
-for (const task of memoryTasks) {
-  if (gc) gc();
-  const before = process.memoryUsage().heapUsed;
-  for (let i = 0; i < MEMORY_ITERATIONS; i++) task.fn();
-  const after = process.memoryUsage().heapUsed;
-  const rawDelta = after - before;
-  const wasClamped = rawDelta < 0;
-  const heapDelta = wasClamped ? 0 : rawDelta;
-  results.push({
-    name: task.name,
-    heapDelta,
-    bytesPerOp: heapDelta / MEMORY_ITERATIONS,
-    wasClamped,
-  });
-}
-
-const maxNameLen = Math.max(...results.map((r) => r.name.length));
-console.log(
-  `${'benchmark'.padEnd(maxNameLen)}  heap delta (${MEMORY_ITERATIONS.toLocaleString()} iter)  bytes/op`
-);
-console.log('-'.repeat(maxNameLen + 50));
-for (const r of results) {
-  const deltaStr = r.wasClamped
-    ? `${formatBytes(r.heapDelta)} (noise)`
-    : formatBytes(r.heapDelta);
-  console.log(
-    `${r.name.padEnd(maxNameLen)}  ${deltaStr.padStart(14)}  ${r.bytesPerOp.toFixed(2)}`
-  );
-}
-if (results.some((r) => r.wasClamped)) {
-  console.log(
-    '\n(Some "0 (noise)" = negative delta clamped; run `npm run bench:memory` for stable memory results.)'
-  );
+  flushStdout();
 } else {
+  const results: {
+    name: string;
+    heapDelta: number;
+    bytesPerOp: number;
+    wasClamped: boolean;
+  }[] = [];
+  for (const task of memoryTasks) {
+    gc();
+    const before = process.memoryUsage().heapUsed;
+    for (let i = 0; i < MEMORY_ITERATIONS; i++) task.fn();
+    const after = process.memoryUsage().heapUsed;
+    const rawDelta = after - before;
+    const wasClamped = rawDelta < 0;
+    const heapDelta = wasClamped ? 0 : rawDelta;
+    results.push({
+      name: task.name,
+      heapDelta,
+      bytesPerOp: heapDelta / MEMORY_ITERATIONS,
+      wasClamped,
+    });
+  }
+
+  const maxNameLen = Math.max(...results.map((r) => r.name.length));
   console.log(
-    '\n(Memory: run `npm run bench:memory` for reliable deltas; otherwise values can be noisy.)'
+    `${'benchmark'.padEnd(maxNameLen)}  heap delta (${MEMORY_ITERATIONS.toLocaleString()} iter)  bytes/op`
   );
+  console.log('-'.repeat(maxNameLen + 50));
+  for (const r of results) {
+    const deltaStr = r.wasClamped
+      ? `${formatBytes(r.heapDelta)} (noise)`
+      : formatBytes(r.heapDelta);
+    console.log(
+      `${r.name.padEnd(maxNameLen)}  ${deltaStr.padStart(14)}  ${r.bytesPerOp.toFixed(2)}`
+    );
+  }
+  if (results.some((r) => r.wasClamped)) {
+    console.log(
+      '\n(A "0 (noise)" here means a low-allocator that GC happened to collect mid-loop — re-run for a clean number.)'
+    );
+  }
+  flushStdout();
 }

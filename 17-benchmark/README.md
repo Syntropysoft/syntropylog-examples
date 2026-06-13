@@ -36,10 +36,10 @@ Plus a **memory section**: heap delta over 100,000 iterations per logger.
 cd 17-benchmark
 npm install
 
-# Throughput + memory (basic)
+# Throughput only (the memory section is skipped without --expose-gc)
 npm run bench
 
-# Memory with --expose-gc for stable heap deltas
+# Throughput + memory — passes --expose-gc for stable heap deltas
 npm run bench:memory
 ```
 
