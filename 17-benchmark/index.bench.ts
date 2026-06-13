@@ -22,6 +22,7 @@ import type { SyntropyLogConfig } from 'syntropylog';
 import pino from 'pino';
 import winston from 'winston';
 import fs from 'fs';
+import { createRequire } from 'node:module';
 
 function flushStdout() {
   if (typeof process !== 'undefined' && process.stdout?.write) {
@@ -81,6 +82,58 @@ if (!nativeAddonInUse) {
   console.log(
     'Tip: build addon (cd syntropylog-native && pnpm run build). To force JS-only (e.g. for comparison): SYNTROPYLOG_NATIVE_DISABLE=1'
   );
+}
+
+// ----------------------------------------------------------------------------
+// Handle directo al addon nativo (para medirlo en AISLAMIENTO, fuera del logger).
+// Lo resolvemos por el mismo path físico que usa SyntropyLog (createRequire sobre
+// el módulo syntropylog), así obtenemos la MISMA instancia .node — la config de
+// masking ya quedó seteada por sl.init() (configureNative es un OnceCell global).
+// ----------------------------------------------------------------------------
+type NativeAddon = {
+  fastSerialize: (
+    level: string,
+    message: string,
+    timestamp: number,
+    service: string,
+    metadata: unknown
+  ) => string;
+  fastSerializeFromJson?: (
+    level: string,
+    message: string,
+    timestamp: number,
+    service: string,
+    metadataJson: string
+  ) => string;
+};
+
+const requireFromHere = createRequire(import.meta.url);
+let nativeAddon: NativeAddon | null = null;
+if (nativeAddonInUse) {
+  try {
+    const slRequire = createRequire(requireFromHere.resolve('syntropylog'));
+    nativeAddon = slRequire('syntropylog-native') as NativeAddon;
+  } catch {
+    nativeAddon = null;
+  }
+}
+
+// Sanity: confirmamos que el masking realmente corre en el addon (la config la
+// dejó sl.init()). Si no aparece [REDACTED], el bloque aislado mediría sin masking
+// y los números no serían comparables contra el path completo — avisamos.
+if (nativeAddon?.fastSerializeFromJson) {
+  const sample = nativeAddon.fastSerializeFromJson(
+    'info',
+    'sanity',
+    Date.now(),
+    'bench',
+    JSON.stringify({ token: 'very-secret-token' })
+  );
+  if (!sample.includes('[REDACTED]')) {
+    console.log(
+      'WARN: native addon resolved but masking config not applied — isolated Rust numbers run WITHOUT masking (not comparable to the full path).'
+    );
+  }
 }
 
 // Pino: forzamos `sync: true` para eliminar el buffering de SonicBoom.
@@ -183,6 +236,55 @@ group('Complex Object — full pipeline cost (Pino/Winston = no-masking referenc
     winstonLogger.info('User action', complexObj);
   });
 });
+
+// ----------------------------------------------------------------------------
+// BLOQUE 3.5 — Motor de Rust en AISLAMIENTO (descomposición del pipeline)
+// ----------------------------------------------------------------------------
+// Aísla el costo del addon nativo (serialize + mask + sanitize en Rust) del
+// resto del pipeline JS (matrix, contexto, merge, transport write). Permite
+// reportar HONESTAMENTE qué fracción del "Complex Object" es Rust vs JS:
+//   full info()        = matrix + contexto + merge + stringify + Rust + write  (Bloque 3)
+//   stringify + Rust   = JSON.stringify(meta) en JS + addon  (= camino real del logger)
+//   Rust puro          = addon con metadata YA stringificada  (sólo Rust)
+// Deltas:
+//   (full − [stringify+Rust])     = overhead JS del logger (matrix/contexto/merge/write)
+//   ([stringify+Rust] − Rust puro) = costo del JSON.stringify en JS
+// Timestamp fijo (ts) para sacar el ruido del syscall Date.now() de la medición.
+// Sólo corre si el addon nativo está activo; si no, se omite con nota.
+// ----------------------------------------------------------------------------
+const complexJson = JSON.stringify(complexObj); // pre-stringificado para "Rust puro"
+const ts = Date.now();
+if (nativeAddon) {
+  group('Rust engine in isolation (pipeline decomposition)', () => {
+    if (nativeAddon!.fastSerializeFromJson) {
+      bench('Rust only (pre-stringified metadata)', () => {
+        nativeAddon!.fastSerializeFromJson!(
+          'info',
+          'User action',
+          ts,
+          'bench',
+          complexJson
+        );
+      });
+      bench('JS stringify + Rust (logger fast path)', () => {
+        nativeAddon!.fastSerializeFromJson!(
+          'info',
+          'User action',
+          ts,
+          'bench',
+          JSON.stringify(complexObj)
+        );
+      });
+    }
+    bench('Rust object path (fastSerialize, JsUnknown crossing)', () => {
+      nativeAddon!.fastSerialize('info', 'User action', ts, 'bench', complexObj);
+    });
+  });
+} else {
+  console.log(
+    '\n(Skipping "Rust engine in isolation" — native addon not active. Build it or unset SYNTROPYLOG_NATIVE_DISABLE.)'
+  );
+}
 
 // ----------------------------------------------------------------------------
 // BLOQUE 4 — Fluent API (withRetention + JSON complejo anidado)
@@ -368,6 +470,40 @@ const memoryTasks: MemoryTask[] = [
     fn: () => slLogger.withRetention(complexRetention).info('Audit event'),
   },
 ];
+
+// Tareas de memoria del motor aislado (sólo si el addon está activo): permiten
+// ver cuánta de la asignación por op del path completo es Rust vs JS.
+if (nativeAddon) {
+  if (nativeAddon.fastSerializeFromJson) {
+    memoryTasks.push({
+      name: 'Rust only (pre-stringified)',
+      fn: () =>
+        nativeAddon!.fastSerializeFromJson!(
+          'info',
+          'User action',
+          ts,
+          'bench',
+          complexJson
+        ),
+    });
+    memoryTasks.push({
+      name: 'JS stringify + Rust (fast path)',
+      fn: () =>
+        nativeAddon!.fastSerializeFromJson!(
+          'info',
+          'User action',
+          ts,
+          'bench',
+          JSON.stringify(complexObj)
+        ),
+    });
+  }
+  memoryTasks.push({
+    name: 'Rust object path (fastSerialize)',
+    fn: () =>
+      nativeAddon!.fastSerialize('info', 'User action', ts, 'bench', complexObj),
+  });
+}
 
 console.log('\n--- Memory consumption ---');
 flushStdout();

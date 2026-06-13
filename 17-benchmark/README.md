@@ -23,6 +23,7 @@ Four benchmark groups, all writing to `/dev/null` to isolate logic overhead from
 | **Logging Throughput** | Simple string log: `console.log` (baseline), SyntropyLog, Pino, Winston |
 | **MaskingEngine only** | Time to mask a complex object with sensitive fields (email, token) — p99/p999 baseline |
 | **Complex Object** | Same payload logged across all three loggers (SyntropyLog with masking enabled) |
+| **Rust engine in isolation** | Native addon called directly — decomposes the complex cost into Rust vs JS (only runs when the addon is active) |
 | **Fluent API** | `withRetention(complexJson).info(...)` — child logger creation + log per iteration |
 
 Plus a **memory section**: heap delta over 100,000 iterations per logger.
@@ -96,6 +97,26 @@ Captured the same day. Source: `npm run bench:memory`.
 This is **not** a head-to-head: SyntropyLog masks, filters by matrix, sanitizes and reads context; Pino and Winston only serialize, so their numbers are a **no-masking reference**. On quiet hardware (M2, WSL2) the full pipeline runs at ~2.2× a bare Pino — that delta *is* the work they don't do. It even lands close to Winston (faster on AMD/GH, slower on M2).
 
 > **⚠️ CI noise — don't over-read the GH complex column.** Three runs on the *same* GitHub EPYC box, no code change, gave wildly different complex numbers: SyntropyLog **11.69 → 7.72 → 7.77 µs** and Pino **3.06 → 7.64 → 4.00 µs**. The shared CI runner is too noisy for the complex/tail group. The reliable signal is the bare-metal-ish M2/WSL2 figures above; the GH column is from the latest run and is indicative only.
+
+### Where the complex-object cost actually goes (Rust vs JS)
+
+The "Rust engine in isolation" group decomposes that complex number. It calls the native addon **directly**, outside the logger, so we can see how much of the cost is the Rust engine doing real work (serialize + mask + sanitize) vs the JS framework around it. M2, 3-run avg:
+
+| Layer | avg µs | Share of complex |
+|-------|-------:|-----------------:|
+| **Rust engine** (serialize + mask + sanitize, pre-stringified metadata) | ~4.7 | **~87%** |
+| `JSON.stringify(metadata)` in JS before crossing | ~0.6 | ~11% |
+| Rest of the SyntropyLog JS pipeline (matrix + context + merge + transport) | ~0.1 | ~2% |
+| **Full `slLogger.info('User action', complexObj)`** | **~5.4** | 100% |
+
+**Takeaway:** the SyntropyLog JS layer is nearly free (~0.1 µs). The complex-object number is *not* framework bloat — it is the actual masking + serialization work, and that work runs in Rust. There is also a time/memory trade-off between the two native paths:
+
+| Native path | avg µs | bytes/op | Used by |
+|-------------|-------:|---------:|---------|
+| `fastSerializeFromJson` (JS stringifies, Rust parses once) | ~5.3 | ~142 | logger default (fast path) |
+| `fastSerialize` (Rust crosses the JS object field-by-field) | ~7.0 | ~37 | fallback for circular/non-serializable |
+
+The JSON path is faster but allocates the intermediate string in JS; the object path allocates almost nothing but pays per-field N-API crossing. The logger uses the JSON path by default and falls back to the object path only when `JSON.stringify` can't run.
 
 ### Memory (100,000 iterations) — bytes/op
 
