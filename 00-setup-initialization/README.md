@@ -29,9 +29,9 @@ The goal of this example is to show:
 
 1. **Proper Initialization**: `await syntropyLog.init(config)` — one line, no wrappers
 2. **Native Addon Check**: confirm whether the Rust pipeline is active
-3. **Graceful Shutdown**: flush all pending logs before the process exits
-4. **Error Handling**: handle initialization and shutdown errors
-5. **Process Signals**: respond to SIGINT and SIGTERM signals
+3. **Automatic PII masking**: log an object with sensitive fields and watch them come out redacted — identical under the native and JS engines
+4. **Graceful Shutdown**: flush all pending logs before the process exits
+5. **Error Handling & Process Signals**: handle init/shutdown errors and respond to SIGINT/SIGTERM
 
 ## Key Concepts
 
@@ -68,6 +68,36 @@ if (syntropyLog.isNativeAddonInUse()) {
 ```
 
 The Rust addon performs serialize + mask + sanitize in a single native pass. On supported platforms it activates automatically. If it's absent, the JS pipeline handles everything transparently — no behavior change, only throughput difference.
+
+### Automatic PII Masking (zero code at the call site)
+
+Masking is on by default. Pass an object as the **first** argument and sensitive fields are redacted **before any transport sees them**:
+
+```typescript
+logger.info(
+  { email: 'john.doe@example.com', password: 'hunter2', creditCard: '4111-1111-1111-1234' },
+  'User signed up'
+);
+// → email: "j*******@example.com"  password: "[REDACTED]"  creditCard: "****-****-****-1234"
+```
+
+Two rules of thumb:
+
+- **Metadata goes first** (the object), message second. Anything after the message is `util.format`-inlined into the message string and is **not** masked. So pass sensitive data as the metadata object, not as text.
+- **Identifiers vs credentials.** Identifiers (email, phone, credit card, SSN) keep a format-preserving partial mask — the last 4 aid debugging. Credentials (password, token, secret, …) are fully `[REDACTED]`.
+
+The same masking runs in the native Rust engine and the JS fallback — one declarative rule set, asserted byte-for-byte equal by a shared parity test — so the redacted output is **identical** regardless of which engine is active. Custom masks declared as data (a rule's `spec`) also run natively:
+
+```typescript
+masking: {
+  rules: [
+    // CUIT/CUIL: keep the last 4 digits. Runs in both engines.
+    { pattern: /cuit|cuil/i, strategy: MaskingStrategy.CUSTOM, spec: { scope: 'digits', unmaskEnd: 4 } },
+  ],
+}
+```
+
+See the [masking guide](https://github.com/Syntropysoft/SyntropyLog/blob/main/docs/masking.md) for the full model.
 
 ### Graceful Shutdown
 
@@ -264,28 +294,25 @@ await syntropyLog.init({
 ## Expected Output
 
 ```
-ℹ️  Native addon not active — JS pipeline in use
-   → Requires Node ≥ 20, supported platform (Linux/macOS/Windows x64/arm64)
-   → To force JS mode intentionally: set SYNTROPYLOG_NATIVE_DISABLE=1
-{"level":"info","timestamp":"2025-07-16T23:16:58.879Z","service":"main","message":"Application startup complete { serviceName: 'my-app', version: '1.0.0', environment: 'development' }"}
-{"level":"info","timestamp":"2025-07-16T23:16:58.880Z","service":"main","message":"Application is ready to handle requests"}
+⚡ Native Rust addon active — masking runs in Rust
+{"level":"info","message":"Application startup complete","service":"main","timestamp":"2026-06-14T12:20:26.685+00:00","serviceName":"my-app","version":"1.0.0","environment":"development"}
+
+— Logging an object with sensitive fields —
+{"apiToken":"[REDACTED]","creditCard":"****-****-****-1234","cuit":"**-*****060-7","email":"j*******@example.com","level":"info","message":"User signed up","password":"[REDACTED]","phone":"+* *** *** 1234","service":"main","ssn":"***-**-6789","timestamp":"2026-06-14T12:20:26.685+00:00","userId":123}
+↑ identifiers keep their last digits (debuggable); credentials are fully [REDACTED].
 🔄 Shutting down SyntropyLog gracefully...
 ✅ SyntropyLog shutdown completed
 ✅ Example completed successfully
 ```
 
-On Node ≥ 20 with a supported platform the first line becomes:
-
-```
-⚡ Native Rust addon active
-```
+If the native addon isn't available (older Node, unsupported platform), the first line becomes `ℹ️  Native addon not active — JS pipeline in use (same masked output)` — and every masked value above is byte-for-byte identical.
 
 ### What You're Seeing
 
 1. **Native addon status**: printed immediately after `init()` — tells you which pipeline is active
-2. **Structured JSON logs**: timestamps, levels, and service names in every line
-3. **Graceful shutdown**: `shutdown()` flushes all pending logs before the process exits
-4. **Signal safety**: SIGINT/SIGTERM handlers call `gracefulShutdown()` to prevent log loss
+2. **Masked PII**: email/phone/card/ssn partially masked, password/token/cuit redacted — with zero code at the call site
+3. **Structured JSON logs**: metadata as real fields (object-first), not inlined into the message
+4. **Graceful shutdown & signal safety**: `shutdown()` flushes pending logs; SIGINT/SIGTERM handlers prevent log loss
 
 ## Code Structure
 
