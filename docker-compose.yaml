@@ -1,0 +1,60 @@
+
+services:
+  # Redis Single Instance (for ventas)
+  redis-ventas:
+    image: 'redis:alpine'
+    container_name: redis-ventas-example
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis-ventas-data:/data
+    command: redis-server --appendonly yes
+
+  # Redis Cluster (for delivery)
+  redis-cluster-node1:
+    image: 'redis:alpine'
+    container_name: redis-cluster-node1
+    ports:
+      - '7001:7001'
+    volumes:
+      - redis-cluster-node1-data:/data
+    command: redis-server --port 7001 --cluster-enabled yes --cluster-config-file nodes.conf --cluster-node-timeout 5000 --appendonly yes
+
+  redis-cluster-node2:
+    image: 'redis:alpine'
+    container_name: redis-cluster-node2
+    ports:
+      - '7002:7002'
+    volumes:
+      - redis-cluster-node2-data:/data
+    command: redis-server --port 7002 --cluster-enabled yes --cluster-config-file nodes.conf --cluster-node-timeout 5000 --appendonly yes
+
+  redis-cluster-node3:
+    image: 'redis:alpine'
+    container_name: redis-cluster-node3
+    ports:
+      - '7003:7003'
+    volumes:
+      - redis-cluster-node3-data:/data
+    command: redis-server --port 7003 --cluster-enabled yes --cluster-config-file nodes.conf --cluster-node-timeout 5000 --appendonly yes
+
+  # Redis Cluster Initializer
+  redis-cluster-init:
+    image: 'redis:alpine'
+    container_name: redis-cluster-init
+    depends_on:
+      - redis-cluster-node1
+      - redis-cluster-node2
+      - redis-cluster-node3
+    command: >
+      sh -c "
+        sleep 10 &&
+        redis-cli --cluster create redis-cluster-node1:7001 redis-cluster-node2:7002 redis-cluster-node3:7003 --cluster-replicas 0 --cluster-yes &&
+        echo 'Redis cluster initialized!'
+      "
+
+volumes:
+  redis-ventas-data:
+  redis-cluster-node1-data:
+  redis-cluster-node2-data:
+  redis-cluster-node3-data:

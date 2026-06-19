@@ -1,0 +1,21 @@
+{
+  "name": "20-getstats-observability",
+  "version": "1.0.0",
+  "description": "SyntropyLog syntropyLog.getStats() — self-observability counters",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "clean": "rm -rf dist",
+    "build": "tsc",
+    "start": "npm run clean && npm run build && node dist/index.js",
+    "dev": "npm run clean && tsx src/index.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0",
+    "tsx": "^4.0.0"
+  },
+  "dependencies": {
+    "syntropylog": "1.1.0"
+  }
+}

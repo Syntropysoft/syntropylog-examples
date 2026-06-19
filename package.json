@@ -1,0 +1,26 @@
+{
+  "name": "syntropylog-examples",
+  "version": "1.0.0",
+  "description": "SyntropyLog Examples Collection",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "echo \"No tests specified\" && exit 0",
+    "build:all": "echo 'Build all examples individually'",
+    "clean:all": "echo 'Clean all examples individually'",
+    "dev:all": "echo 'Run examples individually'"
+  },
+  "devDependencies": {
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3"
+  },
+  "keywords": [
+    "syntropylog",
+    "examples",
+    "logging",
+    "observability",
+    "monorepo"
+  ],
+  "author": "Gabriel Alejandro Gomez",
+  "license": "MIT"
+} 
