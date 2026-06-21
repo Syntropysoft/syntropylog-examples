@@ -1,0 +1,38 @@
+{
+  "name": "distributed-orders-kafka",
+  "version": "1.0.0",
+  "private": true,
+  "description": "SyntropyLog showcase: one correlation-id threaded through Express, NestJS and Fastify over Kafka + Redis, visualized live in a dashboard.",
+  "type": "commonjs",
+  "workspaces": [
+    "packages/*",
+    "services/*",
+    "frontend"
+  ],
+  "scripts": {
+    "infra:up": "docker compose up -d",
+    "infra:down": "docker compose down -v",
+    "infra:logs": "docker compose logs -f",
+    "build:shared": "npm run build -w @distributed/shared",
+    "predev": "npm run build:shared",
+    "dev": "concurrently -n shared,gateway,orders,payments,inventory,notifs,web -c gray,cyan,magenta,green,blue,yellow,white \"npm:dev:shared\" \"npm:dev:gateway\" \"npm:dev:orders\" \"npm:dev:payments\" \"npm:dev:inventory\" \"npm:dev:notifications\" \"npm:dev:web\"",
+    "dev:shared": "npm run dev -w @distributed/shared",
+    "dev:gateway": "wait-on packages/shared/dist/index.js && npm run dev -w @distributed/gateway",
+    "dev:orders": "wait-on packages/shared/dist/index.js && npm run dev -w @distributed/orders",
+    "dev:payments": "wait-on packages/shared/dist/index.js && npm run dev -w @distributed/payments",
+    "dev:inventory": "wait-on packages/shared/dist/index.js && npm run dev -w @distributed/inventory",
+    "dev:notifications": "wait-on packages/shared/dist/index.js && npm run dev -w @distributed/notifications",
+    "dev:web": "npm run dev -w @distributed/frontend",
+    "typecheck": "tsc -b --pretty",
+    "clean": "rimraf \"packages/*/dist\" \"services/*/dist\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0",
+    "rimraf": "^6.0.1",
+    "typescript": "^5.6.3",
+    "wait-on": "^8.0.1"
+  },
+  "engines": {
+    "node": "20.x"
+  }
+}

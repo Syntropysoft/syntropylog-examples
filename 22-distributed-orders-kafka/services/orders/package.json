@@ -1,0 +1,25 @@
+{
+  "name": "@distributed/orders",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "ts-node-dev --respawn --transpile-only --exit-child src/main.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/main.js"
+  },
+  "dependencies": {
+    "@distributed/shared": "*",
+    "@nestjs/common": "^10.4.4",
+    "@nestjs/core": "^10.4.4",
+    "@nestjs/platform-express": "^10.4.4",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.1",
+    "syntropylog": "1.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.16.0",
+    "ts-node": "^10.9.2",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.6.3"
+  }
+}

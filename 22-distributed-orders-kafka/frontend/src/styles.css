@@ -1,0 +1,438 @@
+:root {
+  --bg: #0b0f17;
+  --panel: #131a26;
+  --panel-2: #0f1623;
+  --border: #1f2937;
+  --text: #e5e7eb;
+  --muted: #94a3b8;
+  --accent: #8b5cf6;
+
+  --svc-gateway: #3b82f6;
+  --svc-orders: #ec4899;
+  --svc-payments: #22c55e;
+  --svc-inventory: #06b6d4;
+  --svc-notifications: #94a3b8;
+
+  --info: #9aa4b2;
+  --warn: #f59e0b;
+  --error: #ef4444;
+  --ok: #22c55e;
+}
+
+* {
+  box-sizing: border-box;
+}
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  font-size: 14px;
+}
+code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  background: #0a1322;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0 5px;
+  font-size: 12px;
+  color: #cbd5e1;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(180deg, #0f1623, #0b0f17);
+}
+.brand {
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: 0.2px;
+}
+.brand .logo {
+  color: var(--accent);
+  margin-right: 4px;
+}
+.tag {
+  color: var(--muted);
+  font-size: 12px;
+}
+.conn {
+  margin-left: auto;
+  font-size: 12px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+}
+.conn.on {
+  color: var(--ok);
+  border-color: #14532d;
+  background: #08210f;
+}
+.conn.off {
+  color: var(--warn);
+}
+
+.grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  gap: 16px;
+  padding: 16px;
+  min-height: 0;
+}
+@media (max-width: 900px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Storefront ─────────────────────────────────────────── */
+.storefront,
+.dashboard {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.storefront h2,
+.dashboard h2 {
+  margin: 0 0 12px;
+  font-size: 15px;
+}
+.catalog {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.product {
+  display: grid;
+  grid-template-columns: 36px 1fr auto auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+.product .emoji {
+  font-size: 22px;
+}
+.pname {
+  font-weight: 600;
+}
+.psku {
+  color: var(--muted);
+  font-size: 11px;
+}
+.pprice {
+  font-variant-numeric: tabular-nums;
+  color: #cbd5e1;
+}
+.qty {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.qty button {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: #0a1322;
+  color: var(--text);
+  cursor: pointer;
+  font-size: 15px;
+}
+.qty span {
+  min-width: 16px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.cart {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 14px;
+  gap: 12px;
+}
+.cart-total {
+  font-size: 15px;
+}
+.place {
+  background: var(--accent);
+  border: none;
+  color: white;
+  font-weight: 700;
+  padding: 10px 18px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.place:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.hint {
+  margin-top: 14px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.result {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  border: 1px solid var(--border);
+}
+.result.ok {
+  background: #08210f;
+  border-color: #14532d;
+}
+.result.err {
+  background: #2a0e0e;
+  border-color: #7f1d1d;
+}
+
+/* ── Dashboard ──────────────────────────────────────────── */
+.dash-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.trace-pick {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.chip {
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--panel-2);
+  color: var(--muted);
+  cursor: pointer;
+}
+.chip.on {
+  border-color: var(--accent);
+  color: #fff;
+  background: #2a1d4d;
+}
+.corr-line {
+  color: var(--muted);
+  font-size: 12px;
+  margin: 8px 0 12px;
+}
+
+/* Pipeline */
+.pipeline {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 14px;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow-x: auto;
+}
+.parallel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.node {
+  min-width: 110px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: #0a1322;
+  transition: all 0.25s ease;
+  opacity: 0.45;
+}
+.node.active {
+  opacity: 1;
+}
+.node-name {
+  font-weight: 700;
+  font-size: 13px;
+}
+.node-sub {
+  font-size: 11px;
+  color: var(--muted);
+}
+.node-count {
+  font-size: 11px;
+  margin-top: 4px;
+  font-variant-numeric: tabular-nums;
+  color: #cbd5e1;
+}
+.node.c-blue.active {
+  border-color: var(--svc-gateway);
+  box-shadow: 0 0 0 1px var(--svc-gateway), 0 0 18px -6px var(--svc-gateway);
+}
+.node.c-pink.active {
+  border-color: var(--svc-orders);
+  box-shadow: 0 0 0 1px var(--svc-orders), 0 0 18px -6px var(--svc-orders);
+}
+.node.c-green.active {
+  border-color: var(--svc-payments);
+  box-shadow: 0 0 0 1px var(--svc-payments), 0 0 18px -6px var(--svc-payments);
+}
+.node.c-gray.active {
+  border-color: var(--svc-notifications);
+  box-shadow: 0 0 0 1px var(--svc-notifications);
+}
+.node.warn.active {
+  border-color: var(--warn) !important;
+  box-shadow: 0 0 0 1px var(--warn), 0 0 18px -6px var(--warn) !important;
+}
+.node.error.active {
+  border-color: var(--error) !important;
+  box-shadow: 0 0 0 1px var(--error), 0 0 18px -6px var(--error) !important;
+}
+.hop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: var(--muted);
+  font-size: 10px;
+  padding: 0 2px;
+}
+.hop-label {
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.hop-arrow {
+  font-size: 16px;
+  color: #475569;
+}
+
+/* Log stream */
+.logstream {
+  margin-top: 12px;
+  flex: 1;
+  min-height: 200px;
+  overflow-y: auto;
+  background: #070b12;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.empty {
+  color: var(--muted);
+  padding: 16px;
+  text-align: center;
+}
+.logrow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  padding: 3px 6px;
+  border-bottom: 1px solid #0e1726;
+}
+.logrow .ts {
+  color: #5b6677;
+  font-variant-numeric: tabular-nums;
+}
+.svc {
+  font-weight: 700;
+  padding: 0 6px;
+  border-radius: 4px;
+  font-size: 11px;
+}
+.svc-gateway {
+  color: var(--svc-gateway);
+  background: #0c2036;
+}
+.svc-orders {
+  color: var(--svc-orders);
+  background: #2c1022;
+}
+.svc-payments {
+  color: var(--svc-payments);
+  background: #0c2417;
+}
+.svc-inventory {
+  color: var(--svc-inventory);
+  background: #06222a;
+}
+.svc-notifications {
+  color: var(--svc-notifications);
+  background: #161c27;
+}
+.lvl-pill {
+  font-size: 10px;
+  text-transform: uppercase;
+  padding: 0 5px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+}
+.lvl-pill.lvl-info {
+  color: var(--info);
+}
+.lvl-pill.lvl-warn {
+  color: var(--warn);
+  border-color: #7c4a06;
+}
+.lvl-pill.lvl-error {
+  color: var(--error);
+  border-color: #7f1d1d;
+}
+.logrow.lvl-warn {
+  background: #1a1405;
+}
+.logrow.lvl-error {
+  background: #1f0c0c;
+}
+.msg {
+  color: var(--text);
+}
+.fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  color: var(--muted);
+}
+.field {
+  background: #0c1422;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0 5px;
+}
+.field b {
+  color: #7c8aa0;
+  font-weight: 600;
+}
+.field.masked {
+  border-color: #3b2a06;
+  background: #1a1405;
+  color: #fbbf24;
+}
+.field.masked b {
+  color: #d97706;
+}

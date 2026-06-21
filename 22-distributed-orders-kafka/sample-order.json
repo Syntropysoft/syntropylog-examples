@@ -1,0 +1,8 @@
+{
+  "customer": { "id": "CUST-001", "name": "Ada Lovelace", "email": "ada.lovelace@example.com" },
+  "items": [
+    { "sku": "SKU-PHONE", "name": "Phone X", "qty": 1, "unitPrice": 999 },
+    { "sku": "SKU-HEADPHONES", "name": "Noise-Cancel Headphones", "qty": 2, "unitPrice": 199 }
+  ],
+  "payment": { "cardNumber": "4111 1111 1111 1234", "cardHolder": "ADA LOVELACE", "cvv": "321", "expiry": "12/29" }
+}
