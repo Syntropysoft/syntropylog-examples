@@ -10,6 +10,8 @@
     "frontend"
   ],
   "scripts": {
+    "up": "bash scripts/up.sh",
+    "down": "bash scripts/down.sh",
     "infra:up": "docker compose up -d",
     "infra:down": "docker compose down -v",
     "infra:logs": "docker compose logs -f",
@@ -21,9 +23,12 @@
     "dev:orders": "wait-on packages/shared/dist/index.js && npm run dev -w @distributed/orders",
     "dev:payments": "wait-on packages/shared/dist/index.js && npm run dev -w @distributed/payments",
     "dev:inventory": "wait-on packages/shared/dist/index.js && npm run dev -w @distributed/inventory",
+    "dev:inventory-py": "bash services/inventory-py/run.sh",
     "dev:notifications": "wait-on packages/shared/dist/index.js && npm run dev -w @distributed/notifications",
     "dev:web": "npm run dev -w @distributed/frontend",
-    "typecheck": "tsc -b --pretty",
+    "predev:polyglot": "npm run build:shared",
+    "dev:polyglot": "concurrently -n shared,gateway,orders,payments,inventory-py,notifs,web -c gray,cyan,magenta,green,blue,yellow,white \"npm:dev:shared\" \"npm:dev:gateway\" \"npm:dev:orders\" \"npm:dev:payments\" \"npm:dev:inventory-py\" \"npm:dev:notifications\" \"npm:dev:web\"",
+    "typecheck": "tsc --noEmit -p packages/shared && tsc --noEmit -p services/gateway && tsc --noEmit -p services/orders && tsc --noEmit -p services/payments && tsc --noEmit -p services/inventory && tsc --noEmit -p services/notifications && tsc --noEmit -p frontend",
     "clean": "rimraf \"packages/*/dist\" \"services/*/dist\""
   },
   "devDependencies": {
