@@ -1,0 +1,3 @@
+/Users/gabrielalejandrogomez/source/_syntrosoft/syntropylog-examples/22-distributed-orders-kafka/services/traceability/bin/aot/bench/span.json
+/Users/gabrielalejandrogomez/source/_syntrosoft/syntropylog-examples/22-distributed-orders-kafka/services/traceability/bin/aot/Traceability
+/Users/gabrielalejandrogomez/source/_syntrosoft/syntropylog-examples/22-distributed-orders-kafka/services/traceability/bin/aot/libe_sqlite3.dylib
