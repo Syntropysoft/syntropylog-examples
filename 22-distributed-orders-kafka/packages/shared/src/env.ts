@@ -13,4 +13,7 @@ export const env = {
   INVENTORY_PORT: Number(process.env.INVENTORY_PORT ?? 3003),
 
   ORDERS_URL: process.env.ORDERS_URL ?? 'http://localhost:3001',
+
+  // The .NET AOT traceability collector — where spans (and later logs) are pushed.
+  COLLECTOR_URL: process.env.COLLECTOR_URL ?? 'http://localhost:9317',
 };
