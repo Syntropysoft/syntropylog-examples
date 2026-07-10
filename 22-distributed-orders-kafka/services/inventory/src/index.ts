@@ -13,6 +13,7 @@ import {
   ensureTopics,
   publishEvent,
   createRedis,
+  createTracing,
   stockKey,
   ALL_TOPICS,
   SVC_INVENTORY,
@@ -32,6 +33,7 @@ const SEED_STOCK: Record<string, number> = {
 
 async function main(): Promise<void> {
   const { logger, contextManager, shutdown } = await bootstrap(SVC_INVENTORY);
+  const { tracer, shutdown: shutdownTracing } = createTracing(SVC_INVENTORY, env.COLLECTOR_URL);
   const redis = createRedis();
 
   // Seed stock once (NX = only if absent).
@@ -48,32 +50,51 @@ async function main(): Promise<void> {
     topics: [TOPIC_ORDER_CREATED],
     contextManager,
     logger,
-    eachEvent: async ({ value: order }) => {
-      contextManager.set('orderId', order.orderId);
-      contextManager.set('operation', 'reserve_stock');
-      logger.info({ orderId: order.orderId, itemCount: order.items.length }, 'reserving stock');
-
-      const shortages: StockReservedEvent['shortages'] = [];
-      for (const item of order.items) {
-        const available = Number((await redis.get(stockKey(item.sku))) ?? 0);
-        if (available >= item.qty) {
-          await redis.decrby(stockKey(item.sku), item.qty);
-        } else {
-          shortages.push({ sku: item.sku, requested: item.qty, available });
-        }
-      }
-
-      const reserved = shortages.length === 0;
-      if (reserved) {
-        logger.info({ orderId: order.orderId }, 'stock reserved');
-      } else {
-        logger.warn({ orderId: order.orderId, shortageCount: shortages.length }, 'stock shortage');
-      }
-
-      const event: StockReservedEvent = { orderId: order.orderId, reserved, shortages };
-      await publishEvent(producer, TOPIC_STOCK_RESERVED, order.orderId, event, contextManager);
+    eachEvent: async ({ value: order, headers }) => {
+      tracer.extract(headers); // continue the trace across Kafka
+      await tracer.withSpan(
+        'consume order.created',
+        { orderId: order.orderId },
+        () => reserveStock(order),
+        'consumer'
+      );
     },
   });
+
+  async function reserveStock(order: OrderCreatedEvent): Promise<void> {
+    contextManager.set('orderId', order.orderId);
+    contextManager.set('operation', 'reserve_stock');
+    logger.info({ orderId: order.orderId, itemCount: order.items.length }, 'reserving stock');
+
+    const shortages: StockReservedEvent['shortages'] = [];
+    for (const item of order.items) {
+      const available = Number((await redis.get(stockKey(item.sku))) ?? 0);
+      if (available >= item.qty) {
+        await redis.decrby(stockKey(item.sku), item.qty);
+      } else {
+        shortages.push({ sku: item.sku, requested: item.qty, available });
+      }
+    }
+
+    const reserved = shortages.length === 0;
+    if (reserved) {
+      logger.info({ orderId: order.orderId }, 'stock reserved');
+    } else {
+      logger.warn({ orderId: order.orderId, shortageCount: shortages.length }, 'stock shortage');
+    }
+
+    const event: StockReservedEvent = { orderId: order.orderId, reserved, shortages };
+    await tracer.withSpan(
+      'publish stock.reserved',
+      { orderId: order.orderId },
+      async () => {
+        const traceHeaders: Record<string, string> = {};
+        tracer.inject(traceHeaders);
+        await publishEvent(producer, TOPIC_STOCK_RESERVED, order.orderId, event, contextManager, traceHeaders);
+      },
+      'producer'
+    );
+  }
 
   const app = express();
   app.get('/health', (_req, res) => {
@@ -97,6 +118,7 @@ async function main(): Promise<void> {
     await consumer.disconnect().catch(() => {});
     await producer.disconnect().catch(() => {});
     await redis.quit().catch(() => {});
+    await shutdownTracing();
     await shutdown();
     process.exit(0);
   };
