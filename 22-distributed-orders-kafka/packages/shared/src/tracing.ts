@@ -91,10 +91,14 @@ export interface ExporterOptions {
   flushMs?: number;
 }
 
+/** Cap on the retry buffer per stream, so a long collector outage can't grow unbounded. */
+const MAX_BUFFER = 20_000;
+
 /**
  * Buffers spans/logs and flushes them to the collector in batches — the OTel
- * BatchProcessor/exporter pattern. Best-effort (Silent Observer): a failed flush drops
- * the batch rather than throwing (durable buffering is a later phase).
+ * BatchProcessor/exporter pattern. On a failed flush the batch is **kept and retried** on
+ * the next tick (a bounded, in-memory exporter queue): kill the collector, keep ordering,
+ * restart it, and the backlog flushes in. Never throws (Silent Observer).
  */
 export class OtlpLiteExporter {
   private readonly endpoint: string;
@@ -133,25 +137,33 @@ export class OtlpLiteExporter {
     if (this.spans.length === 0) return; // guard
     const batch = this.spans;
     this.spans = [];
-    await this.post('/v1/spans', batch);
+    if (!(await this.post('/v1/spans', batch))) {
+      // Collector down → keep the batch and retry on the next tick (durable exporter
+      // queue), bounded so a long outage can't grow unbounded. Drop-oldest past the cap.
+      this.spans = [...batch, ...this.spans].slice(-MAX_BUFFER);
+    }
   }
 
   private async flushLogs(): Promise<void> {
     if (this.logs.length === 0) return; // guard
     const batch = this.logs;
     this.logs = [];
-    await this.post('/v1/logs', batch);
+    if (!(await this.post('/v1/logs', batch))) {
+      this.logs = [...batch, ...this.logs].slice(-MAX_BUFFER);
+    }
   }
 
-  private async post(path: string, batch: unknown[]): Promise<void> {
+  /** POST a batch; returns true on success. Never throws (Silent Observer). */
+  private async post(path: string, batch: unknown[]): Promise<boolean> {
     try {
-      await fetch(`${this.endpoint}${path}`, {
+      const res = await fetch(`${this.endpoint}${path}`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify(batch),
       });
+      return res.ok;
     } catch {
-      /* Silent Observer — never let a telemetry hiccup touch the request path. */
+      return false; // never let a telemetry hiccup touch the request path
     }
   }
 }
@@ -245,8 +257,9 @@ export function createTracer(serviceName: string, exporter: OtlpLiteExporter): T
 /**
  * A SyntropyLog transport that pushes every already-masked log entry to the collector's
  * `/v1/logs` (batched) — this is the log path (the Redis log bus was retired). The executor's
- * sink is HTTP: same "declare once, route anywhere", new target. Best-effort (Silent-Observer
- * drop on failure) — telemetry never touches the request path.
+ * sink is HTTP: same "declare once, route anywhere", new target. On a failed flush the batch is
+ * **kept and retried** (bounded exporter queue) — collector down never loses logs; they flush in
+ * on recovery. Never throws (Silent Observer).
  */
 export function createCollectorLogTransport(
   endpoint: string,
@@ -259,15 +272,18 @@ export function createCollectorLogTransport(
     if (buffer.length === 0) return; // guard
     const batch = buffer;
     buffer = [];
+    let ok = false;
     try {
-      await fetch(`${endpoint}/v1/logs`, {
+      const res = await fetch(`${endpoint}/v1/logs`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify(batch),
       });
+      ok = res.ok;
     } catch {
-      /* Silent Observer — telemetry never touches the app. */
+      ok = false; // collector unreachable
     }
+    if (!ok) buffer = [...batch, ...buffer].slice(-MAX_BUFFER); // retry next tick, bounded
   };
 
   const timer = setInterval(() => void flush(), flushMs);

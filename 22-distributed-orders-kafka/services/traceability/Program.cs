@@ -26,7 +26,12 @@ builder.Services.ConfigureHttpJsonOptions(o =>
 builder.Logging.ClearProviders();
 builder.Services.AddSl4n(cfg => cfg.Masking.EnableDefaultRules = true);
 
-builder.Services.AddSingleton<ISpanStore, InMemorySpanStore>();
+// Durable store: SQLite (survives a collector restart). Same ISpanStore abstraction, so the
+// endpoints and the pure assembler are unchanged (DIP). Override the path with TRACE_DB.
+string dbPath = Environment.GetEnvironmentVariable("TRACE_DB")
+    ?? Path.Combine(AppContext.BaseDirectory, "traceability.db");
+builder.Services.AddSingleton(new SqliteStore(dbPath));
+builder.Services.AddSingleton<ISpanStore>(sp => sp.GetRequiredService<SqliteStore>());
 builder.Services.AddSingleton<Broadcaster>();
 builder.Services.AddSingleton(new Counters(startedAt));
 
@@ -72,26 +77,35 @@ app.MapPost("/v1/spans", IResult (SpanRecord[] batch, ISpanStore store, Broadcas
     return TypedResults.Ok(new IngestResponse(accepted, dropped));
 });
 
-// ── Ingest: POST /v1/logs — pass the full (already-masked) entry through, verbatim, to the
-//    dashboard over SSE. JsonElement (not a fixed DTO) so no field is dropped. ─────────────
-app.MapPost("/v1/logs", IResult (JsonElement[] batch, Broadcaster hub, Counters counters) =>
+// ── Ingest: POST /v1/logs — persist (durable) + pass the full (already-masked) entry through,
+//    verbatim, to the dashboard over SSE. JsonElement (not a fixed DTO) so no field is dropped. ─
+app.MapPost("/v1/logs", IResult (JsonElement[] batch, SqliteStore store, Broadcaster hub, Counters counters) =>
 {
     if (batch is null || batch.Length == 0)
         return TypedResults.BadRequest(new IngestResponse(0, 0)); // guard
 
     foreach (JsonElement entry in batch)
-        hub.Publish($"{{\"type\":\"log\",\"entry\":{entry.GetRawText()}}}");
+    {
+        string raw = entry.GetRawText();
+        store.AddLog(raw);
+        hub.Publish($"{{\"type\":\"log\",\"entry\":{raw}}}");
+    }
 
     counters.AddLogs(batch.Length);
     return TypedResults.Ok(new IngestResponse(batch.Length, 0));
 });
 
-// ── Live feed: GET /stream — Server-Sent Events of logs (and later spans) to the dashboard ──
-app.MapGet("/stream", async (HttpContext ctx, Broadcaster hub, CancellationToken ct) =>
+// ── Live feed: GET /stream — Server-Sent Events to the dashboard. On connect, replay the recent
+//    persisted logs so the dashboard repopulates after a (re)connect or a collector restart. ──
+app.MapGet("/stream", async (HttpContext ctx, SqliteStore store, Broadcaster hub, CancellationToken ct) =>
 {
     ctx.Response.Headers.ContentType = "text/event-stream";
     ctx.Response.Headers.CacheControl = "no-cache";
     ctx.Response.Headers["Access-Control-Allow-Origin"] = "*";
+
+    foreach (string raw in store.RecentLogs(200))
+        await ctx.Response.WriteAsync($"data: {{\"type\":\"log\",\"entry\":{raw}}}\n\n", ct);
+    await ctx.Response.Body.FlushAsync(ct);
 
     (Guid id, System.Threading.Channels.ChannelReader<string> reader) = hub.Subscribe();
     try

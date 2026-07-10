@@ -7,8 +7,10 @@ trace **waterfall** and serves it. Schematic OpenTelemetry Collector — see
 the .NET member of the family.
 
 > **Status: in production use by the demo.** Ingests logs + spans from all 5 services (TS + Python),
-> assembles traces, and serves the live dashboard over SSE (logs + a live-filling waterfall). The
-> `bench/latigazo.sh` load test is measured below.
+> assembles traces, and serves the live dashboard over SSE (logs + a live-filling waterfall).
+> **Durable**: spans + logs persist to **SQLite**, so a collector restart keeps the traces intact
+> (kill it, restart it, the waterfall is still there). Native **AOT** binary. The `bench/latigazo.sh`
+> load test is measured below (note: durable SQLite writes trade some of the in-memory throughput).
 
 ## House standard — functional core / imperative shell
 
@@ -16,7 +18,7 @@ the .NET member of the family.
 |---|---|---|
 | **Pure core** | `Domain/TraceAssembler.cs`, `Domain/Validation.cs` | No I/O, no clock, no store. `Assemble(spans) → waterfall` and the validation guards are pure & deterministic — trivially testable. |
 | **Imperative shell** | `Program.cs` | All side effects: HTTP endpoints, sl4n. Dependencies injected (`ISpanStore`, `Counters`) — no global state. Guard clauses on every endpoint. |
-| **Store (DIP)** | `Store/ISpanStore.cs` + `InMemorySpanStore.cs` | Bounded, thread-safe ring buffer; drop-oldest. Swappable for a WAL/stream store without touching the assembler or endpoints. |
+| **Store (DIP)** | `Store/ISpanStore.cs` + `SqliteStore.cs` | **Durable SQLite** store (spans + logs) — survives a collector restart. `InMemorySpanStore.cs` is the alternative behind the same interface; swapping is one DI line, the assembler and endpoints don't change. |
 | **Telemetry** | `Telemetry/Counters.cs` | The only mutable state, isolated (lock-free `Interlocked`). |
 | **AOT JSON** | `Json/IngestJsonContext.cs` | Source-generated metadata — no reflection (the AOT requirement). |
 
@@ -79,7 +81,7 @@ Domain/
   Responses.cs          response DTOs
   Validation.cs         PURE guards
   TraceAssembler.cs     PURE functional core: spans → waterfall
-Store/                  ISpanStore (DIP) + InMemorySpanStore (bounded ring buffer)
+Store/                  ISpanStore (DIP): SqliteStore (durable) + InMemorySpanStore (alternative)
 Telemetry/Counters.cs   ingest counters
 Json/IngestJsonContext  source-generated JSON (AOT)
 bench/                  latigazo.sh + span.json

@@ -29,6 +29,9 @@ from slpy import slpy, AdapterTransport, UniversalAdapter
 FIELD_TRACE_ID = "traceId"
 FIELD_SPAN_ID = "spanId"
 
+# Cap on the retry buffer per stream, so a long collector outage can't grow unbounded.
+_MAX_BUFFER = 20_000
+
 
 # ══════════════════════════════════════════════════════════════════════════════
 # PURE CORE — id generation + W3C traceparent codec. No I/O, no context.
@@ -86,9 +89,10 @@ def _iso_now() -> str:
 # SHELL — batched async HTTP exporter (the executor's sink).
 # ══════════════════════════════════════════════════════════════════════════════
 class OtlpLiteExporter:
-    """Buffers spans and flushes them to the collector on a short interval. Best-effort
-    (Silent Observer): a failed flush drops the batch rather than raising. Reliable delivery
-    (not fire-and-forget-per-span): a single owned background task drains the buffer."""
+    """Buffers spans and flushes them to the collector on a short interval. On a failed flush
+    the batch is kept and retried next tick (bounded exporter queue) — collector down never
+    loses spans; they flush in on recovery. Never raises (Silent Observer). A single owned
+    background task drains the buffer (not fire-and-forget-per-span)."""
 
     def __init__(self, endpoint: str, flush_interval: float = 0.25) -> None:
         self._endpoint = endpoint.rstrip("/")
@@ -110,10 +114,15 @@ class OtlpLiteExporter:
             return
         batch = self._spans
         self._spans = []
+        ok = False
         try:
-            await self._client.post(f"{self._endpoint}/v1/spans", json=batch)
+            resp = await self._client.post(f"{self._endpoint}/v1/spans", json=batch)
+            ok = resp.is_success
         except Exception:
-            pass  # Silent Observer — telemetry never touches the request path
+            ok = False  # collector unreachable
+        if not ok:
+            # keep the batch and retry next tick (bounded exporter queue) — flushes in on recovery
+            self._spans = (batch + self._spans)[-_MAX_BUFFER:]
 
     async def shutdown(self) -> None:
         self._task.cancel()
@@ -213,10 +222,14 @@ class CollectorLogTransport:
             return
         batch = self._logs
         self._logs = []
+        ok = False
         try:
-            await self._client.post(f"{self._endpoint}/v1/logs", json=batch)
+            resp = await self._client.post(f"{self._endpoint}/v1/logs", json=batch)
+            ok = resp.is_success
         except Exception:
-            pass  # Silent Observer
+            ok = False  # collector unreachable
+        if not ok:
+            self._logs = (batch + self._logs)[-_MAX_BUFFER:]  # retry next tick, bounded
 
     async def shutdown(self) -> None:
         self._task.cancel()

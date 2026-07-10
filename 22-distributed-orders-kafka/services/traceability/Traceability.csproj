@@ -14,7 +14,9 @@
 
   <ItemGroup>
     <!-- Dogfood sl4n for the collector's own logs (the .NET side of the family). -->
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.9" />
     <PackageReference Include="sl4n" Version="1.0.4" />
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.3" />
   </ItemGroup>
 
 </Project>

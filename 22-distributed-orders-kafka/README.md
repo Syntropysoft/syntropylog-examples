@@ -82,7 +82,8 @@ Every service pushes its already-masked LOGS and its SPANS over HTTP to:
   [`services/inventory-py/tracing.py`](services/inventory-py/tracing.py)).
 - **The collector** ([`services/traceability/`](services/traceability/)) is a single native
   **.NET AOT** binary built on **sl4n** (it dogfoods sl4n for its own logs). It assembles spans
-  into a waterfall and streams logs + traces to the dashboard over **SSE**. See its
+  into a waterfall and streams logs + traces to the dashboard over **SSE**. It's **durable** —
+  spans + logs persist to **SQLite**, so a collector restart keeps the traces intact. See its
   [README](services/traceability/README.md) and the `bench/latigazo.sh` load test.
 - Design write-up: **[TRACING-DESIGN.md](TRACING-DESIGN.md)**. Cross-language envelope:
   **[LOGBUS-CONTRACT.md](LOGBUS-CONTRACT.md)**.

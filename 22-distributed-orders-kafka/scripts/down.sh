@@ -13,6 +13,8 @@ for p in 3000 3001 3002 3003 5173 9317; do
 done
 # the .NET collector runs via `dotnet run` — stop the build host too
 pkill -f 'services/traceability' 2>/dev/null || true
+# wipe the collector's SQLite store so the next start is fresh
+find services/traceability/bin -name 'traceability.db*' -delete 2>/dev/null || true
 
 echo "▶ wiping infra (containers + volumes)…"
 docker compose down -v
