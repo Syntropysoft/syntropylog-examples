@@ -86,7 +86,9 @@ app.MapPost("/v1/spans", IResult (SpanRecord[] batch, ISpanStore store, Broadcas
 });
 
 // ── Ingest: POST /v1/logs — persist (durable) + pass the full (already-masked) entry through,
-//    verbatim, to the dashboard over SSE. JsonElement (not a fixed DTO) so no field is dropped. ─
+//    verbatim, to the dashboard over SSE. Masking is the SOURCE's job (each service declares its
+//    own rules and masks before it pushes); the collector trusts that contract and only collects —
+//    it does not re-mask. JsonElement (not a fixed DTO) so no field is dropped. ─────────────────
 app.MapPost("/v1/logs", IResult (JsonElement[] batch, SqliteStore store, Broadcaster hub, Counters counters) =>
 {
     if (batch is null || batch.Length == 0)
@@ -94,8 +96,8 @@ app.MapPost("/v1/logs", IResult (JsonElement[] batch, SqliteStore store, Broadca
 
     foreach (JsonElement entry in batch)
     {
-        string raw = entry.GetRawText();
-        store.AddLog(raw);
+        string raw = entry.GetRawText();                 // stored verbatim — masking is the source's job
+        store.AddLog(LogFields.ReadString(entry, "correlationId"), LogFields.ReadString(entry, "timestamp"), raw);
         hub.Publish($"{{\"type\":\"log\",\"entry\":{raw}}}");
     }
 
@@ -158,6 +160,24 @@ app.MapGet("/traces", (ISpanStore store) =>
     return TypedResults.Ok(summaries.ToArray());
 });
 
+// ── Query: one flow's logs by correlationId (=== traceId), ordered by timestamp ──
+//    The collector's core review axis: everything logged under a correlation id, in order.
+//    Raw entries, verbatim (already masked at the source). Pair with /trace/{id} for the spans.
+app.MapGet("/logs/{correlationId}", IResult (string correlationId, SqliteStore store) =>
+{
+    IReadOnlyList<string> rows = store.LogsByCorrelation(correlationId, 2000);
+    return Results.Text($"[{string.Join(',', rows)}]", "application/json");
+});
+
+// ── Query: recent logs across flows, grouped by correlationId then timestamp ──────
+//    A bounded "everything, sorted the way you review it" listing (default 500, max 5000).
+app.MapGet("/logs", IResult (SqliteStore store, int? limit) =>
+{
+    int cap = limit is > 0 and <= 5000 ? limit.Value : 500;
+    IReadOnlyList<string> rows = store.RecentLogsByFlow(cap);
+    return Results.Text($"[{string.Join(',', rows)}]", "application/json");
+});
+
 // ── Ops: health + metrics (the AOT numbers) ──────────────────────────────────
 app.MapGet("/healthz", (ISpanStore store) =>
     TypedResults.Ok(new HealthResponse("ok", (DateTimeOffset.UtcNow - startedAt).TotalSeconds, store.TraceCount)));
@@ -169,5 +189,8 @@ app.MapGet("/metrics", (ISpanStore store, Counters counters) =>
     return TypedResults.Ok(new MetricsSnapshot(spans, logs, dropped, store.TraceCount, uptime, rssMb));
 });
 
-log.LogInformation("traceability collector (.NET AOT) listening on {Url}", "http://0.0.0.0:9317");
+// Report the real execution mode: under native AOT there is no JIT, so dynamic code is unsupported.
+// Don't claim "AOT" when started via `dotnet run` (JIT) — that honesty is the whole point of up:aot.
+string runtimeMode = System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported ? "JIT" : "native AOT";
+log.LogInformation("traceability collector (.NET {Mode}) listening on {Url}", runtimeMode, "http://0.0.0.0:9317");
 app.Run("http://0.0.0.0:9317");

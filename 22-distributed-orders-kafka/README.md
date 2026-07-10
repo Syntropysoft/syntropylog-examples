@@ -121,7 +121,8 @@ npm run down    # stop host services + the collector + wipe infra & volumes
 
 | Command | What runs |
 |---|---|
-| `npm run up` | **Recommended.** Infra + the .NET collector + the polyglot mesh (inventory in **Python**) + dashboard. |
+| `npm run up` | **Recommended.** Infra + the collector (JIT, `dotnet run` — fast startup) + the polyglot mesh (inventory in **Python**) + dashboard. |
+| `npm run up:aot` | Same, but the collector is the **real native AOT binary** (published on first run, ~30-60s, then reused). This is the AOT cold-start/no-warmup path — see [note below](#notes). |
 | `npm run down` | Stop host services + the collector (ports 3000-3003, 5173, 9317) + `docker compose down -v`. |
 | `npm run dev:polyglot` | Collector + the polyglot mesh (assumes infra already up). |
 | `npm run dev` | Collector + the **all-TypeScript** mesh (inventory in Express). |
@@ -137,8 +138,10 @@ curl -X POST http://localhost:3000/api/orders \
 ```
 
 Then watch it appear on the collector feed (`curl -N http://localhost:9317/stream`) under
-`gateway`, `orders`, `payments`, `inventory` (Python) and `notifications`, and query the assembled
-trace (`GET http://localhost:9317/trace/{traceId}`). Try it:
+`gateway`, `orders`, `payments`, `inventory` (Python) and `notifications`. Review the whole flow by
+its id — the spans (`GET http://localhost:9317/trace/{id}`) and every log line, ordered by time
+(`GET http://localhost:9317/logs/{id}`), since `correlationId === traceId`. `GET /logs` lists recent
+logs across flows, grouped by `correlationId` then timestamp. Try it:
 
 - **Totals over $5,000** → payment **declined** (`payment.processed { approved: false }`).
 - **Smart Watch** (seeded at 0 stock) → **out of stock** (`stock.reserved { reserved: false }`).
@@ -155,7 +158,9 @@ trace (`GET http://localhost:9317/trace/{traceId}`). Try it:
   that the same executor primitive carries spans too. See [TRACING-DESIGN.md](TRACING-DESIGN.md).
 - **Automatic PII masking** — card → `**** **** **** 1234`, CVV → `[REDACTED]`, email →
   `a***@example.com`, declared once per service and enforced everywhere (same default rules in
-  TS, Python and .NET).
+  TS, Python and .NET). Masking is applied **at the source**: each service masks with its own rules
+  before it pushes. The collector just collects — it trusts the contract and stores/streams the
+  already-masked entry verbatim (no field dropped).
 - **Logging Matrix** — per-level context whitelist, identical config across languages.
 - **The executor as the universal sink** — one `AdapterTransport`/`UniversalAdapter` pattern ships
   logs *and* spans to the collector over HTTP; the collector streams them to the dashboard over SSE.
@@ -193,6 +198,15 @@ single-purpose helpers. Each has pure unit tests (`test_domain.py`, `test_tracin
 - **Infra in Docker, app on the host.** Kafka + Redis run in containers; the services + the
   collector run on your machine so you see the correlated logs + trace stream live. Kafka exposes a
   host listener (`localhost:9092`) and an in-network one (`kafka:19092`, for the Kafka UI).
+- **Collector: JIT by default, AOT on demand.** `npm run up` runs the collector with `dotnet run`
+  (JIT) for the fastest startup — functionally identical, but *not* the native binary. The
+  `PublishAot=true` project produces a real single-file native binary; **`npm run up:aot`** (or
+  `npm run dev:collector:aot`) publishes and runs it. That's the path that actually delivers the
+  ~200 ms cold start / no-warmup / ~11 MB binary the collector [README](services/traceability/README.md)
+  measures — don't quote those numbers from a `dotnet run`.
+- **Masking is the source's job.** Each service declares its own rules and masks before it pushes;
+  the collector trusts that contract and only collects — it does **not** re-mask. That's the OTel
+  Collector split: a leak is fixed in the service that leaked, not papered over at the sink.
 - **One inventory at a time.** The Python and TypeScript inventory services share the Kafka
   consumer group `inventory-service` — run one or the other, never both.
 - **NestJS:** the `orders` service uses the **official `syntropylog/nestjs`** integration —

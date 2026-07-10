@@ -11,6 +11,10 @@ type StreamMessage =
   | { type: 'log'; entry: LogEntry }
   | { type: 'trace'; trace: TraceView };
 
+// Identity of a log line for de-dup when the live SSE buffer and a durable fetch overlap.
+const logKey = (e: LogEntry): string =>
+  `${e.correlationId ?? ''}|${e.timestamp}|${e.service}|${e.level}|${e.spanId ?? ''}|${e.message}`;
+
 /**
  * Subscribes to the collector's SSE stream. Accumulates a rolling buffer of log entries
  * AND the latest assembled trace per `traceId` (the waterfall fills in live as spans
@@ -21,6 +25,7 @@ export function useLogBus(max = 1000): {
   traces: Record<string, TraceView>;
   connected: boolean;
   fetchTrace: (traceId: string) => void;
+  fetchLogs: (correlationId: string) => void;
 } {
   const [entries, setEntries] = useState<LogEntry[]>([]);
   const [traces, setTraces] = useState<Record<string, TraceView>>({});
@@ -42,6 +47,33 @@ export function useLogBus(max = 1000): {
       }
     })();
   }, []);
+
+  // Pull a whole flow's logs by correlationId from the collector's durable store, ordered by
+  // timestamp, and merge them into the buffer (de-duped against what SSE already delivered). Lets
+  // the dashboard review a historical flow in full — the live SSE buffer only holds the recent tail.
+  // Never throws — telemetry never breaks the UI.
+  const fetchLogs = useCallback(
+    (correlationId: string): void => {
+      void (async () => {
+        try {
+          const res = await fetch(`${COLLECTOR_URL}/logs/${correlationId}`);
+          if (!res.ok) return;
+          const rows = (await res.json()) as LogEntry[];
+          if (rows.length === 0) return;
+          setEntries((prev) => {
+            const seen = new Set(prev.map(logKey));
+            const fresh = rows.filter((e) => !seen.has(logKey(e)));
+            if (fresh.length === 0) return prev;
+            const next = [...prev, ...fresh];
+            return next.length > max ? next.slice(next.length - max) : next;
+          });
+        } catch {
+          /* collector unreachable → ignore */
+        }
+      })();
+    },
+    [max]
+  );
 
   useEffect(() => {
     // EventSource reconnects on its own — we just reflect the connection state.
@@ -71,5 +103,5 @@ export function useLogBus(max = 1000): {
     };
   }, [max]);
 
-  return { entries, traces, connected, fetchTrace };
+  return { entries, traces, connected, fetchTrace, fetchLogs };
 }

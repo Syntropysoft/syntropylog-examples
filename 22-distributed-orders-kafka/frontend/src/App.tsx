@@ -9,7 +9,7 @@ import { TraceWaterfall } from './components/TraceWaterfall';
 import type { CartLine, OrderResult } from './types';
 
 export default function App() {
-  const { entries, traces, connected, fetchTrace } = useLogBus();
+  const { entries, traces, connected, fetchTrace, fetchLogs } = useLogBus();
   const [activeId, setActiveId] = useState<string | null>(null);
   const [placing, setPlacing] = useState(false);
   const [lastResult, setLastResult] = useState<OrderResult | null>(null);
@@ -29,17 +29,29 @@ export default function App() {
     }
   }
 
-  // Selecting a trace whose waterfall isn't in memory (a historical one, e.g. after a reload —
-  // logs are replayed on connect but trace layouts are only streamed live) → fetch it from the
-  // collector's durable store on demand, so any recent trace shows its full waterfall, not just the last.
+  // Selecting a flow → pull its full history from the collector's durable store on demand.
+  // Two effects on purpose: the waterfall depends on `traces` (fetch only when the layout is
+  // missing), but the logs must NOT — folding them together re-fired the log fetch on every live
+  // span update (traces changes per ingest). Split, so each fetches exactly once per selection.
   useEffect(() => {
     if (activeId && !traces[activeId]) fetchTrace(activeId);
   }, [activeId, traces, fetchTrace]);
 
-  const traceEntries = useMemo(
-    () => (activeId ? entries.filter((e) => e.correlationId === activeId) : entries),
-    [entries, activeId]
-  );
+  // The complete set of logs for the flow by correlationId (the live SSE buffer only holds the
+  // recent tail, so a historical flow would otherwise show partial logs). Once per selection.
+  useEffect(() => {
+    if (activeId) fetchLogs(activeId);
+  }, [activeId, fetchLogs]);
+
+  // The selected flow's logs, ordered by timestamp — the collector's contract (ordinal ISO compare,
+  // matching its SQLite ORDER BY). The unfiltered "all" view stays in live-arrival order.
+  const traceEntries = useMemo(() => {
+    if (!activeId) return entries;
+    return entries
+      .filter((e) => e.correlationId === activeId)
+      .slice()
+      .sort((a, b) => (a.timestamp < b.timestamp ? -1 : a.timestamp > b.timestamp ? 1 : 0));
+  }, [entries, activeId]);
 
   const recentIds = useMemo(() => {
     const seen: string[] = [];

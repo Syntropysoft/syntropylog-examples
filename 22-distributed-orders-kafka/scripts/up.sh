@@ -5,6 +5,9 @@
 #
 # Ctrl-C stops the services; the infra keeps running for a fast restart.
 # Run ./scripts/down.sh (npm run down) to wipe everything.
+#
+#   ./scripts/up.sh --aot   (npm run up:aot)  runs the collector as a REAL native AOT binary
+#                                             instead of JIT (`dotnet run`).
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
@@ -20,6 +23,13 @@ for _ in $(seq 1 40); do
   sleep 3
 done
 
+# Collector mode: JIT by default (fast startup); `--aot` publishes + runs the real native binary.
+MESH="dev:polyglot"
+if [ "${1:-}" = "--aot" ]; then
+  MESH="dev:polyglot:aot"
+  echo "▶ collector mode: native AOT binary (real publish; first build ~30-60s, then reused)"
+fi
+
 echo "▶ starting the polyglot mesh (JS + Python) — dashboard: http://localhost:5173"
 echo "  (Ctrl-C stops the services; infra stays up. Wipe with ./scripts/down.sh)"
-exec npm run dev:polyglot
+exec npm run "$MESH"

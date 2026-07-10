@@ -11,6 +11,7 @@
   ],
   "scripts": {
     "up": "bash scripts/up.sh",
+    "up:aot": "bash scripts/up.sh --aot",
     "down": "bash scripts/down.sh",
     "infra:up": "docker compose up -d",
     "infra:down": "docker compose down -v",
@@ -27,8 +28,12 @@
     "dev:notifications": "wait-on packages/shared/dist/index.js && npm run dev -w @distributed/notifications",
     "dev:web": "npm run dev -w @distributed/frontend",
     "dev:collector": "dotnet run --project services/traceability -c Release",
+    "dev:collector:aot": "bash scripts/collector-aot.sh",
     "predev:polyglot": "npm run build:shared",
     "dev:polyglot": "concurrently -n collector,shared,gateway,orders,payments,inventory-py,notifs,web -c red,gray,cyan,magenta,green,blue,yellow,white \"npm:dev:collector\" \"npm:dev:shared\" \"npm:dev:gateway\" \"npm:dev:orders\" \"npm:dev:payments\" \"npm:dev:inventory-py\" \"npm:dev:notifications\" \"npm:dev:web\"",
+    "predev:polyglot:aot": "npm run build:shared",
+    "dev:polyglot:aot": "concurrently -n collector,shared,gateway,orders,payments,inventory-py,notifs,web -c red,gray,cyan,magenta,green,blue,yellow,white \"npm:dev:collector:aot\" \"npm:dev:shared\" \"npm:dev:gateway\" \"npm:dev:orders\" \"npm:dev:payments\" \"npm:dev:inventory-py\" \"npm:dev:notifications\" \"npm:dev:web\"",
+    "smoke:logs": "bash scripts/smoke-logs.sh",
     "typecheck": "tsc --noEmit -p packages/shared && tsc --noEmit -p services/gateway && tsc --noEmit -p services/orders && tsc --noEmit -p services/payments && tsc --noEmit -p services/inventory && tsc --noEmit -p services/notifications && tsc --noEmit -p frontend",
     "clean": "rimraf \"packages/*/dist\" \"services/*/dist\""
   },

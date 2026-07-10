@@ -28,9 +28,11 @@ the .NET member of the family.
 | Method | Path | Role |
 |---|---|---|
 | POST | `/v1/spans` | Ingest a batch of spans (the hot path). |
-| POST | `/v1/logs` | Ingest a batch of logs (persisted; each carries its `spanId`, so the dashboard nests it under its span in the waterfall). |
+| POST | `/v1/logs` | Ingest a batch of logs (persisted verbatim — already masked at the source; each carries its `spanId`, so the dashboard nests it under its span in the waterfall). |
 | GET | `/trace/{traceId}` | The assembled waterfall for a trace (pure `TraceAssembler`). |
 | GET | `/traces` | Recent trace summaries. |
+| GET | `/logs/{correlationId}` | One flow's logs (verbatim), ordered by timestamp. The core "review by correlationId" query — pair with `/trace/{id}` for the spans (`correlationId === traceId`). |
+| GET | `/logs?limit=N` | Recent logs across flows, grouped by `correlationId` then timestamp (default 500, max 5000). |
 | GET | `/healthz` | Liveness + uptime + traces in store. |
 | GET | `/metrics` | Ingest counters + RSS. |
 
@@ -39,13 +41,17 @@ the .NET member of the family.
 Prereqs: **.NET 10 SDK**, and clang (for AOT). `sl4n` 1.0.4 restores from NuGet.
 
 ```bash
-# dev (JIT):
+# dev (JIT — fast startup, functionally identical, but NOT the native binary):
 dotnet run -c Release            # listens on http://0.0.0.0:9317
 
-# native AOT binary:
+# native AOT binary (the cold-start / no-warmup numbers below are THIS path):
 dotnet publish -c Release -r osx-arm64 -o bin/aot     # (linux: -r linux-x64)
 ./bin/aot/Traceability
 ```
+
+From the example root, `npm run dev:collector` runs the JIT path and **`npm run dev:collector:aot`**
+(or `npm run up:aot` for the whole mesh) detects your RID, publishes the native binary once, and
+runs it. The measured numbers below are the **AOT** path — don't quote them from a `dotnet run`.
 
 ## The latigazo (load test)
 

@@ -30,7 +30,29 @@ public sealed class SqliteStore : ISpanStore, IDisposable
               durationMs REAL, status TEXT, attributes TEXT);
             """);
         Exec("CREATE INDEX IF NOT EXISTS ix_spans_trace ON spans(traceId);");
-        Exec("CREATE TABLE IF NOT EXISTS logs(seq INTEGER PRIMARY KEY AUTOINCREMENT, raw TEXT NOT NULL);");
+        Exec("CREATE TABLE IF NOT EXISTS logs(seq INTEGER PRIMARY KEY AUTOINCREMENT, correlationId TEXT, ts TEXT, raw TEXT NOT NULL);");
+        // Migrate an older db (logs used to be seq+raw only) so filtering/ordering by
+        // correlationId + timestamp works without wiping it.
+        if (!HasColumn("logs", "correlationId"))
+            Exec("ALTER TABLE logs ADD COLUMN correlationId TEXT;");
+        if (!HasColumn("logs", "ts"))
+            Exec("ALTER TABLE logs ADD COLUMN ts TEXT;");
+        // Composite index: every log listing is ORDER BY correlationId, ts — serve it from the index.
+        Exec("CREATE INDEX IF NOT EXISTS ix_logs_corr_ts ON logs(correlationId, ts);");
+    }
+
+    /// <summary>True iff <paramref name="table"/> already has a column named <paramref name="column"/>.</summary>
+    private bool HasColumn(string table, string column)
+    {
+        using SqliteCommand cmd = _conn.CreateCommand();
+        cmd.CommandText = $"PRAGMA table_info({table});";
+        using SqliteDataReader r = cmd.ExecuteReader();
+        while (r.Read())
+        {
+            if (string.Equals(r.GetString(1), column, StringComparison.OrdinalIgnoreCase))
+                return true; // column 1 of PRAGMA table_info is the column name
+        }
+        return false;
     }
 
     // ── ISpanStore ───────────────────────────────────────────────────────────
@@ -139,12 +161,16 @@ public sealed class SqliteStore : ISpanStore, IDisposable
     }
 
     // ── logs (persisted so the dashboard repopulates after a restart) ─────────
-    public void AddLog(string rawJson)
+    // The raw entry is stored verbatim (masking is the source's job); correlationId + ts are
+    // pulled out only to INDEX and ORDER — the collector's whole query job is "give me a flow".
+    public void AddLog(string? correlationId, string? ts, string rawJson)
     {
         lock (_gate)
         {
             using SqliteCommand cmd = _conn.CreateCommand();
-            cmd.CommandText = "INSERT INTO logs(raw) VALUES($r);";
+            cmd.CommandText = "INSERT INTO logs(correlationId, ts, raw) VALUES($c,$t,$r);";
+            SqliteParameter c = cmd.CreateParameter(); c.ParameterName = "$c"; c.Value = (object?)correlationId ?? DBNull.Value; cmd.Parameters.Add(c);
+            SqliteParameter t = cmd.CreateParameter(); t.ParameterName = "$t"; t.Value = (object?)ts ?? DBNull.Value; cmd.Parameters.Add(t);
             SqliteParameter r = cmd.CreateParameter(); r.ParameterName = "$r"; r.Value = rawJson; cmd.Parameters.Add(r);
             cmd.ExecuteNonQuery();
         }
@@ -165,6 +191,46 @@ public sealed class SqliteStore : ISpanStore, IDisposable
             while (r.Read())
                 rows.Add(r.GetString(0));
             rows.Reverse(); // oldest first
+            return rows;
+        }
+    }
+
+    /// <summary>One flow's logs — everything under a <paramref name="correlationId"/>, ordered by
+    /// timestamp (seq breaks ties for same-ms events). The core "review by correlationId" query.</summary>
+    public IReadOnlyList<string> LogsByCorrelation(string correlationId, int limit)
+    {
+        if (limit <= 0)
+            return [];
+        lock (_gate)
+        {
+            using SqliteCommand cmd = _conn.CreateCommand();
+            cmd.CommandText = "SELECT raw FROM logs WHERE correlationId=$c ORDER BY ts, seq LIMIT $l;";
+            SqliteParameter c = cmd.CreateParameter(); c.ParameterName = "$c"; c.Value = correlationId; cmd.Parameters.Add(c);
+            SqliteParameter l = cmd.CreateParameter(); l.ParameterName = "$l"; l.Value = limit; cmd.Parameters.Add(l);
+            List<string> rows = new();
+            using SqliteDataReader r = cmd.ExecuteReader();
+            while (r.Read())
+                rows.Add(r.GetString(0));
+            return rows;
+        }
+    }
+
+    /// <summary>Recent logs across all flows, grouped by correlationId then chronological — the
+    /// most-recent <paramref name="limit"/> entries, re-ordered by (correlationId, ts).</summary>
+    public IReadOnlyList<string> RecentLogsByFlow(int limit)
+    {
+        if (limit <= 0)
+            return [];
+        lock (_gate)
+        {
+            using SqliteCommand cmd = _conn.CreateCommand();
+            cmd.CommandText =
+                "SELECT raw FROM (SELECT seq, correlationId, ts, raw FROM logs ORDER BY seq DESC LIMIT $l) ORDER BY correlationId, ts, seq;";
+            SqliteParameter l = cmd.CreateParameter(); l.ParameterName = "$l"; l.Value = limit; cmd.Parameters.Add(l);
+            List<string> rows = new();
+            using SqliteDataReader r = cmd.ExecuteReader();
+            while (r.Read())
+                rows.Add(r.GetString(0));
             return rows;
         }
     }
