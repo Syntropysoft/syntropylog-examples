@@ -1,7 +1,16 @@
 import type { CartLine, OrderResult } from './types';
 
-export function newCorrelationId(): string {
-  return `trc_web_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`;
+function hex(bytes: number): string {
+  const a = new Uint8Array(bytes);
+  crypto.getRandomValues(a);
+  return Array.from(a, (b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+/** A W3C trace-id (16 bytes / 32 hex). The browser sends it as BOTH the correlation id
+ *  and the root of a `traceparent`, so logs and spans share ONE identity end to end —
+ *  the dashboard filters both by this single id. */
+export function newTraceId(): string {
+  return hex(16);
 }
 
 /** Deliberately fake PII so you can watch SyntropyLog mask it across services. */
@@ -13,7 +22,7 @@ const PAYMENT = {
   expiry: '12/29',
 };
 
-export async function placeOrder(lines: CartLine[], correlationId: string): Promise<OrderResult> {
+export async function placeOrder(lines: CartLine[], traceId: string): Promise<OrderResult> {
   const body = {
     customer: CUSTOMER,
     items: lines.map((l) => ({
@@ -26,7 +35,11 @@ export async function placeOrder(lines: CartLine[], correlationId: string): Prom
   };
   const res = await fetch('/api/orders', {
     method: 'POST',
-    headers: { 'content-type': 'application/json', 'x-correlation-id': correlationId },
+    headers: {
+      'content-type': 'application/json',
+      'x-correlation-id': traceId, // correlationId === traceId (unified)
+      traceparent: `00-${traceId}-${hex(8)}-01`, // W3C root — the gateway continues this trace
+    },
     body: JSON.stringify(body),
   });
   return (await res.json()) as OrderResult;

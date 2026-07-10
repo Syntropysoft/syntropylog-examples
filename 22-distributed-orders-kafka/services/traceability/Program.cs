@@ -34,7 +34,7 @@ WebApplication app = builder.Build();
 ILogger log = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("traceability");
 
 // ── Ingest: POST /v1/spans (the hot path — the latigazo target) ──────────────
-app.MapPost("/v1/spans", IResult (SpanRecord[] batch, ISpanStore store, Counters counters) =>
+app.MapPost("/v1/spans", IResult (SpanRecord[] batch, ISpanStore store, Broadcaster hub, Counters counters) =>
 {
     if (batch is null || batch.Length == 0)
         return TypedResults.BadRequest(new IngestResponse(0, 0)); // guard: empty batch
@@ -51,6 +51,23 @@ app.MapPost("/v1/spans", IResult (SpanRecord[] batch, ISpanStore store, Counters
     counters.AddSpans(accepted);
     if (dropped > 0)
         counters.AddDropped(dropped);
+
+    // Push the (re)assembled trace to the dashboard so the waterfall fills in live. The
+    // pure TraceAssembler does the layout once per affected trace — the frontend only renders.
+    if (hub.ClientCount > 0)
+    {
+        HashSet<string> touched = new();
+        foreach (SpanRecord span in valid)
+            touched.Add(span.TraceId);
+        foreach (string traceId in touched)
+        {
+            IReadOnlyList<SpanRecord>? spans = store.GetTrace(traceId);
+            if (spans is null)
+                continue;
+            string json = JsonSerializer.Serialize(TraceAssembler.Assemble(traceId, spans), IngestJsonContext.Default.TraceView);
+            hub.Publish($"{{\"type\":\"trace\",\"trace\":{json}}}");
+        }
+    }
 
     return TypedResults.Ok(new IngestResponse(accepted, dropped));
 });

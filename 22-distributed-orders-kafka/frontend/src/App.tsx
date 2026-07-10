@@ -1,20 +1,21 @@
 import { useMemo, useState } from 'react';
 import { CATALOG } from './catalog';
-import { newCorrelationId, placeOrder } from './api';
+import { newTraceId, placeOrder } from './api';
 import { useLogBus } from './useLogBus';
 import { Storefront } from './components/Storefront';
 import { Pipeline } from './components/Pipeline';
 import { LogStream } from './components/LogStream';
+import { TraceWaterfall } from './components/TraceWaterfall';
 import type { CartLine, OrderResult } from './types';
 
 export default function App() {
-  const { entries, connected } = useLogBus();
+  const { entries, traces, connected } = useLogBus();
   const [activeId, setActiveId] = useState<string | null>(null);
   const [placing, setPlacing] = useState(false);
   const [lastResult, setLastResult] = useState<OrderResult | null>(null);
 
   async function onPlaceOrder(lines: CartLine[]): Promise<void> {
-    const id = newCorrelationId();
+    const id = newTraceId();
     setActiveId(id);
     setPlacing(true);
     setLastResult(null);
@@ -48,7 +49,7 @@ export default function App() {
         <div className="brand">
           <span className="logo">◈</span> SyntropyLog · Distributed Orders
         </div>
-        <div className="tag">one correlation-id · Express · NestJS · Fastify · Kafka · Redis</div>
+        <div className="tag">one id across TS · Python · Kafka — logs + trace served by the .NET AOT collector</div>
         <div className={`conn ${connected ? 'on' : 'off'}`}>{connected ? '● live' : '○ connecting…'}</div>
       </header>
 
@@ -69,7 +70,7 @@ export default function App() {
                   onClick={() => setActiveId(id)}
                   title={id}
                 >
-                  {id.replace('trc_', '')}
+                  {id.slice(0, 8)}
                 </button>
               ))}
             </div>
@@ -86,7 +87,13 @@ export default function App() {
             )}
           </div>
 
+          <h3 className="section-h">Trace waterfall</h3>
+          <TraceWaterfall trace={activeId ? traces[activeId] ?? null : null} />
+
+          <h3 className="section-h">Pipeline</h3>
           <Pipeline entries={traceEntries} />
+
+          <h3 className="section-h">Logs</h3>
           <LogStream entries={traceEntries} />
         </section>
       </main>

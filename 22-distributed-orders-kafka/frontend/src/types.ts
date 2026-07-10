@@ -9,6 +9,26 @@ export interface LogEntry {
   [key: string]: unknown;
 }
 
+export interface WaterfallEntry {
+  spanId: string;
+  parentSpanId: string | null;
+  name: string;
+  service: string;
+  kind: string;
+  status: string;
+  offsetMs: number;
+  durationMs: number;
+  depth: number;
+}
+
+export interface TraceView {
+  traceId: string;
+  totalDurationMs: number;
+  spanCount: number;
+  status: string;
+  waterfall: WaterfallEntry[];
+}
+
 export interface Product {
   sku: string;
   name: string;
