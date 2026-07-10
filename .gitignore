@@ -82,3 +82,8 @@ obj/
 *.db
 *.db-shm
 *.db-wal
+
+# Python runtime artifacts (example 22 inventory service)
+__pycache__/
+*.pyc
+.venv/
