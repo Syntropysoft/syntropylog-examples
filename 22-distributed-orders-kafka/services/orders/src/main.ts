@@ -4,6 +4,7 @@ import { syntropyLog, correlationIdMiddleware } from 'syntropylog';
 import { SyntropyNestLoggerService } from 'syntropylog/nestjs';
 import { bootstrap as bootstrapSyntropy, env, SVC_ORDERS } from '@distributed/shared';
 import { AppModule } from './app.module';
+import { shutdownTracing } from './observability';
 
 async function main(): Promise<void> {
   // Init SyntropyLog (singleton) + logbus BEFORE creating the Nest app.
@@ -27,6 +28,7 @@ async function main(): Promise<void> {
 
   const stop = async (): Promise<void> => {
     await app.close().catch(() => {});
+    await shutdownTracing();
     await shutdown();
     process.exit(0);
   };

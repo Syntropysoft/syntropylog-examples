@@ -56,15 +56,18 @@ export async function ensureTopics(clientId: string, topics: string[]): Promise<
   }
 }
 
-/** Publish an event, translating the current context to Kafka wire headers. */
+/** Publish an event, translating the current context to Kafka wire headers.
+ *  `extraHeaders` (e.g. a `traceparent`) are merged onto the message headers — the tracing
+ *  layer uses this to carry a span context across the broker without coupling to it. */
 export async function publishEvent(
   producer: Producer,
   topic: string,
   key: string | null,
   value: unknown,
-  contextManager: CtxLike
+  contextManager: CtxLike,
+  extraHeaders: Record<string, string> = {}
 ): Promise<void> {
-  const headers = contextManager.getPropagationHeaders(TARGET_KAFKA);
+  const headers = { ...contextManager.getPropagationHeaders(TARGET_KAFKA), ...extraHeaders };
   await producer.send({
     topic,
     messages: [{ key, value: JSON.stringify(value), headers }],

@@ -1,5 +1,5 @@
 import { randomUUID } from 'crypto';
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { syntropyLog } from 'syntropylog';
 import {
   createRedis,
@@ -10,8 +10,10 @@ import {
   type CreateOrderRequest,
   type Order,
   type OrderCreatedEvent,
+  type Tracer,
 } from '@distributed/shared';
 import { KafkaProducerService } from './kafka.provider';
+import { TRACER } from './observability';
 
 @Injectable()
 export class OrdersService {
@@ -20,7 +22,10 @@ export class OrdersService {
   // Nest constructs this provider, so getLogger() here is safe.
   private readonly log = syntropyLog.getLogger(SVC_ORDERS).withSource('OrdersService');
 
-  constructor(private readonly kafka: KafkaProducerService) {}
+  constructor(
+    private readonly kafka: KafkaProducerService,
+    @Inject(TRACER) private readonly tracer: Tracer
+  ) {}
 
   async createOrder(req: CreateOrderRequest): Promise<Order> {
     const cm = syntropyLog.getContextManager();
@@ -62,8 +67,19 @@ export class OrdersService {
       total,
       payment: req.payment,
     };
-    // Correlation id travels in the Kafka message headers (getPropagationHeaders('kafka')).
-    await publishEvent(this.kafka.instance, TOPIC_ORDER_CREATED, order.id, event, cm);
+    // Producer span. The id travels in the Kafka headers as correlationId (via
+    // getPropagationHeaders) AND as a W3C traceparent (via tracer.inject), so the
+    // consumers can continue the same trace across the broker.
+    await this.tracer.withSpan(
+      'publish order.created',
+      { topic: TOPIC_ORDER_CREATED, orderId: order.id },
+      async () => {
+        const traceHeaders: Record<string, string> = {};
+        this.tracer.inject(traceHeaders);
+        await publishEvent(this.kafka.instance, TOPIC_ORDER_CREATED, order.id, event, cm, traceHeaders);
+      },
+      'producer'
+    );
     this.log.info(
       { orderId: order.id, topic: TOPIC_ORDER_CREATED },
       'order.created published to Kafka'
