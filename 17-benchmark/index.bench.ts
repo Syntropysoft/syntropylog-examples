@@ -1,15 +1,21 @@
 // ============================================================================
 // 17-benchmark — SyntropyLog vs Pino vs Winston
 // ----------------------------------------------------------------------------
-// Mide overhead de la pipeline de logging (sin I/O) en throughput y memoria.
-// Todos los loggers escriben a /dev/null para aislar el costo de la lógica
+// Mide overhead de la pipeline de logging en throughput y memoria. Todos los
+// loggers escriben a /dev/null para aislar el costo de la lógica
 // (serialización, masking, contexto, fluent API) del costo del sink.
 //
-// Comparación justa requiere que los tres loggers usen el MISMO modelo de I/O:
-// SyntropyLog escribe síncrono al stream desde BenchTransport, Winston usa
-// Stream sync, y Pino se fuerza a `sync: true` (sin SonicBoom buffering) —
-// sin esto, el buffer async de Pino contamina las mediciones de memoria al
-// acumular chunks bajo alta carga.
+// Comparación justa requiere que los tres loggers usen el MISMO modelo de I/O.
+// Acá todos escriben con `fs.writeSync` sobre UN MISMO fd a /dev/null:
+//   - SyntropyLog: BenchTransport → fs.writeSync(fd)
+//   - Pino: pino.destination({ dest: fd, sync: true }) (SonicBoom sync, sin buffer)
+//   - Winston: Stream transport sobre un Writable cuyo _write hace fs.writeSync(fd)
+//   - baseline: fs.writeSync(fd) directo
+// NO usar fs.createWriteStream: su .write() es buffered/async — no paga el
+// syscall en la medición (throughput irreal a la baja) y, como los loops de
+// medición son síncronos y el event loop nunca drena, acumula cada línea en
+// el buffer interno del stream (memoria irreal al alza). Con writeSync todos
+// pagan el mismo syscall determinista y nadie acumula buffers.
 // ============================================================================
 
 import { run, bench, baseline, group } from 'mitata';
@@ -22,6 +28,7 @@ import type { SyntropyLogConfig } from 'syntropylog';
 import pino from 'pino';
 import winston from 'winston';
 import fs from 'fs';
+import { Writable } from 'node:stream';
 import { createRequire } from 'node:module';
 
 function flushStdout() {
@@ -34,24 +41,27 @@ console.log('\n=== SyntropyLog Benchmark (SyntropyLog vs Pino vs Winston) ===\n'
 flushStdout();
 
 // ----------------------------------------------------------------------------
-// SETUP — sinks y configuración por lib
+// SETUP — sink único compartido: fd a /dev/null + fs.writeSync
 // ----------------------------------------------------------------------------
-// Stream compartido a /dev/null (lo usan SyntropyLog vía BenchTransport y
-// Winston). Pino tiene su propio destination configurado más abajo.
+// El MISMO fd lo usan los tres loggers y el baseline, siempre vía fs.writeSync,
+// para que todos paguen exactamente el mismo costo de I/O (un syscall write(2)
+// bloqueante por log) sin buffering intermedio.
 // ----------------------------------------------------------------------------
-const devNull = fs.createWriteStream(
-  process.platform === 'win32' ? '\\\\.\\nul' : '/dev/null'
-);
+const devNullPath = process.platform === 'win32' ? '\\\\.\\nul' : '/dev/null';
+const devNullFd = fs.openSync(devNullPath, 'w');
+const writeSink = (str: string): void => {
+  fs.writeSync(devNullFd, str);
+};
 
 // SyntropyLog: el singleton ya existe; configuramos el logger con un transport
-// que escribe al devNull en vez de stdout. BenchTransport debe manejar AMBOS
+// que escribe al fd en vez de stdout. BenchTransport debe manejar AMBOS
 // formatos: object (path JS) y string pre-serializado (path nativo del addon
 // Rust). Sin el typeof check habría double-stringify cuando el addon está activo.
 class BenchTransport extends ConsoleTransport {
   public override log(entry: unknown): void {
     const logString =
       (typeof entry === 'string' ? entry : JSON.stringify(entry)) + '\n';
-    devNull.write(logString);
+    writeSink(logString);
   }
 }
 
@@ -136,23 +146,25 @@ if (nativeAddon?.fastSerializeFromJson) {
   }
 }
 
-// Pino: forzamos `sync: true` para eliminar el buffering de SonicBoom.
-// Sin esto, Pino acumula logs en un buffer interno cuando el throughput es
-// alto (caso "Hello Bench"), inflando artificialmente la memoria medida y
-// haciendo la comparación contra SyntropyLog injusta (SL escribe síncrono).
-// Con sync:true, ambos loggers entregan cada log al sink en el mismo tick.
+// Pino: mismo fd, `sync: true` (SonicBoom sin buffering) → fs.writeSync por log.
 const pinoLogger = pino(
   { level: 'info' },
-  pino.destination({
-    dest: process.platform === 'win32' ? '\\\\.\\nul' : '/dev/null',
-    sync: true,
-  })
+  pino.destination({ dest: devNullFd, sync: true })
 );
 
-// Winston: el Stream transport ya escribe síncrono al stream provisto.
+// Winston: el Stream transport necesita un Writable; el _write llama al mismo
+// writeSink y ejecuta el callback en el mismo tick, así el write queda dentro
+// de la medición igual que en los otros loggers.
+const winstonSink = new Writable({
+  decodeStrings: false,
+  write(chunk: unknown, _enc: string, cb: (err?: Error | null) => void): void {
+    writeSink(typeof chunk === 'string' ? chunk : String(chunk));
+    cb();
+  },
+});
 const winstonLogger = winston.createLogger({
   level: 'info',
-  transports: [new winston.transports.Stream({ stream: devNull })],
+  transports: [new winston.transports.Stream({ stream: winstonSink })],
 });
 
 const ITERATIONS = 5_000;
@@ -180,8 +192,8 @@ const complexObj = {
 // "framework completo" vs el "JSON-only logger".
 // ----------------------------------------------------------------------------
 group(`Logging Throughput (${ITERATIONS.toLocaleString()} iterations)`, () => {
-  bench('console.log (baseline)', () => {
-    devNull.write('Hello Bench\n');
+  bench('raw writeSync (baseline)', () => {
+    writeSink('Hello Bench\n');
   });
 
   bench('SyntropyLog (JSON)', () => {
@@ -430,9 +442,10 @@ if (benchList.length > 0) {
 // clampea a 0 = "noise").
 //
 // Caveat importante de comparación: requiere que todos los loggers usen el
-// MISMO modelo I/O (sync) — de lo contrario buffers internos async (ej.
-// SonicBoom en Pino default) inflan el delta artificialmente. El setup de
-// arriba fuerza `sync: true` en Pino para evitar este sesgo.
+// MISMO modelo I/O — acá todos hacen fs.writeSync sobre el mismo fd, así que
+// ningún logger acumula chunks en buffers internos durante el loop (que es
+// síncrono y nunca cede el event loop, por lo que un stream buffered jamás
+// drenaría y su delta mediría strings sin flushear, no el pipeline).
 // ============================================================================
 const MEMORY_ITERATIONS = 100_000;
 const gc = typeof globalThis.gc === 'function' ? globalThis.gc : null;
@@ -449,7 +462,7 @@ interface MemoryTask {
 }
 
 const memoryTasks: MemoryTask[] = [
-  { name: 'console.log (baseline)', fn: () => devNull.write('Hello Bench\n') },
+  { name: 'raw writeSync (baseline)', fn: () => writeSink('Hello Bench\n') },
   { name: 'SyntropyLog (JSON)', fn: () => slLogger.info('Hello Bench') },
   { name: 'Pino', fn: () => pinoLogger.info('Hello Bench') },
   { name: 'Winston', fn: () => winstonLogger.info('Hello Bench') },
