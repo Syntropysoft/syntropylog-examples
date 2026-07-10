@@ -9,7 +9,7 @@
  *   - Shell: the exporter (fetch) and `withSpan` (reads/writes SyntropyLog context).
  */
 import { randomBytes } from 'node:crypto';
-import { syntropyLog } from 'syntropylog';
+import { syntropyLog, AdapterTransport, UniversalAdapter } from 'syntropylog';
 
 // ── Context field keys (conceptual; also ride in the log envelope) ───────────
 export const FIELD_TRACE_ID = 'traceId';
@@ -240,6 +240,58 @@ export function createTracer(serviceName: string, exporter: OtlpLiteExporter): T
   }
 
   return { withSpan, inject, extract };
+}
+
+/**
+ * A SyntropyLog transport that pushes every already-masked log entry to the collector's
+ * `/v1/logs` (batched), so the dashboard can be fed by the collector instead of the Redis
+ * log bus. The executor's sink is HTTP — same "declare once, route anywhere", new target.
+ * Coexists with the log bus during the transition (Silent-Observer drop on failure).
+ */
+export function createCollectorLogTransport(
+  endpoint: string,
+  batchSize = 100,
+  flushMs = 1000
+): { transport: AdapterTransport; shutdown: () => Promise<void> } {
+  let buffer: Record<string, unknown>[] = [];
+
+  const flush = async (): Promise<void> => {
+    if (buffer.length === 0) return; // guard
+    const batch = buffer;
+    buffer = [];
+    try {
+      await fetch(`${endpoint}/v1/logs`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(batch),
+      });
+    } catch {
+      /* Silent Observer — telemetry never touches the app. */
+    }
+  };
+
+  const timer = setInterval(() => void flush(), flushMs);
+  if (typeof timer.unref === 'function') timer.unref();
+
+  const transport = new AdapterTransport({
+    name: 'collector-logs',
+    adapter: new UniversalAdapter({
+      // `entry` is already masked, sanitized and context-enriched.
+      executor: (entry: unknown) => {
+        buffer.push(entry as Record<string, unknown>);
+        if (buffer.length >= batchSize) void flush();
+      },
+      onError: () => {},
+    }),
+  });
+
+  return {
+    transport,
+    shutdown: async () => {
+      clearInterval(timer);
+      await flush();
+    },
+  };
 }
 
 /** Convenience: an exporter + tracer for a service, pointed at the collector. */

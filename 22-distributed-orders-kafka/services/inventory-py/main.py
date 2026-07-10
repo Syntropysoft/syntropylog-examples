@@ -47,6 +47,7 @@ from kafka_bus import (
     publish_event,
 )
 from syntropy import FIELD_CORRELATION, bootstrap
+from tracing import Tracer, create_tracing
 
 CLIENT_ID = f"{SVC_INVENTORY}-py"
 
@@ -58,6 +59,7 @@ class Deps:
     logger: Any
     redis: "aioredis.Redis"
     producer: Any
+    tracer: Tracer
 
 
 # ── I/O helpers (each does one thing) ────────────────────────────────────────
@@ -99,8 +101,12 @@ async def handle_order(order: dict[str, Any], deps: Deps) -> None:
             )
 
         event = stock_reserved_event(order_id, reservation)
-        headers = slpy.get_propagation_headers("kafka")
-        await publish_event(deps.producer, TOPIC_STOCK_RESERVED, order_id, json.dumps(event), headers)
+        # Producer span: inject a traceparent onto the Kafka headers so notifications
+        # continues the trace across the broker (alongside the correlationId).
+        async with deps.tracer.span("publish stock.reserved", "producer", orderId=order_id):
+            headers = slpy.get_propagation_headers("kafka")
+            deps.tracer.inject(headers)
+            await publish_event(deps.producer, TOPIC_STOCK_RESERVED, order_id, json.dumps(event), headers)
 
 
 async def consume_loop(consumer: Any, deps: Deps) -> None:
@@ -110,13 +116,21 @@ async def consume_loop(consumer: Any, deps: Deps) -> None:
         if msg.value is None:  # guard: skip tombstones / empty payloads
             continue
 
-        fields = extract_inbound_context(normalize_headers(msg.headers))
+        raw_headers = normalize_headers(msg.headers)
+        fields = extract_inbound_context(raw_headers)
         if not fields.get(FIELD_CORRELATION):  # guard: never orphan a log line
             fields[FIELD_CORRELATION] = fallback_correlation_id(CLIENT_ID)
+        # traceId + parentSpanId from the W3C traceparent orders put on the Kafka message.
+        trace_fields = deps.tracer.extract(raw_headers)
 
-        async with slpy.context(**fields):
+        async with slpy.context(**fields, **trace_fields):
             try:
-                await handle_order(json.loads(msg.value.decode("utf-8")), deps)
+                order = json.loads(msg.value.decode("utf-8"))
+                # Consumer span — the trace crosses the broker AND the language boundary here.
+                async with deps.tracer.span(
+                    "consume order.created", "consumer", orderId=order.get("orderId", "")
+                ):
+                    await handle_order(order, deps)
             except Exception as err:  # noqa: BLE001 — one bad message never kills the loop
                 deps.logger.error("kafka consumer handler failed", error=str(err))
 
@@ -132,7 +146,8 @@ async def lifespan(app: FastAPI):
         f"{CLIENT_ID}-consumer", GROUP_INVENTORY, TOPIC_ORDER_CREATED, env.KAFKA_BROKERS
     )
 
-    deps = Deps(logger=boot.logger, redis=redis, producer=producer)
+    tracer, trace_exporter = create_tracing(SVC_INVENTORY, env.COLLECTOR_URL)
+    deps = Deps(logger=boot.logger, redis=redis, producer=producer, tracer=tracer)
     app.state.deps = deps
     consumer_task = asyncio.create_task(consume_loop(consumer, deps))
 
@@ -151,6 +166,7 @@ async def lifespan(app: FastAPI):
         for close in (consumer.stop, producer.stop, redis.aclose):
             with contextlib.suppress(Exception):
                 await close()
+        await trace_exporter.shutdown()
         await boot.shutdown()
 
 

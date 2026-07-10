@@ -1,9 +1,11 @@
+using System.Text.Json;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Sl4n;
 using Traceability.Domain;
 using Traceability.Json;
+using Traceability.Sse;
 using Traceability.Store;
 using Traceability.Telemetry;
 
@@ -25,6 +27,7 @@ builder.Logging.ClearProviders();
 builder.Services.AddSl4n(cfg => cfg.Masking.EnableDefaultRules = true);
 
 builder.Services.AddSingleton<ISpanStore, InMemorySpanStore>();
+builder.Services.AddSingleton<Broadcaster>();
 builder.Services.AddSingleton(new Counters(startedAt));
 
 WebApplication app = builder.Build();
@@ -52,14 +55,44 @@ app.MapPost("/v1/spans", IResult (SpanRecord[] batch, ISpanStore store, Counters
     return TypedResults.Ok(new IngestResponse(accepted, dropped));
 });
 
-// ── Ingest: POST /v1/logs (accepted + counted in v1; nesting under spans is later) ──
-app.MapPost("/v1/logs", IResult (LogRecord[] batch, Counters counters) =>
+// ── Ingest: POST /v1/logs — pass the full (already-masked) entry through, verbatim, to the
+//    dashboard over SSE. JsonElement (not a fixed DTO) so no field is dropped. ─────────────
+app.MapPost("/v1/logs", IResult (JsonElement[] batch, Broadcaster hub, Counters counters) =>
 {
     if (batch is null || batch.Length == 0)
         return TypedResults.BadRequest(new IngestResponse(0, 0)); // guard
 
+    foreach (JsonElement entry in batch)
+        hub.Publish($"{{\"type\":\"log\",\"entry\":{entry.GetRawText()}}}");
+
     counters.AddLogs(batch.Length);
     return TypedResults.Ok(new IngestResponse(batch.Length, 0));
+});
+
+// ── Live feed: GET /stream — Server-Sent Events of logs (and later spans) to the dashboard ──
+app.MapGet("/stream", async (HttpContext ctx, Broadcaster hub, CancellationToken ct) =>
+{
+    ctx.Response.Headers.ContentType = "text/event-stream";
+    ctx.Response.Headers.CacheControl = "no-cache";
+    ctx.Response.Headers["Access-Control-Allow-Origin"] = "*";
+
+    (Guid id, System.Threading.Channels.ChannelReader<string> reader) = hub.Subscribe();
+    try
+    {
+        await foreach (string message in reader.ReadAllAsync(ct))
+        {
+            await ctx.Response.WriteAsync($"data: {message}\n\n", ct);
+            await ctx.Response.Body.FlushAsync(ct);
+        }
+    }
+    catch (OperationCanceledException)
+    {
+        /* client disconnected */
+    }
+    finally
+    {
+        hub.Unsubscribe(id);
+    }
 });
 
 // ── Query: assembled trace (pure assembler) ──────────────────────────────────

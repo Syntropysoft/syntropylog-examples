@@ -13,6 +13,8 @@ class _Env:
     REDIS_URL: str = os.getenv("REDIS_URL", "redis://localhost:6379")
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "info")
     INVENTORY_PORT: int = int(os.getenv("INVENTORY_PORT", "3003"))
+    # The .NET AOT traceability collector — where spans are pushed.
+    COLLECTOR_URL: str = os.getenv("COLLECTOR_URL", "http://localhost:9317")
 
 
 env = _Env()

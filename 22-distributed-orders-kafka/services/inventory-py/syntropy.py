@@ -35,6 +35,7 @@ from constants import (
     TARGET_KAFKA,
 )
 from env import env
+from tracing import CollectorLogTransport
 
 
 # The coherence trick, identical to CONTEXT_CONFIG in syntropy.ts: the conceptual
@@ -106,11 +107,15 @@ async def bootstrap(service_name: str) -> Bootstrapped:
         adapter=UniversalAdapter(executor=_publish),
     )
 
+    # Also push logs to the .NET collector (coexists with the Redis log bus during the
+    # transition — the dashboard can be fed by either).
+    collector_logs = CollectorLogTransport(env.COLLECTOR_URL)
+
     await slpy.init(
         {
             "logger": {
                 "level": env.LOG_LEVEL,
-                "transports": [PrettyConsoleTransport(), logbus_transport],
+                "transports": [PrettyConsoleTransport(), logbus_transport, collector_logs.transport],
             },
             "masking": {"enable_default_rules": True},
             "logging_matrix": LOGGING_MATRIX,
@@ -124,6 +129,10 @@ async def bootstrap(service_name: str) -> Bootstrapped:
         try:
             await slpy.shutdown()
         finally:
+            try:
+                await collector_logs.shutdown()
+            except Exception:
+                pass
             try:
                 logbus_redis.close()
             except Exception:

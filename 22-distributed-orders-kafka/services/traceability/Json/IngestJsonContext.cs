@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using Traceability.Domain;
 
@@ -10,7 +11,7 @@ namespace Traceability.Json;
 /// </summary>
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
 [JsonSerializable(typeof(SpanRecord[]))]
-[JsonSerializable(typeof(LogRecord[]))]
+[JsonSerializable(typeof(JsonElement[]))]
 [JsonSerializable(typeof(TraceView))]
 [JsonSerializable(typeof(TraceSummary[]))]
 [JsonSerializable(typeof(IngestResponse))]

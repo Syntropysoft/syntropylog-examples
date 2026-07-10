@@ -21,6 +21,7 @@ import Redis from 'ioredis';
 
 import { env } from './env';
 import { maskingConfig } from './masking';
+import { createCollectorLogTransport } from './tracing';
 import {
   FIELD_CORRELATION,
   FIELD_TENANT,
@@ -88,11 +89,15 @@ export async function bootstrap(serviceName: string): Promise<Bootstrapped> {
     }),
   });
 
+  // Also push logs to the .NET collector (coexists with the Redis log bus during the
+  // transition — the dashboard can be fed by either).
+  const collectorLogs = createCollectorLogTransport(env.COLLECTOR_URL);
+
   await syntropyLog.init({
     logger: {
       serviceName,
       level: env.LOG_LEVEL,
-      transports: [new ClassicConsoleTransport(), logbusTransport],
+      transports: [new ClassicConsoleTransport(), logbusTransport, collectorLogs.transport],
     },
     masking: maskingConfig,
     loggingMatrix: {
@@ -118,6 +123,7 @@ export async function bootstrap(serviceName: string): Promise<Bootstrapped> {
     try {
       await syntropyLog.shutdown();
     } finally {
+      await collectorLogs.shutdown();
       await logbusRedis.quit().catch(() => {});
     }
   };
