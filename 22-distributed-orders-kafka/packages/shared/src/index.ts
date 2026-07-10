@@ -5,5 +5,4 @@ export * from './masking';
 export * from './syntropy';
 export * from './redis';
 export * from './kafka';
-export * from './logbus';
 export * from './tracing';

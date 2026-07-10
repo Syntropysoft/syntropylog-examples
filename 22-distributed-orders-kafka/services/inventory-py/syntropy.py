@@ -18,17 +18,14 @@ Two things happen here, declared once:
 
 from __future__ import annotations
 
-import json
 from dataclasses import dataclass
 from typing import Any, Callable
 
-import redis as sync_redis
-from slpy import slpy, AdapterTransport, UniversalAdapter, PrettyConsoleTransport
+from slpy import slpy, PrettyConsoleTransport
 
 from constants import (
     FIELD_CORRELATION,
     FIELD_TENANT,
-    LOGBUS_CHANNEL,
     SOURCE_FRONTEND,
     SOURCE_KAFKA,
     TARGET_HTTP,
@@ -79,43 +76,22 @@ LOGGING_MATRIX: dict[str, list[str]] = {
 @dataclass
 class Bootstrapped:
     logger: Any
-    logbus_redis: "sync_redis.Redis"
     shutdown: Callable[[], Any]
 
 
 async def bootstrap(service_name: str) -> Bootstrapped:
-    """Init slpy with a console transport + the Redis log-bus transport."""
-    # Dedicated, publish-only Redis connection for the log bus. A *synchronous* client
-    # on purpose: the executor must run inline. slpy's UniversalAdapter dispatches an
-    # async executor via a bare `loop.create_task(...)` (fire-and-forget, no reference
-    # held) — under a busy consumer loop those tasks are unreliable/GC-prone and the
-    # publish silently never happens. A sync executor runs synchronously inside
-    # `transport.log()`, so every already-masked entry reliably reaches the log bus.
-    # The publish is a single local PUBLISH (sub-millisecond); acceptable to run inline.
-    logbus_redis = sync_redis.from_url(env.REDIS_URL)
+    """Init slpy with a console transport + the collector-log transport.
 
-    def _publish(entry: dict[str, Any]) -> None:
-        # `entry` is already masked, sanitized and context-enriched — it *is* the
-        # envelope defined in LOGBUS-CONTRACT.md. Best-effort: never crash the app.
-        try:
-            logbus_redis.publish(LOGBUS_CHANNEL, json.dumps(entry, default=str))
-        except Exception:
-            pass
-
-    logbus_transport = AdapterTransport(
-        name="logbus",
-        adapter=UniversalAdapter(executor=_publish),
-    )
-
-    # Also push logs to the .NET collector (coexists with the Redis log bus during the
-    # transition — the dashboard can be fed by either).
+    Logs are pushed to the .NET collector over HTTP (batched, via CollectorLogTransport),
+    which serves the live dashboard over SSE. Redis is state-only in this service.
+    """
     collector_logs = CollectorLogTransport(env.COLLECTOR_URL)
 
     await slpy.init(
         {
             "logger": {
                 "level": env.LOG_LEVEL,
-                "transports": [PrettyConsoleTransport(), logbus_transport, collector_logs.transport],
+                "transports": [PrettyConsoleTransport(), collector_logs.transport],
             },
             "masking": {"enable_default_rules": True},
             "logging_matrix": LOGGING_MATRIX,
@@ -133,9 +109,5 @@ async def bootstrap(service_name: str) -> Bootstrapped:
                 await collector_logs.shutdown()
             except Exception:
                 pass
-            try:
-                logbus_redis.close()
-            except Exception:
-                pass
 
-    return Bootstrapped(logger=logger, logbus_redis=logbus_redis, shutdown=shutdown)
+    return Bootstrapped(logger=logger, shutdown=shutdown)

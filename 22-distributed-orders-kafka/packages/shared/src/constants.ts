@@ -33,9 +33,7 @@ export const GROUP_PAYMENTS = 'payments-service';
 export const GROUP_INVENTORY = 'inventory-service';
 export const GROUP_NOTIFICATIONS = 'notifications-service';
 
-// ── Redis ───────────────────────────────────────────────────────────────────
-/** Pub/sub channel every service publishes its (already-masked) log entries to. */
-export const LOGBUS_CHANNEL = 'syntropy:logbus';
+// ── Redis (state only — orders + stock; logs go to the collector over HTTP) ──
 export const orderKey = (id: string): string => `order:${id}`;
 export const stockKey = (sku: string): string => `stock:${sku}`;
 

@@ -1,21 +1,18 @@
 /**
- * Gateway · Express.
+ * Gateway · Express — the edge.
  * - `correlationIdMiddleware()` opens a correlation scope per request (using the
  *   id the browser sent on `x-correlation-id`, or generating one).
  * - POST /api/orders forwards to the orders service over HTTP, propagating the id
- *   via `getPropagationHeaders('http')`.
- * - A WebSocket hub subscribes to the Redis log bus and streams every (already
- *   masked) log entry from ALL services to the live dashboard.
+ *   via `getPropagationHeaders('http')`, wrapped in a trace span.
+ * Logs and spans go to the .NET collector, which serves the live dashboard — the
+ * gateway no longer bridges the log bus.
  */
-import http from 'http';
 import path from 'path';
 import express from 'express';
-import { WebSocketServer, WebSocket } from 'ws';
 import { correlationIdMiddleware } from 'syntropylog';
 import {
   bootstrap,
   env,
-  subscribeLogBus,
   createTracing,
   TARGET_HTTP,
   SVC_GATEWAY,
@@ -104,35 +101,11 @@ async function main(): Promise<void> {
   const webDist = path.resolve(__dirname, '../../../frontend/dist');
   app.use(express.static(webDist));
 
-  const server = http.createServer(app);
-
-  // WebSocket hub → live dashboard.
-  const wss = new WebSocketServer({ server, path: '/ws' });
-  const clients = new Set<WebSocket>();
-  wss.on('connection', (ws) => {
-    clients.add(ws);
-    ws.on('close', () => clients.delete(ws));
-    ws.on('error', () => clients.delete(ws));
-  });
-
-  const stopBus = subscribeLogBus((entry) => {
-    const msg = JSON.stringify(entry);
-    for (const ws of clients) {
-      if (ws.readyState === WebSocket.OPEN) ws.send(msg);
-    }
-  });
-
-  server.listen(env.GATEWAY_PORT, () => {
-    logger.info(
-      { port: env.GATEWAY_PORT, operation: 'startup' },
-      'gateway (Express) listening + WS hub + logbus bridge'
-    );
+  const server = app.listen(env.GATEWAY_PORT, () => {
+    logger.info({ port: env.GATEWAY_PORT, operation: 'startup' }, 'gateway (Express) listening');
   });
 
   const stop = async (): Promise<void> => {
-    await stopBus();
-    for (const ws of clients) ws.terminate();
-    wss.close();
     server.close();
     await shutdownTracing();
     await shutdown();

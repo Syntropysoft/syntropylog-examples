@@ -27,11 +27,8 @@ TOPIC_STOCK_RESERVED = "stock.reserved"
 # ── Kafka consumer groups ────────────────────────────────────────────────────
 GROUP_INVENTORY = "inventory-service"
 
-# ── Redis ────────────────────────────────────────────────────────────────────
-# Pub/sub channel every service publishes its (already-masked) log entries to.
-LOGBUS_CHANNEL = "syntropy:logbus"
 
-
+# ── Redis (state only — stock; logs go to the collector over HTTP) ───────────
 def stock_key(sku: str) -> str:
     return f"stock:{sku}"
 

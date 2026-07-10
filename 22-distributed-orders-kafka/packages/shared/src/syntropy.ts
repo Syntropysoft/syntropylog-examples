@@ -7,17 +7,10 @@
  *     reads. That is what keeps ONE id in the logs AND on the wire (HTTP + Kafka).
  *   - inbound/outbound maps declare the wire names per source/target. HTTP uses
  *     `x-correlation-id`; Kafka uses `correlationId`. The framework translates.
- *   - a logbus AdapterTransport publishes every already-masked entry to Redis,
- *     where the gateway picks it up and streams it to the live dashboard.
+ *   - a collector-log AdapterTransport pushes every already-masked entry to the .NET
+ *     collector over HTTP, which serves the live dashboard over SSE.
  */
-import {
-  syntropyLog,
-  ClassicConsoleTransport,
-  AdapterTransport,
-  UniversalAdapter,
-  type ILogger,
-} from 'syntropylog';
-import Redis from 'ioredis';
+import { syntropyLog, ClassicConsoleTransport, type ILogger } from 'syntropylog';
 
 import { env } from './env';
 import { maskingConfig } from './masking';
@@ -29,7 +22,6 @@ import {
   SOURCE_KAFKA,
   TARGET_HTTP,
   TARGET_KAFKA,
-  LOGBUS_CHANNEL,
 } from './constants';
 
 /**
@@ -68,36 +60,15 @@ export interface Bootstrapped {
 }
 
 export async function bootstrap(serviceName: string): Promise<Bootstrapped> {
-  // Dedicated, publish-only Redis connection for the log bus.
-  const logbusRedis = new Redis(env.REDIS_URL, { maxRetriesPerRequest: null });
-  logbusRedis.on('error', () => {
-    /* the logbus is best-effort; never let it crash a service */
-  });
-
-  const logbusTransport = new AdapterTransport({
-    name: 'logbus',
-    adapter: new UniversalAdapter({
-      // `entry` is already masked, sanitized and context-enriched.
-      executor: (entry: unknown) => {
-        const payload = JSON.stringify({
-          ...(entry as Record<string, unknown>),
-          service: serviceName,
-        });
-        void logbusRedis.publish(LOGBUS_CHANNEL, payload).catch(() => {});
-      },
-      onError: () => {},
-    }),
-  });
-
-  // Also push logs to the .NET collector (coexists with the Redis log bus during the
-  // transition — the dashboard can be fed by either).
+  // Logs are pushed to the .NET collector over HTTP (batched); the collector serves the
+  // live dashboard over SSE. Redis is now state-only (orders + stock).
   const collectorLogs = createCollectorLogTransport(env.COLLECTOR_URL);
 
   await syntropyLog.init({
     logger: {
       serviceName,
       level: env.LOG_LEVEL,
-      transports: [new ClassicConsoleTransport(), logbusTransport, collectorLogs.transport],
+      transports: [new ClassicConsoleTransport(), collectorLogs.transport],
     },
     masking: maskingConfig,
     loggingMatrix: {
@@ -124,7 +95,6 @@ export async function bootstrap(serviceName: string): Promise<Bootstrapped> {
       await syntropyLog.shutdown();
     } finally {
       await collectorLogs.shutdown();
-      await logbusRedis.quit().catch(() => {});
     }
   };
 

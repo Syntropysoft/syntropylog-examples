@@ -1,15 +1,14 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
-// In dev, proxy API + WebSocket to the gateway so the page is same-origin.
-// In prod, the gateway serves the built dist and both are same-origin anyway.
+// In dev, proxy /api to the gateway so order POSTs are same-origin. The live log/trace
+// feed comes straight from the .NET collector over SSE (see useLogBus.ts).
 export default defineConfig({
   plugins: [react()],
   server: {
     port: 5173,
     proxy: {
       '/api': 'http://localhost:3000',
-      '/ws': { target: 'ws://localhost:3000', ws: true },
     },
   },
 });
