@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { CATALOG } from './catalog';
 import { newTraceId, placeOrder } from './api';
 import { useLogBus } from './useLogBus';
@@ -9,7 +9,7 @@ import { TraceWaterfall } from './components/TraceWaterfall';
 import type { CartLine, OrderResult } from './types';
 
 export default function App() {
-  const { entries, traces, connected } = useLogBus();
+  const { entries, traces, connected, fetchTrace } = useLogBus();
   const [activeId, setActiveId] = useState<string | null>(null);
   const [placing, setPlacing] = useState(false);
   const [lastResult, setLastResult] = useState<OrderResult | null>(null);
@@ -28,6 +28,13 @@ export default function App() {
       setPlacing(false);
     }
   }
+
+  // Selecting a trace whose waterfall isn't in memory (a historical one, e.g. after a reload —
+  // logs are replayed on connect but trace layouts are only streamed live) → fetch it from the
+  // collector's durable store on demand, so any recent trace shows its full waterfall, not just the last.
+  useEffect(() => {
+    if (activeId && !traces[activeId]) fetchTrace(activeId);
+  }, [activeId, traces, fetchTrace]);
 
   const traceEntries = useMemo(
     () => (activeId ? entries.filter((e) => e.correlationId === activeId) : entries),

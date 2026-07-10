@@ -38,6 +38,14 @@ builder.Services.AddSingleton(new Counters(startedAt));
 WebApplication app = builder.Build();
 ILogger log = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("traceability");
 
+// CORS: the dashboard (Vite on another origin) fetches historical traces/metrics cross-origin.
+// Simple GETs need only this response header (no preflight); /stream also sets it (idempotent).
+app.Use(async (ctx, next) =>
+{
+    ctx.Response.Headers["Access-Control-Allow-Origin"] = "*";
+    await next();
+});
+
 // ── Ingest: POST /v1/spans (the hot path — the latigazo target) ──────────────
 app.MapPost("/v1/spans", IResult (SpanRecord[] batch, ISpanStore store, Broadcaster hub, Counters counters) =>
 {
