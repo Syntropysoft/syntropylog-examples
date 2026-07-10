@@ -12,6 +12,7 @@ import {
   createProducer,
   ensureTopics,
   publishEvent,
+  createTracing,
   ALL_TOPICS,
   SVC_PAYMENTS,
   GROUP_PAYMENTS,
@@ -25,6 +26,9 @@ const APPROVAL_LIMIT = 5000;
 
 async function main(): Promise<void> {
   const { logger, contextManager, shutdown } = await bootstrap(SVC_PAYMENTS);
+  // Tracing: the trace crosses the broker here — extract the traceparent orders put on
+  // the Kafka message, open a consumer span. Additive; the log bus is untouched.
+  const { tracer, shutdown: shutdownTracing } = createTracing(SVC_PAYMENTS, env.COLLECTOR_URL);
   await ensureTopics(`${SVC_PAYMENTS}-admin`, ALL_TOPICS);
   const producer = await createProducer(`${SVC_PAYMENTS}-producer`);
 
@@ -34,7 +38,18 @@ async function main(): Promise<void> {
     topics: [TOPIC_ORDER_CREATED],
     contextManager,
     logger,
-    eachEvent: async ({ value: order }) => {
+    eachEvent: async ({ value: order, headers }) => {
+      tracer.extract(headers); // continue the trace across Kafka
+      await tracer.withSpan(
+        'consume order.created',
+        { orderId: order.orderId },
+        () => processPayment(order),
+        'consumer'
+      );
+    },
+  });
+
+  async function processPayment(order: OrderCreatedEvent): Promise<void> {
       contextManager.set('orderId', order.orderId);
       contextManager.set('operation', 'process_payment');
 
@@ -66,9 +81,24 @@ async function main(): Promise<void> {
         logger.warn({ orderId: order.orderId, amount: order.total }, 'payment declined');
       }
 
-      await publishEvent(producer, TOPIC_PAYMENT_PROCESSED, order.orderId, result, contextManager);
-    },
-  });
+      await tracer.withSpan(
+        'publish payment.processed',
+        { orderId: order.orderId },
+        async () => {
+          const traceHeaders: Record<string, string> = {};
+          tracer.inject(traceHeaders);
+          await publishEvent(
+            producer,
+            TOPIC_PAYMENT_PROCESSED,
+            order.orderId,
+            result,
+            contextManager,
+            traceHeaders
+          );
+        },
+        'producer'
+      );
+  }
 
   const app = Fastify();
   app.get('/health', async () => ({ ok: true, service: SVC_PAYMENTS }));
@@ -82,6 +112,7 @@ async function main(): Promise<void> {
     await consumer.disconnect().catch(() => {});
     await producer.disconnect().catch(() => {});
     await app.close().catch(() => {});
+    await shutdownTracing();
     await shutdown();
     process.exit(0);
   };

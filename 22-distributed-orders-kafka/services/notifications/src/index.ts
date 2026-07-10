@@ -9,6 +9,8 @@ import {
   ensureTopics,
   createRedis,
   orderKey,
+  createTracing,
+  env,
   ALL_TOPICS,
   SVC_NOTIFICATIONS,
   GROUP_NOTIFICATIONS,
@@ -34,6 +36,9 @@ async function updateStatus(redis: Redis, orderId: string, status: OrderStatus):
 
 async function main(): Promise<void> {
   const { logger, contextManager, shutdown } = await bootstrap(SVC_NOTIFICATIONS);
+  // Tracing: the trace crosses the broker here too — extract the traceparent the upstream
+  // producer put on the message, open a consumer span. Additive; the log bus is untouched.
+  const { tracer, shutdown: shutdownTracing } = createTracing(SVC_NOTIFICATIONS, env.COLLECTOR_URL);
   const redis = createRedis();
   await ensureTopics(`${SVC_NOTIFICATIONS}-admin`, ALL_TOPICS);
 
@@ -43,27 +48,35 @@ async function main(): Promise<void> {
     topics: [TOPIC_PAYMENT_PROCESSED, TOPIC_STOCK_RESERVED],
     contextManager,
     logger,
-    eachEvent: async ({ topic, value }) => {
-      contextManager.set('orderId', value.orderId);
-      contextManager.set('operation', 'notify');
+    eachEvent: async ({ topic, value, headers }) => {
+      tracer.extract(headers); // continue the trace across Kafka
+      await tracer.withSpan(
+        `consume ${topic}`,
+        { orderId: value.orderId },
+        async () => {
+          contextManager.set('orderId', value.orderId);
+          contextManager.set('operation', 'notify');
 
-      if (topic === TOPIC_PAYMENT_PROCESSED) {
-        const e = value as PaymentProcessedEvent;
-        if (e.approved) {
-          logger.info({ orderId: e.orderId, channel: 'email', last4: e.last4 }, 'email sent: payment approved');
-        } else {
-          logger.warn({ orderId: e.orderId, channel: 'email', reason: e.reason ?? null }, 'email sent: payment declined');
-        }
-        await updateStatus(redis, e.orderId, e.approved ? 'paid' : 'payment_declined');
-      } else {
-        const e = value as StockReservedEvent;
-        if (e.reserved) {
-          logger.info({ orderId: e.orderId, channel: 'email' }, 'email sent: items reserved');
-        } else {
-          logger.warn({ orderId: e.orderId, channel: 'email' }, 'email sent: out of stock');
-        }
-        await updateStatus(redis, e.orderId, e.reserved ? 'reserved' : 'out_of_stock');
-      }
+          if (topic === TOPIC_PAYMENT_PROCESSED) {
+            const e = value as PaymentProcessedEvent;
+            if (e.approved) {
+              logger.info({ orderId: e.orderId, channel: 'email', last4: e.last4 }, 'email sent: payment approved');
+            } else {
+              logger.warn({ orderId: e.orderId, channel: 'email', reason: e.reason ?? null }, 'email sent: payment declined');
+            }
+            await updateStatus(redis, e.orderId, e.approved ? 'paid' : 'payment_declined');
+          } else {
+            const e = value as StockReservedEvent;
+            if (e.reserved) {
+              logger.info({ orderId: e.orderId, channel: 'email' }, 'email sent: items reserved');
+            } else {
+              logger.warn({ orderId: e.orderId, channel: 'email' }, 'email sent: out of stock');
+            }
+            await updateStatus(redis, e.orderId, e.reserved ? 'reserved' : 'out_of_stock');
+          }
+        },
+        'consumer'
+      );
     },
   });
 
@@ -72,6 +85,7 @@ async function main(): Promise<void> {
   const stop = async (): Promise<void> => {
     await consumer.disconnect().catch(() => {});
     await redis.quit().catch(() => {});
+    await shutdownTracing();
     await shutdown();
     process.exit(0);
   };

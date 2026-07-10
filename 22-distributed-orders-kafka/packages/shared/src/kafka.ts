@@ -79,6 +79,8 @@ export interface ConsumedEvent<T> {
   partition: number;
   key: string | null;
   value: T;
+  /** Normalized (lowercased) message headers — lets the tracing layer extract a traceparent. */
+  headers: Record<string, string>;
 }
 
 export interface StartConsumerOptions<T> {
@@ -131,7 +133,7 @@ export async function startConsumer<T>(
 
         const value = (message.value ? JSON.parse(message.value.toString('utf8')) : null) as T;
         try {
-          await eachEvent({ topic, partition, key: message.key?.toString() ?? null, value });
+          await eachEvent({ topic, partition, key: message.key?.toString() ?? null, value, headers });
         } catch (err) {
           logger.error(
             { topic, error: err instanceof Error ? err.message : String(err) },
