@@ -7,7 +7,7 @@ import { AppModule } from './app.module';
 import { shutdownTracing } from './observability';
 
 async function main(): Promise<void> {
-  // Init SyntropyLog (singleton) + logbus BEFORE creating the Nest app.
+  // Init SyntropyLog (singleton) + its transports BEFORE creating the Nest app.
   const { shutdown } = await bootstrapSyntropy(SVC_ORDERS);
 
   // bufferLogs holds Nest's early logs until we attach the logger, then flushes.
@@ -15,7 +15,7 @@ async function main(): Promise<void> {
 
   // Use the official SyntropyLog logger — resolved from SyntropyLogModule, bound to the
   // same initialized singleton — as Nest's app logger. Nest's own logs now route through
-  // SyntropyLog's masking/matrix/logbus pipeline.
+  // SyntropyLog's masking/matrix/logging pipeline.
   app.useLogger(app.get(SyntropyNestLoggerService));
 
   // Open a correlation scope per request, picking up the id the gateway sent

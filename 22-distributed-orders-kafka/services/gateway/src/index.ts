@@ -21,8 +21,7 @@ import {
 
 async function main(): Promise<void> {
   const { logger, contextManager, shutdown } = await bootstrap(SVC_GATEWAY);
-  // Tracing (Phase 4, incremental): emit spans to the .NET AOT collector. Additive —
-  // the Redis log bus is untouched. Only the gateway is instrumented for now.
+  // Tracing: emit spans (and, via the shared bootstrap, logs) to the .NET AOT collector.
   const { tracer, shutdown: shutdownTracing } = createTracing(SVC_GATEWAY, env.COLLECTOR_URL);
 
   const app = express();

@@ -188,9 +188,9 @@ def create_tracing(service: str, endpoint: str) -> tuple[Tracer, OtlpLiteExporte
 
 class CollectorLogTransport:
     """An slpy transport that batches already-masked log entries and POSTs them to the
-    collector's /v1/logs (background drain), so the dashboard can be fed by the collector
-    instead of the Redis log bus. The executor append is SYNC (reliable — no fire-and-forget
-    drop under load); the flush is an owned task. Coexists with the Redis log bus."""
+    collector's /v1/logs (background drain) — this is the log path (the Redis log bus was
+    retired). The executor append is SYNC (reliable — no fire-and-forget drop under load);
+    the flush is an owned task."""
 
     def __init__(self, endpoint: str, flush_interval: float = 1.0) -> None:
         self._endpoint = endpoint.rstrip("/")

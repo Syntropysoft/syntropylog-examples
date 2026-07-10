@@ -8,7 +8,7 @@ import { tracingProviders } from './observability';
 
 // Official `syntropylog/nestjs` integration. `forRoot({ syntropyLog })` binds the
 // module to the ONE runtime singleton we initialize in main.ts — so Nest's own logs
-// (startup banner, route mapping) flow through the same masking/matrix/logbus pipeline
+// (startup banner, route mapping) flow through the same masking/matrix/logging pipeline
 // as the app code, and `@InjectLogger()` is available everywhere (the module is global).
 // This replaces the earlier hand-rolled SyntropyNestLoggerService workaround, which
 // existed only because pre-1.3.0 the subpath bundled a *second*, uninitialized singleton

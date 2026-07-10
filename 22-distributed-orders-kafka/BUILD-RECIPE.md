@@ -1,5 +1,13 @@
 # Build Recipe — Example 22: Distributed Orders (one correlation-id, end to end)
 
+> **⚠️ Historical.** This recipe documents the **original** build — the all-TypeScript mesh with a
+> Redis **log bus** bridged to the dashboard over **WebSocket**. The example has since grown a
+> **Python** service, a **.NET AOT** traceability collector, distributed **tracing** (W3C
+> `traceparent` + a live waterfall), and the log path moved to **HTTP push → the collector → SSE**
+> (the Redis log bus is retired). For the current architecture read [README.md](README.md) and
+> [TRACING-DESIGN.md](TRACING-DESIGN.md); the sections below are the original step-by-step, kept
+> for the record.
+
 > Authoritative, resumable plan. If context is lost, re-read this file and continue
 > from the first unchecked step. Every non-obvious SyntropyLog API fact is captured
 > in §3 so we never have to re-research the library.

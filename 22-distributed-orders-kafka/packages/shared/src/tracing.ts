@@ -244,9 +244,9 @@ export function createTracer(serviceName: string, exporter: OtlpLiteExporter): T
 
 /**
  * A SyntropyLog transport that pushes every already-masked log entry to the collector's
- * `/v1/logs` (batched), so the dashboard can be fed by the collector instead of the Redis
- * log bus. The executor's sink is HTTP — same "declare once, route anywhere", new target.
- * Coexists with the log bus during the transition (Silent-Observer drop on failure).
+ * `/v1/logs` (batched) — this is the log path (the Redis log bus was retired). The executor's
+ * sink is HTTP: same "declare once, route anywhere", new target. Best-effort (Silent-Observer
+ * drop on failure) — telemetry never touches the request path.
  */
 export function createCollectorLogTransport(
   endpoint: string,

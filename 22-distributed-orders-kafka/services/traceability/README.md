@@ -6,8 +6,9 @@ trace **waterfall** and serves it. Schematic OpenTelemetry Collector — see
 [../../TRACING-DESIGN.md](../../TRACING-DESIGN.md). It logs *itself* with **sl4n**, dogfooding
 the .NET member of the family.
 
-> **Status:** Phase 1 (collector skeleton) + Phase 2 (the load test) — **done & measured**.
-> Wiring the services to push, log-nesting, and the dashboard waterfall are the next phases.
+> **Status: in production use by the demo.** Ingests logs + spans from all 5 services (TS + Python),
+> assembles traces, and serves the live dashboard over SSE (logs + a live-filling waterfall). The
+> `bench/latigazo.sh` load test is measured below.
 
 ## House standard — functional core / imperative shell
 

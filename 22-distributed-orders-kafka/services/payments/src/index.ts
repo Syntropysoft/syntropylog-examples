@@ -27,7 +27,7 @@ const APPROVAL_LIMIT = 5000;
 async function main(): Promise<void> {
   const { logger, contextManager, shutdown } = await bootstrap(SVC_PAYMENTS);
   // Tracing: the trace crosses the broker here — extract the traceparent orders put on
-  // the Kafka message, open a consumer span. Additive; the log bus is untouched.
+  // the Kafka message, open a consumer span.
   const { tracer, shutdown: shutdownTracing } = createTracing(SVC_PAYMENTS, env.COLLECTOR_URL);
   await ensureTopics(`${SVC_PAYMENTS}-admin`, ALL_TOPICS);
   const producer = await createProducer(`${SVC_PAYMENTS}-producer`);

@@ -9,9 +9,9 @@ Two things happen here, declared once:
      outbound), so the id the browser started travels coherently across the broker
      and lands in every log line — exactly like the TypeScript services.
 
-  2. A log-bus transport — an `AdapterTransport` whose executor publishes every
-     already-masked, context-enriched entry to the shared Redis channel. The gateway
-     subscribes there and streams each entry to the live dashboard, grouped by
+  2. A collector-log transport (`CollectorLogTransport`) — an `AdapterTransport` whose
+     executor pushes every already-masked, context-enriched entry to the .NET collector's
+     `/v1/logs` over HTTP, which streams it to the live dashboard over SSE, grouped by
      `correlationId`. The entry already carries `service` (the logger name), so it is
      emitted verbatim — see `LOGBUS-CONTRACT.md`.
 """

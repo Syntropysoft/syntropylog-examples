@@ -37,7 +37,7 @@ async function updateStatus(redis: Redis, orderId: string, status: OrderStatus):
 async function main(): Promise<void> {
   const { logger, contextManager, shutdown } = await bootstrap(SVC_NOTIFICATIONS);
   // Tracing: the trace crosses the broker here too — extract the traceparent the upstream
-  // producer put on the message, open a consumer span. Additive; the log bus is untouched.
+  // producer put on the message, open a consumer span.
   const { tracer, shutdown: shutdownTracing } = createTracing(SVC_NOTIFICATIONS, env.COLLECTOR_URL);
   const redis = createRedis();
   await ensureTopics(`${SVC_NOTIFICATIONS}-admin`, ALL_TOPICS);

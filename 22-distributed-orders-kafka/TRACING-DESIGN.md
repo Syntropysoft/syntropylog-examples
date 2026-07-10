@@ -1,7 +1,11 @@
 # Observability backend — design (schematic OpenTelemetry, on the executor)
 
-**Status:** design only (no code yet).
-**Decisions locked:**
+**Status: IMPLEMENTED.** This document is the design; it all shipped. The .NET AOT collector
+(`services/traceability/`), the per-language helpers (TS `packages/shared/src/tracing.ts`, Python
+`services/inventory-py/tracing.py`), every service's instrumentation, the SSE dashboard with a live
+waterfall, and the Redis-log-bus retirement are all in the tree and verified end to end. The phased
+plan (§9) and the open questions (§10) below are kept for the record — read them as "why", not "todo".
+**Decisions locked (all executed):**
 1. Wire format = full **W3C `traceparent`** (HTTP + Kafka).
 2. **All services push** logs *and* spans to a single service (the OTel Collector model) —
    emission stays on the SyntropyLog **executor**, its sink becomes an HTTP export.

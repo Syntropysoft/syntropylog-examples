@@ -60,7 +60,7 @@ export function Pipeline({ entries }: { entries: LogEntry[] }) {
       <Hop label="Kafka" />
       <div className="parallel">
         <Node svc="payments" label="Payments" sub="Fastify" color="green" stat={s.get('payments')} />
-        <Node svc="inventory" label="Inventory" sub="Express" color="blue" stat={s.get('inventory')} />
+        <Node svc="inventory" label="Inventory" sub="🐍 FastAPI · Python" color="cyan" stat={s.get('inventory')} />
       </div>
       <Hop label="Kafka" />
       <Node

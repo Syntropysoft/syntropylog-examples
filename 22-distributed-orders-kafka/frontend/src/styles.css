@@ -303,6 +303,10 @@ code {
   border-color: var(--svc-notifications);
   box-shadow: 0 0 0 1px var(--svc-notifications);
 }
+.node.c-cyan.active {
+  border-color: var(--svc-inventory);
+  box-shadow: 0 0 0 1px var(--svc-inventory), 0 0 18px -6px var(--svc-inventory);
+}
 .node.warn.active {
   border-color: var(--warn) !important;
   box-shadow: 0 0 0 1px var(--warn), 0 0 18px -6px var(--warn) !important;
