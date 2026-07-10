@@ -64,7 +64,7 @@ async function main(): Promise<void> {
             ...contextManager.getPropagationHeaders(TARGET_HTTP),
           };
           // Client span around the downstream call; inject propagates traceparent so the
-          // (soon-instrumented) orders service continues the same trace.
+          // orders service (NestJS, instrumented) continues the same trace.
           const { status, body } = await tracer.withSpan(
             'call orders',
             { url: env.ORDERS_URL },

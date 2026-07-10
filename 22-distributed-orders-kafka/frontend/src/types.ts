@@ -4,6 +4,7 @@ export interface LogEntry {
   message: string;
   timestamp: string;
   correlationId?: string;
+  spanId?: string;
   orderId?: string;
   operation?: string;
   [key: string]: unknown;

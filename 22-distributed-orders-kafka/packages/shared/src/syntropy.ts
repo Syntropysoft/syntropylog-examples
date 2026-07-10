@@ -14,7 +14,7 @@ import { syntropyLog, ClassicConsoleTransport, type ILogger } from 'syntropylog'
 
 import { env } from './env';
 import { maskingConfig } from './masking';
-import { createCollectorLogTransport } from './tracing';
+import { createCollectorLogTransport, FIELD_SPAN_ID } from './tracing';
 import {
   FIELD_CORRELATION,
   FIELD_TENANT,
@@ -72,9 +72,12 @@ export async function bootstrap(serviceName: string): Promise<Bootstrapped> {
     },
     masking: maskingConfig,
     loggingMatrix: {
-      default: [FIELD_CORRELATION, FIELD_TENANT],
-      info: [FIELD_CORRELATION, FIELD_TENANT, 'orderId', 'customerId', 'operation'],
-      warn: [FIELD_CORRELATION, FIELD_TENANT, 'orderId', 'operation'],
+      // spanId rides every entry so the dashboard can nest each log under its span in the
+      // waterfall. It is set by tracing's withSpan; a log emitted outside any span simply
+      // has no spanId and attaches to the trace, not a span.
+      default: [FIELD_CORRELATION, FIELD_TENANT, FIELD_SPAN_ID],
+      info: [FIELD_CORRELATION, FIELD_TENANT, FIELD_SPAN_ID, 'orderId', 'customerId', 'operation'],
+      warn: [FIELD_CORRELATION, FIELD_TENANT, FIELD_SPAN_ID, 'orderId', 'operation'],
       error: ['*'],
       audit: ['*'],
     },

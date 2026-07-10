@@ -88,7 +88,7 @@ export default function App() {
           </div>
 
           <h3 className="section-h">Trace waterfall</h3>
-          <TraceWaterfall trace={activeId ? traces[activeId] ?? null : null} />
+          <TraceWaterfall trace={activeId ? traces[activeId] ?? null : null} logs={traceEntries} />
 
           <h3 className="section-h">Pipeline</h3>
           <Pipeline entries={traceEntries} />

@@ -7,7 +7,8 @@ trace **waterfall** and serves it. Schematic OpenTelemetry Collector — see
 the .NET member of the family.
 
 > **Status: in production use by the demo.** Ingests logs + spans from all 5 services (TS + Python),
-> assembles traces, and serves the live dashboard over SSE (logs + a live-filling waterfall).
+> assembles traces, and serves the live dashboard over SSE (a live-filling waterfall with each
+> service's logs nested under the span they were emitted in).
 > **Durable**: spans + logs persist to **SQLite**, so a collector restart keeps the traces intact
 > (kill it, restart it, the waterfall is still there). Native **AOT** binary. The `bench/latigazo.sh`
 > load test is measured below (note: durable SQLite writes trade some of the in-memory throughput).
@@ -27,7 +28,7 @@ the .NET member of the family.
 | Method | Path | Role |
 |---|---|---|
 | POST | `/v1/spans` | Ingest a batch of spans (the hot path). |
-| POST | `/v1/logs` | Ingest a batch of logs (counted in v1; nesting under spans is a later phase). |
+| POST | `/v1/logs` | Ingest a batch of logs (persisted; each carries its `spanId`, so the dashboard nests it under its span in the waterfall). |
 | GET | `/trace/{traceId}` | The assembled waterfall for a trace (pure `TraceAssembler`). |
 | GET | `/traces` | Recent trace summaries. |
 | GET | `/healthz` | Liveness + uptime + traces in store. |

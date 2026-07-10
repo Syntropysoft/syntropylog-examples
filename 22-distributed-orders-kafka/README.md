@@ -19,7 +19,8 @@ Click **Place order** in the storefront. Within a second you watch the **same** 
 appear across **Express → NestJS → Kafka → Python → a worker** — every log stitched into one
 distributed trace, with the credit card, CVV and email **masked automatically**. Then look at
 the **waterfall**: the same order as a tree of timed **spans**, crossing the message broker and
-a language boundary, assembled by a native **.NET AOT** collector everyone pushes to.
+a language boundary, assembled by a native **.NET AOT** collector everyone pushes to — expand any
+span to read the logs that service emitted inside it.
 
 Two jaw-drops:
 1. The id survives a hop *through Kafka* **and across a language boundary** — a Python service
@@ -82,7 +83,8 @@ Every service pushes its already-masked LOGS and its SPANS over HTTP to:
   [`services/inventory-py/tracing.py`](services/inventory-py/tracing.py)).
 - **The collector** ([`services/traceability/`](services/traceability/)) is a single native
   **.NET AOT** binary built on **sl4n** (it dogfoods sl4n for its own logs). It assembles spans
-  into a waterfall and streams logs + traces to the dashboard over **SSE**. It's **durable** —
+  into a waterfall and streams logs + traces to the dashboard over **SSE**, where each service's
+  logs nest under the span they were emitted in (every entry carries its `spanId`). It's **durable** —
   spans + logs persist to **SQLite**, so a collector restart keeps the traces intact. See its
   [README](services/traceability/README.md) and the `bench/latigazo.sh` load test.
 - Design write-up: **[TRACING-DESIGN.md](TRACING-DESIGN.md)**. Cross-language envelope:

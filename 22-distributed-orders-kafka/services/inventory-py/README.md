@@ -19,9 +19,10 @@ same log envelope as SyntropyLog (see [`../../LOGBUS-CONTRACT.md`](../../LOGBUS-
   `extractInboundContext(...)` on the TS side.
 - **Outbound (context → Kafka):** `slpy.get_propagation_headers('kafka')` turns the
   context back into wire headers when publishing `stock.reserved`.
-- **Log bus:** an `AdapterTransport` publishes every already-masked entry to the
-  `syntropy:logbus` Redis channel. The entry already carries `correlationId` — that is
-  the stitch key the gateway groups by.
+- **Log path:** a `CollectorLogTransport` (an `AdapterTransport`) POSTs every already-masked
+  entry to the .NET collector's `/v1/logs` over HTTP; the collector streams it to the dashboard
+  over SSE. Each entry carries `correlationId` (the trace stitch key) **and** `spanId`, so the
+  dashboard nests the log under its span in the waterfall — exactly like the TypeScript services.
 
 The wire names are declared per service in `syntropy.py` (`CONTEXT_CONFIG`), never
 hard-coded globally — the inbound/outbound design is exactly what lets a Python service
@@ -50,7 +51,8 @@ dashboard in Python, sharing the same `correlationId` as the surrounding TS serv
 | File           | Role                                                                    |
 |----------------|-------------------------------------------------------------------------|
 | `main.py`      | FastAPI app: consume `order.created`, reserve stock, publish `stock.reserved`, `/health` + `/stock`. |
-| `syntropy.py`  | slpy bootstrap: `CONTEXT_CONFIG`, logging matrix, masking, Redis log-bus transport. |
+| `syntropy.py`  | slpy bootstrap: `CONTEXT_CONFIG`, logging matrix, masking, collector-log transport (HTTP). |
+| `tracing.py`   | the slpy observability helper: W3C `traceparent` codec, span exporter, collector-log transport. |
 | `kafka_bus.py` | aiokafka producer/consumer + inbound extraction + propagation headers. |
 | `constants.py` | topics, groups, keys, field + service names — mirror of `shared/constants.ts`. |
 | `env.py`       | broker/redis/port defaults — mirror of `shared/env.ts`.                 |

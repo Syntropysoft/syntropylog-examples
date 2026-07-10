@@ -32,7 +32,7 @@ from constants import (
     TARGET_KAFKA,
 )
 from env import env
-from tracing import CollectorLogTransport
+from tracing import CollectorLogTransport, FIELD_SPAN_ID
 
 
 # The coherence trick, identical to CONTEXT_CONFIG in syntropy.ts: the conceptual
@@ -63,11 +63,13 @@ CONTEXT_CONFIG: dict[str, Any] = {
 
 # Per-level context whitelist — mirrors `loggingMatrix` in syntropy.ts. Fields not
 # whitelisted for a level never reach a transport (the correlation id and tenant are
-# always allowed; error/audit see everything).
+# always allowed; error/audit see everything). `spanId` rides every entry so the dashboard
+# can nest each log under its span in the waterfall (set by tracing's span(); a log emitted
+# outside any span has no spanId and attaches to the trace, not a span).
 LOGGING_MATRIX: dict[str, list[str]] = {
-    "default": [FIELD_CORRELATION, FIELD_TENANT],
-    "info": [FIELD_CORRELATION, FIELD_TENANT, "orderId", "customerId", "operation"],
-    "warn": [FIELD_CORRELATION, FIELD_TENANT, "orderId", "operation"],
+    "default": [FIELD_CORRELATION, FIELD_TENANT, FIELD_SPAN_ID],
+    "info": [FIELD_CORRELATION, FIELD_TENANT, FIELD_SPAN_ID, "orderId", "customerId", "operation"],
+    "warn": [FIELD_CORRELATION, FIELD_TENANT, FIELD_SPAN_ID, "orderId", "operation"],
     "error": ["*"],
     "audit": ["*"],
 }

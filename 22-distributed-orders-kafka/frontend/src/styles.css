@@ -526,3 +526,76 @@ code {
   padding: 0 4px;
   white-space: nowrap;
 }
+
+/* ── logs nested under their span ───────────────────────────────────────── */
+.wf-group {
+  border-radius: 4px;
+}
+.wf-caret {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  flex: none;
+  min-width: 22px;
+  padding: 0 3px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 10px;
+  cursor: pointer;
+}
+.wf-caret:hover {
+  background: #16203300;
+  color: var(--text);
+}
+.wf-caret-empty {
+  cursor: default;
+  color: #33405400;
+  opacity: 0;
+}
+.wf-tri {
+  width: 8px;
+  text-align: center;
+}
+.wf-logcount {
+  font-variant-numeric: tabular-nums;
+  font-size: 10px;
+  color: #7c8aa0;
+}
+.wf-logs {
+  display: flex;
+  flex-direction: column;
+  margin: 1px 0 4px;
+  border-left: 1px solid #1b2740;
+}
+.wf-logrow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 7px;
+  padding: 2px 6px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 11px;
+  line-height: 1.5;
+  border-radius: 3px;
+}
+.wf-logrow.lvl-warn {
+  background: #1a1405;
+}
+.wf-logrow.lvl-error {
+  background: #1f0c0c;
+}
+.wf-orphans {
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px dashed var(--border);
+}
+.wf-orphan-head {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  padding: 0 6px 2px;
+}
