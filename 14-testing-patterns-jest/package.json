@@ -11,7 +11,7 @@
     "test:coverage": "jest --coverage"
   },
   "dependencies": {
-    "syntropylog": "1.1.0",
+    "syntropylog": "1.4.0",
     "chalk": "^5.4.1"
   },
   "devDependencies": {
